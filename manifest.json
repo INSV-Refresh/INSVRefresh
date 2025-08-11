@@ -1,0 +1,55 @@
+{
+  "name": "INSV Refresh",
+  "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
+  "version": "4.0",
+  "manifest_version": 3,
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.lightning.force.com/*"
+      ],
+      "js": [
+        "gridRefresh.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "*://*.lightning.force.com/*"
+  ],
+  "action": {
+    "default_icon": {
+      "128": "assets/icons/INSVRefresh.png"
+    },
+    "default_popup": "popup.html",
+    "default_title": "Grid Refresher"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+    "128": "assets/icons/INSVRefresh.png"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/sounds/notification.mp3",
+        "assets/sounds/bubble.mp3",
+        "assets/sounds/interface.mp3",
+        "assets/sounds/lis.mp3",
+        "assets/sounds/tech.mp3",
+        "assets/icons/banner.png",
+        "assets/icons/plus_green.png",
+        "assets/icons/trash-bin.png",
+        "assets/icons/notification.png"
+      ],
+      "matches": [
+        "*://*.lightning.force.com/*"
+      ]
+    }
+  ]
+}

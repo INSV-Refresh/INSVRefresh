@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="variaveis.css">
+</head>
+
+<body>
+    <div class="header">
+        <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb"
+            target="_blank"><img class="insvRefresh" src="./assets/icons/banner.svg" alt="Logo extensão"></a>
+    </div>
+    <hr>
+
+    <div id="normal-mode">
+        <div id="queue-list"></div>
+        <button id="add-queue-btn" class="add-queue-btn has-tooltip has-tooltip-add-queue-btn" data-tooltip="Adicionar fila">
+            <img class src="./assets/icons/add.png" alt="Icone de adicionar">
+        </button>
+    </div>
+
+    <div id="legacy-mode">
+        <div class="legacy-mode-containers">
+            <div class="container-1">
+                <div class="input-wrapper">
+                    <input type="number" id="legacyInterval" class="queue-interval" min="5" max="900" value="10">
+                    <span class="seconds">s</span>
+                </div>
+            </div>
+            <div class="container-2">
+                <button id="legacyToggle" class="queue-inactive">Inativo</button>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="sound-and-range">
+        <a href="/options.html" target="_blank" class="has-tooltip has-tooltip-settings" data-tooltip="Conheça mais sobre a extensão">
+            <img src="/assets/icons/settings.svg" alt="Configurações">
+        </a>
+        <input class="has-tooltip has-tooltip-default" data-tooltip="Volume da notificação" type="range"
+            id="volumeSlider" min="0" max="100" value="50" />
+        <a href="/options.html#modo-legacy" target="_blank" id="legacy-text" class="has-tooltip has-tooltip-legacy-text" data-tooltip="Desative o modo legacy para mais funcionalidades!">Modo Legacy</a>
+    </div>
+
+    <div class="flex-between">
+        <span id="status"></span>
+        <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank">Enviar feedback</a>
+    </div>
+
+    <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb"
+        target="_blank" class="glowPulse">✨</a>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

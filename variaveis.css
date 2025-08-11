@@ -1,0 +1,18 @@
+:root {
+  /* Cor do fundo */
+  --background-color: #411e5a linear-gradient(45deg, #411e5a 0, #6e4b87);
+
+  /* Cor para ativar fila */
+  --green-color: #329a43;
+
+  /* Cor para inativar fila */
+  --red-color: #c8341b;
+
+  /* Cores padrão */
+  --white-color: #fff;
+  --ice-white-color: #cfd9f4;
+  --box-shadow: #00000029 0px 3px 6px, #0000003b 0px 1px 2px;
+  --light-purple-color: #8c50a2;
+  --medium-gray-color: #333;
+  --light-blue-color: #00a1e0;
+}

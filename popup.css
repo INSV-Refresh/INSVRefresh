@@ -1,0 +1,365 @@
+html {
+  min-height: 5em;
+  min-width: 24em;
+  background: var(--background-color);
+  border-radius: 12px;
+  font-family: "Poppins", sans-serif;
+}
+
+.queue-active {
+  width: 75px;
+  height: auto;
+  padding: 8px 17px 8px 17px;
+  border-radius: 5px;
+  background-color: var(--green-color);
+  color: var(--white-color);
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  margin-left: 25px;
+}
+
+.queue-inactive {
+  width: 75px;
+  height: auto;
+  padding: 8px 17px 8px 17px;
+  border-radius: 5px;
+  background-color: var(--red-color);
+  color: var(--white-color);
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  margin-left: 25px;
+}
+
+.btn-queue {
+  padding: 8px 10px 8px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input {
+  padding: 8px 17px 8px 17px;
+  border-radius: 5px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  box-shadow: var(--box-shadow);
+}
+
+label {
+  font-size: 14px;
+  color: var(--white-color);
+  display: flex;
+}
+
+.container-1 {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.container-2, #legacy-mode > div{
+  gap: 14px;
+  display: flex;
+  align-items: center;
+  padding: 10px 0 20px 0;
+
+  & input {
+    width: 35px;
+    padding: 8px 17px 8px 8px;
+    border-radius: 5px;
+    border: none;
+    font-size: 13px;
+    outline: none;
+    box-shadow: var(--box-shadow);
+    direction: rtl;
+  }
+}
+
+.add-queue-btn img,
+.delete-queue img {
+  width: 20px;
+  height: 20px;
+}
+
+.add-queue-btn {
+  position: relative;
+  bottom: 44px;
+  left: 155px;
+}
+
+.add-queue-btn.centralizado-add-button {
+  left: 137px;
+}
+
+.queue-item button.delete-queue {
+  right: 40px;
+  position: absolute;
+}
+
+.queue-item:last-child button.delete-queue {
+  right: 55px;
+}
+
+.adjustments-containers-1-and-2 {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.input-wrapper {
+  & .seconds {
+    position: absolute;
+    right: 10px;
+    top: 45%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 14px;
+  }
+}
+
+select {
+  padding: 8px 17px 8px 17px;
+  border-radius: 5px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+hr {
+  margin-bottom: 30px;
+  border: 1.5px solid var(--light-purple-color);
+  width: 94.5%;
+}
+
+body > hr:nth-of-type(2) {
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+button {
+  border-radius: 5px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  color: var(--white-color);
+  background-color: transparent;
+  width: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.sound-and-range {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 20px 15px 20px;
+  & input {
+    box-shadow: none;
+  }
+}
+
+.button-alignment {
+  display: flex;
+  justify-content: center;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--light-purple-color);
+  cursor: pointer;
+  margin-left: 25px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  accent-color: var(--light-blue-color);
+  height: 10px;
+  cursor: grab;
+  padding: 0;
+  width: 150px;
+}
+
+.queue-item {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100px;
+  border: 1px solid transparent;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 18px;
+  padding: 4px 0 4px 0;
+  user-select: none;
+  margin-right: 25px;
+  color: var(--white-color);
+}
+.queue-item.dragging {
+  opacity: 0.5;
+}
+
+.queue-item:first-child .drag-handle {
+  opacity: 30%;
+}
+
+.queue-sound img {
+  width: 20px;
+  height: 20px;
+}
+
+.queue-sound.off {
+  opacity: 0.5;
+}
+
+.insvRefresh {
+  width: auto;
+  height: auto;
+}
+
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  transform: translateX(-50%);
+  background: var(--medium-gray-color);
+  color: var(--white-color);
+  padding: 6px 10px;
+  margin-bottom: 5px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 999;
+}
+
+.has-tooltip:hover::after {
+  opacity: 1;
+}
+
+.has-tooltip-default::after {
+  left: 50%;
+}
+
+.has-tooltip-settings::after {
+  left: 380%;
+}
+
+.has-tooltip-add-queue-btn::after {
+  left: 0;
+}
+
+.has-tooltip-legacy-text::after{
+  width: 150px!important;
+  left: 0;
+  white-space: normal !important;
+  font-weight: normal;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  color: var(--white-color);
+  margin: 0 24px 0 12px;
+
+  & a {
+    color: var(--white-color);
+    font-weight: bold;
+    opacity: 50%;
+  }
+}
+
+#legacy-mode .container-1 {
+    padding: 0; 
+}
+
+#legacy-mode{
+  justify-content: center;
+}
+
+.legacy-mode-containers{
+    padding: 0!important;
+    position: relative;
+    top: -15px
+}
+
+#legacy-mode .seconds{
+  top: 46%;
+}
+
+#legacy-text{
+  text-decoration: none;
+  color: var(--white-color);
+  font-weight: bold;
+  right: 12px;
+}
+
+.queue-item {
+  -webkit-user-drag: none;
+}
+
+.drag-handle {
+  cursor: drag;
+  -webkit-user-drag: element;
+}
+
+@keyframes glowPulse {
+  0% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
+      0 0 12px rgba(249, 135, 100, 0.6);
+  }
+  100% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.glowPulse {
+  animation: glowPulse 2s ease-in-out infinite;
+  font-size: 16px;
+  text-decoration: none;
+  position: absolute;
+  top: 10px;
+  right: 11px;
+}
+
+.queue-sound-select {
+  width: 85px;
+  font-size: 13px;
+  box-shadow: var(--box-shadow);
+  padding: 8px 2px 8px 8px;
+  margin-bottom: 0;
+  height: 31px;
+}
+
+::-webkit-scrollbar {
+  display: none !important;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+}

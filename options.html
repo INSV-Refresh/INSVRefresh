@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INSV Refresh - Configs</title>
+    <link rel="shortcut icon" href="assets/icons/INSVRefresh.png">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="options.css">
+    <link rel="stylesheet" href="variaveis.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">INSV Refresh</div>
+            <nav class="menu">
+                <a href="#top">Introdução</a>
+                <a href="#funcionalidades">Funcionalidades</a>
+                <a href="#upload-audio">Upload de Áudio</a>
+                <a href="#saved-audios">Áudios salvos</a>
+                <a href="#modo-legacy">Modo Legacy</a>
+                <a href="#status-notification">Noticar status</a>
+            </nav>
+            <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb" class="review" target="_blank">Avalie nossa extensão!
+                <span class="glowPulse">✨</span></a>
+        </aside>
+
+        <main class="content">
+            <section id="intro">
+                <h1>Bem-vindo!</h1>
+                <p>Aqui você encontra um tutorial de como utilizar a extensão e configurar os recursos disponíveis.</p>
+                <div style="filter: grayscale(1); opacity: 50%;">
+                    <p style="position: absolute; top: 15%; font-size: 150px; font-weight: bolder; left: 50%; transform: translateX(-50%);">EM BREVE</p>
+                    <div class="demo">
+                        <video src="" controls width="100%" poster="/assets/video/mockup.svg">
+                            Seu navegador não suporta a visualização de vídeos.
+                        </video>
+                        <p class="caption">Exemplo visual do funcionamento da extensão.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="funcionalidades">
+                <h2>Funcionalidades</h2>
+                <ul>
+                    <li><strong>Monitoramento Inteligente:</strong> Atualiza filas automaticamente em intervalos configuráveis em segundos.</li>
+                    <li><strong>Notificações Sonoras:</strong> Emite som personalizado ao detectar novos chamados na fila.</li>
+                    <li><strong>Proteção Anti-Interrupção:</strong> Pausa automaticamente o refresh quando há chamados selecionados para evitar perder a seleção.</li>
+                    <li><strong>Áudios Personalizados:</strong> Faça upload dos seus próprios sons de notificação (MP3, WAV, OGG, etc.).</li>
+                    <li><strong>Gestão de Múltiplas Filas:</strong> Configure diferentes intervalos e sons para cada fila que você monitora.</li>
+                    <li><strong>Modo Legacy:</strong> Versão simplificada que apenas atualiza a página em intervalos regulares, ideal para quando você só precisa do refresh básico.</li>
+                </ul>
+            </section>
+
+            <section id="upload-audio">
+                <h2>Upload de Som Personalizado</h2>
+
+                <div id="drop-area" class="drop-area">
+                    <div class="drop-content">
+                        <div class="drop-icon">🎵</div>
+                        <div class="drop-text">
+                            <strong>Arraste um arquivo de áudio aqui</strong>
+                            <p>ou <button type="button" id="browse-btn" class="browse-btn">clique para procurar</button></p>
+                        </div>
+                        <div class="drop-formats">
+                            Formatos: MP3, WAV, OGG, MP4, WebM (máx. 5MB)
+                        </div>
+                    </div>
+                </div>
+
+                <input type="file" accept="audio/*" id="custom-audio" style="display: none;">
+                <div id="audio-preview"></div>
+                <div>
+                    <label for="custom-audio-name" >
+                        Nome para exibir:
+                        <input type="text" id="custom-audio-name" placeholder="Ex: Meu Som Favorito">
+                        <button class="save-audio-btn" id="save-audio-btn">Salvar Áudio</button>
+                    </label>
+                </div>
+                </section>
+                <section id="saved-audios">
+                <h2>Áudios Personalizados Salvos</h2>
+                <div id="custom-audios-list">
+                    <p>Carregando áudios personalizados...</p>
+                </div>
+
+                <div class="how-to-audio">
+                    <h3>ℹ️ Como usar áudios personalizados</h3>
+                    <ul>
+                        <li>Após salvar um áudio, ele ficará disponível no popup da extensão</li>
+                        <li>Você pode dar um nome personalizado para cada áudio</li>
+                        <li>Formatos suportados: MP3, WAV, OGG, MP4, WebM</li>
+                        <li>Tamanho máximo: 5MB por arquivo</li>
+                        <li>Os áudios são salvos localmente no seu navegador</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="modo-legacy">
+                <h2>Modo Legacy</h2>
+                <p>Ative o modo simples da extensão (sem notificações ou validações).</p>
+                <p>Neste modo, a extensão apenas atualiza a fila a cada intervalo definido, desativando todas as outras funcionalidades.</p>
+                <label>
+                    <input type="checkbox" id="legacyMode"> Ativar Modo Legacy
+                </label>
+            </section>
+            <div style="filter: grayscale(1); opacity: 50%;">
+                <p style="position: absolute; top: 45%; font-size: 75px; font-weight: bolder; left: 50%; transform: translateX(-50%);">EM BREVE</p>
+                <section id="status-notification">
+                    <h2>Notificar mudança de status</h2>
+                    <p>Preencha este campo para ser notificado quando seus chamados forem atualizados para o staus desejado</p>
+                    <label for="" style="margin-right: 10px;">Status desejados:<input type="text" disabled></label>
+                    <small style="font-size: 13px;">Separe demais status com <span style="font-weight: bolder;">;</span></small>
+                </section>
+            </div>
+
+        </main>
+    </div>
+    <div id="toast-container"></div>
+    <script src="options.js"></script>
+</body>
+
+</html>

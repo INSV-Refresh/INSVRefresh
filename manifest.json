@@ -1,7 +1,7 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "4.0",
+  "version": "4.0.1",
   "manifest_version": 3,
   "content_scripts": [
     {
@@ -37,15 +37,19 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "assets/sounds/notification.mp3",
+        "assets/icons/add.png",
+        "assets/icons/banner.svg",
+        "assets/icons/INSVRefresh.png",
+        "assets/icons/notification.png",
+        "assets/icons/settings.svg",
+        "assets/icons/trash-bin.png",
         "assets/sounds/bubble.mp3",
         "assets/sounds/interface.mp3",
+        "assets/sounds/limba.mp3",
         "assets/sounds/lis.mp3",
+        "assets/sounds/notification.mp3",
         "assets/sounds/tech.mp3",
-        "assets/icons/banner.png",
-        "assets/icons/plus_green.png",
-        "assets/icons/trash-bin.png",
-        "assets/icons/notification.png"
+        "assets/video/mockup.svg"
       ],
       "matches": [
         "*://*.lightning.force.com/*"

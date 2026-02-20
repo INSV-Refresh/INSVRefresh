@@ -1,3 +1,95 @@
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+function trackEvent(eventName, data) {
+  try {
+    chrome.storage.local.get("analytics", (result) => {
+      const analytics = result.analytics || { events: [], lastCleanup: Date.now() };
+      analytics.events.push({ name: eventName, data, timestamp: Date.now() });
+      if (analytics.events.length > 1000) {
+        analytics.events = analytics.events.slice(-500);
+        analytics.lastCleanup = Date.now();
+      }
+      chrome.storage.local.set({ analytics });
+    });
+  } catch (e) {}
+}
+
+function exportSettings() {
+  try {
+    chrome.storage.local.get(null, (allData) => {
+      const exportData = {
+        version: chrome.runtime.getManifest().version,
+        exportDate: new Date().toISOString(),
+        queues: allData.queues || [],
+        general: allData.general || {},
+        statusNotifications: allData.statusNotifications || [],
+        advanced: allData.advanced || {},
+        audiosPersonalizados: allData.audiosPersonalizados || {},
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `insv-refresh-backup-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Configurações exportadas!", "success");
+      trackEvent("settings_exported");
+    });
+  } catch (e) {
+    showToast("Erro ao exportar: " + e.message, "error");
+  }
+}
+
+function importSettings(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const importData = JSON.parse(e.target.result);
+      if (!importData.queues && !importData.statusNotifications) {
+        throw new Error("Arquivo inválido");
+      }
+      const toImport = {
+        queues: importData.queues || [],
+        general: importData.general || {},
+        statusNotifications: importData.statusNotifications || [],
+        advanced: importData.advanced || {},
+        audiosPersonalizados: importData.audiosPersonalizados || {},
+      };
+      chrome.storage.local.set(toImport, () => {
+        showToast("Configurações importadas! Recarregue a página.", "success");
+        trackEvent("settings_imported");
+        setTimeout(() => window.location.reload(), 1500);
+      });
+    } catch (err) {
+      showToast("Erro ao importar: " + err.message, "error");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function applyDarkMode(enabled) {
+  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
+  if (enabled) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+}
+
 function validateAudioFile(input) {
   const file = input.files[0];
   if (!file) {
@@ -336,6 +428,197 @@ function resetDropArea() {
   }
 }
 
+function loadStatusNotificationSounds(selectEl, selectedValue, onPreview) {
+  if (!selectEl) return;
+  selectEl.innerHTML = "";
+  const defaultSounds = [
+    { value: "notification.mp3", text: "Padrão" },
+    { value: "tech.mp3", text: "Tech" },
+    { value: "limba.mp3", text: "Limba" },
+    { value: "lis.mp3", text: "LIS" },
+    { value: "interface.mp3", text: "Interface" },
+    { value: "bubble.mp3", text: "Bubbles" },
+  ];
+  defaultSounds.forEach((s) => {
+    const opt = document.createElement("option");
+    opt.value = s.value;
+    opt.textContent = s.text;
+    selectEl.appendChild(opt);
+  });
+  chrome.storage.local.get("audiosPersonalizados", (data) => {
+    const custom = data.audiosPersonalizados || {};
+    const keys = Object.keys(custom);
+    if (keys.length > 0) {
+      const sep = document.createElement("option");
+      sep.disabled = true;
+      sep.textContent = "───────";
+      selectEl.appendChild(sep);
+      keys.forEach((key) => {
+        const o = document.createElement("option");
+        o.value = key;
+        o.textContent = custom[key].name;
+        selectEl.appendChild(o);
+      });
+    }
+    if (selectedValue) selectEl.value = selectedValue;
+    if (onPreview) {
+      selectEl.addEventListener("change", () => {
+        if (selectEl.value) previewSound(selectEl.value);
+      });
+    }
+  });
+}
+
+function previewSound(soundValue) {
+  try {
+    chrome.storage.local.get("general", (data) => {
+      const volume = (data.general && data.general.volume) || 0.5;
+      if (soundValue.startsWith("custom_")) {
+        chrome.storage.local.get("audiosPersonalizados", (d) => {
+          const custom = d.audiosPersonalizados || {};
+          const audio = custom[soundValue];
+          if (audio && audio.data) {
+            const a = new Audio(audio.data);
+            a.volume = volume;
+            a.play().catch(() => {});
+          }
+        });
+      } else {
+        const a = new Audio(chrome.runtime.getURL("assets/sounds/" + soundValue));
+        a.volume = volume;
+        a.play().catch(() => {});
+      }
+    });
+  } catch (e) {
+    console.error("Preview error:", e);
+  }
+}
+
+function createStatusNotificationItem(cfg, index) {
+  const div = document.createElement("div");
+  div.className = "status-notification-item";
+  div.dataset.index = index;
+  div.innerHTML = `
+    <div class="status-notification-header">
+      <strong>Notificação ${index + 1}</strong>
+      <button type="button" class="remove-status-notification-btn" data-index="${index}">✕</button>
+    </div>
+    <div class="status-notification-fields">
+      <label>
+        <input type="checkbox" class="status-notification-enabled" ${cfg.enabled ? "checked" : ""}>
+        Ativar
+      </label>
+      <label>Fila: <input type="text" class="status-notification-queue" value="${cfg.queueName || ""}" placeholder="Nome exato da fila"></label>
+      <label>Status: <input type="text" class="status-notification-statuses" value="${(cfg.statuses || []).join(";")}" placeholder="Ex: Em andamento;Resolvido"></label>
+      <small>Separe vários status com <strong>;</strong></small>
+      <label>Som: <select class="status-notification-sound"></select></label>
+    </div>
+  `;
+  const soundSelect = div.querySelector(".status-notification-sound");
+  loadStatusNotificationSounds(soundSelect, cfg.sound || "notification.mp3", true);
+  return div;
+}
+
+function loadStatusNotificationOptions() {
+  const container = document.getElementById("status-notifications-list");
+  if (!container) return;
+  chrome.storage.local.get("statusNotifications", (data) => {
+    const configs = data.statusNotifications || [];
+    if (configs.length === 0) {
+      configs.push({ enabled: false, queueName: "", statuses: [], sound: "notification.mp3" });
+    }
+    container.innerHTML = "";
+    configs.forEach((cfg, idx) => {
+      container.appendChild(createStatusNotificationItem(cfg, idx));
+    });
+    attachStatusNotificationListeners();
+  });
+}
+
+function attachStatusNotificationListeners() {
+  document.querySelectorAll(".status-notification-item").forEach((item) => {
+    const inputs = item.querySelectorAll("input, select");
+    inputs.forEach((inp) => {
+      inp.addEventListener("change", saveAllStatusNotificationsDebounced);
+      inp.addEventListener("input", saveAllStatusNotificationsDebounced);
+    });
+    const removeBtn = item.querySelector(".remove-status-notification-btn");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", () => {
+        item.remove();
+        saveAllStatusNotifications();
+      });
+    }
+  });
+}
+
+function saveAllStatusNotifications() {
+  const items = document.querySelectorAll(".status-notification-item");
+  const configs = [];
+  items.forEach((item) => {
+    const enabled = item.querySelector(".status-notification-enabled")?.checked || false;
+    const queueName = item.querySelector(".status-notification-queue")?.value.trim() || "";
+    const statusesStr = item.querySelector(".status-notification-statuses")?.value || "";
+    const statuses = statusesStr.split(";").map((s) => s.trim()).filter(Boolean);
+    const sound = item.querySelector(".status-notification-sound")?.value || "notification.mp3";
+    configs.push({ enabled, queueName, statuses, sound });
+  });
+  chrome.storage.local.set({ statusNotifications: configs }, () => {
+    showToast("Notificações de status salvas.", "success");
+    trackEvent("status_notification_saved", { count: configs.length });
+  });
+}
+
+const saveAllStatusNotificationsDebounced = debounce(saveAllStatusNotifications, 500);
+
+function addStatusNotification() {
+  const container = document.getElementById("status-notifications-list");
+  if (!container) return;
+  const newCfg = { enabled: false, queueName: "", statuses: [], sound: "notification.mp3" };
+  container.appendChild(createStatusNotificationItem(newCfg, container.children.length));
+  attachStatusNotificationListeners();
+  saveAllStatusNotifications();
+}
+
+function applyPaidGateOptions(isPaid) {
+  try {
+    const uploadSection = document.getElementById("upload-audio");
+    const statusSection = document.getElementById("status-notification");
+    const payMsg = '<p class="paid-gate-msg">Disponível no plano pago. <a href="' + chrome.runtime.getURL('pricing.html') + '" target="_blank">Ver planos</a>.</p>';
+    if (!isPaid && uploadSection && !uploadSection.querySelector(".paid-gate-msg")) {
+      const wrap = document.createElement("div");
+      wrap.className = "paid-gate-msg";
+      wrap.innerHTML = payMsg;
+      uploadSection.insertBefore(wrap, uploadSection.firstChild);
+      const dropArea = document.getElementById("drop-area");
+      if (dropArea) {
+        dropArea.style.pointerEvents = "none";
+        dropArea.style.opacity = "0.7";
+      }
+    }
+    if (!isPaid && statusSection && !statusSection.querySelector(".paid-gate-msg")) {
+      const wrap = document.createElement("div");
+      wrap.className = "paid-gate-msg";
+      wrap.innerHTML = payMsg;
+      statusSection.insertBefore(wrap, statusSection.firstChild);
+      const addBtn = document.getElementById("add-status-notification-btn");
+      if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.style.opacity = "0.7";
+      }
+    }
+    if (isPaid) {
+      const addBtn = document.getElementById("add-status-notification-btn");
+      if (addBtn) {
+        addBtn.disabled = false;
+        addBtn.style.opacity = "1";
+      }
+    }
+  } catch (e) {
+    console.error("Error applying paid gate:", e);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   setupDragAndDrop();
   
@@ -357,8 +640,79 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast("Modo Legacy " + (legacyCheckbox.checked ? "ativado" : "desativado"), "success");
     });
   }
+
+  loadStatusNotificationOptions();
+  document.getElementById("add-status-notification-btn")?.addEventListener("click", addStatusNotification);
+
+  document.getElementById("export-settings-btn")?.addEventListener("click", exportSettings);
+  document.getElementById("import-settings-input")?.addEventListener("change", importSettings);
+
+  const darkModeToggle = document.getElementById("darkModeToggle");
+  if (darkModeToggle) {
+    chrome.storage.local.get("darkMode", (data) => {
+      darkModeToggle.checked = !!data.darkMode;
+      applyDarkMode(data.darkMode);
+    });
+    darkModeToggle.addEventListener("change", () => {
+      chrome.storage.local.set({ darkMode: darkModeToggle.checked });
+      applyDarkMode(darkModeToggle.checked);
+      trackEvent("dark_mode_toggled", { enabled: darkModeToggle.checked });
+    });
+  }
+
+  chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+    if (!chrome.runtime.lastError) applyPaidGateOptions(!!(user && user.paid));
+  });
+
+  chrome.storage.local.get("pendingChangelogVersion", (data) => {
+    const v = data.pendingChangelogVersion;
+    if (!v) return;
+    const banner = document.getElementById("changelog-banner");
+    if (!banner) return;
+    banner.style.display = "block";
+    banner.innerHTML = `
+      <strong>Novidades da versão ${v}</strong>
+      <ul>
+        <li>Botão para copiar o nome da fila (evita erros de digitação)</li>
+        <li>Refresh sem interromper busca (usa atualização nativa da página)</li>
+        <li>Som quando o status do chamado muda (config. em Notificar status)</li>
+        <li>Ícone da extensão fica cinza quando não há filas ativas</li>
+        <li>Planos: Grátis, Normal e Empresa (página Planos)</li>
+        <li>Atalho de teclado para aceitar chamado (Avançado)</li>
+        <li>Validação mais rápida após o refresh</li>
+      </ul>
+      <button type="button" id="changelog-dismiss">Entendi</button>
+    `;
+    banner.querySelector("#changelog-dismiss").addEventListener("click", () => {
+      chrome.storage.local.remove("pendingChangelogVersion");
+      banner.style.display = "none";
+    });
+  });
+
+  const acceptShortcutKey = document.getElementById("acceptShortcutKey");
+  if (acceptShortcutKey) {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      acceptShortcutKey.value = adv.acceptShortcutKey || "";
+    });
+    const saveAcceptShortcut = debounce(() => {
+      chrome.storage.local.get("advanced", (data) => {
+        const adv = data.advanced || {};
+        adv.acceptShortcutKey = (acceptShortcutKey.value || "").trim();
+        chrome.storage.local.set({ advanced: adv });
+        showToast("Atalho salvo.", "success");
+      });
+    }, 500);
+    acceptShortcutKey.addEventListener("change", saveAcceptShortcut);
+    acceptShortcutKey.addEventListener("input", saveAcceptShortcut);
+  }
 });
 
+
+document.getElementById("nav-pricing") && document.getElementById("nav-pricing").addEventListener("click", (e) => {
+  e.preventDefault();
+  window.open(chrome.runtime.getURL("pricing.html"), "_blank");
+});
 
 document.querySelectorAll(".menu a").forEach(link => {
     link.addEventListener("click", function (e) {

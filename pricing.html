@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INSV Refresh - Planos</title>
+  <link rel="stylesheet" href="variaveis.css">
+  <link rel="stylesheet" href="options.css">
+  <style>
+    .pricing-layout { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .plan-card { border: 2px solid var(--ice-white-color); border-radius: 12px; padding: 1.5rem; background: #f8f9ff; }
+    .plan-card.featured { border-color: var(--light-blue-color); background: #e8f4fd; }
+    .plan-card h3 { margin: 0 0 0.5rem; color: var(--light-blue-color); }
+    .plan-card .price { font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; }
+    .plan-card ul { list-style: none; padding: 0; margin: 1rem 0; }
+    .plan-card li { padding: 0.3rem 0; padding-left: 1.2rem; position: relative; }
+    .plan-card li::before { content: "✓"; position: absolute; left: 0; color: var(--green-color); font-weight: bold; }
+    .plan-card .cta { display: inline-block; margin-top: 1rem; padding: 0.6rem 1.2rem; background: var(--light-blue-color); color: white; border-radius: 6px; text-decoration: none; font-weight: 600; }
+    .plan-card .cta:hover { opacity: 0.9; }
+    .plan-card .cta.secondary { background: #555; }
+  </style>
+</head>
+<body>
+  <div class="pricing-layout">
+    <h1>Planos INSV Refresh</h1>
+    <p>Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
+    <div class="pricing-grid">
+      <div class="plan-card">
+        <h3>Grátis</h3>
+        <div class="price">R$ 0</div>
+        <ul>
+          <li>1 fila de monitoramento</li>
+          <li>Sons padrão da extensão</li>
+          <li>Notificação de novos chamados</li>
+          <li>Modo Legacy</li>
+        </ul>
+        <span class="cta secondary">Já incluso</span>
+      </div>
+      <div class="plan-card featured">
+        <h3>Normal</h3>
+        <div class="price">Pago</div>
+        <ul>
+          <li>Tudo do plano Grátis</li>
+          <li>Múltiplas filas</li>
+          <li>Áudios personalizados (upload)</li>
+          <li>Notificação por mudança de status</li>
+        </ul>
+        <button type="button" id="pay-normal-btn" class="cta">Assinar</button>
+      </div>
+      <div class="plan-card">
+        <h3>Empresa</h3>
+        <div class="price">Sob consulta</div>
+        <ul>
+          <li>Para times/empresas inteiros</li>
+          <li>Preço negociado</li>
+          <li>Suporte dedicado</li>
+        </ul>
+        <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="cta">Contatar por e-mail</a>
+      </div>
+    </div>
+    <p style="margin-top: 2rem;"><a href="options.html">← Voltar às configurações</a></p>
+  </div>
+  <script src="pricing.js"></script>
+</body>
+</html>

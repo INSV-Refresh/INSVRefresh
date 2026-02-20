@@ -21,13 +21,16 @@
                 <a href="#upload-audio">Upload de Áudio</a>
                 <a href="#saved-audios">Áudios salvos</a>
                 <a href="#modo-legacy">Modo Legacy</a>
-                <a href="#status-notification">Noticar status</a>
+                <a href="#status-notification">Notificar status</a>
+                <a href="#avancado">Avançado</a>
+                <a href="#" id="nav-pricing">Planos</a>
             </nav>
             <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb" class="review" target="_blank">Avalie nossa extensão!
                 <span class="glowPulse">✨</span></a>
         </aside>
 
         <main class="content">
+            <div id="changelog-banner" class="changelog-banner" style="display: none;"></div>
             <section id="intro">
                 <h1>Bem-vindo!</h1>
                 <p>Aqui você encontra um tutorial de como utilizar a extensão e configurar os recursos disponíveis.</p>
@@ -106,15 +109,39 @@
                     <input type="checkbox" id="legacyMode"> Ativar Modo Legacy
                 </label>
             </section>
-            <div style="filter: grayscale(1); opacity: 50%;">
-                <p style="position: absolute; top: 45%; font-size: 75px; font-weight: bolder; left: 50%; transform: translateX(-50%);">EM BREVE</p>
-                <section id="status-notification">
-                    <h2>Notificar mudança de status</h2>
-                    <p>Preencha este campo para ser notificado quando seus chamados forem atualizados para o staus desejado</p>
-                    <label for="" style="margin-right: 10px;">Status desejados:<input type="text" disabled></label>
-                    <small style="font-size: 13px;">Separe demais status com <span style="font-weight: bolder;">;</span></small>
-                </section>
-            </div>
+            <section id="status-notification">
+                <h2>Notificar mudança de status</h2>
+                <p>Seja notificado com um som quando um chamado na fila for atualizado para um dos status abaixo.</p>
+                <div id="status-notifications-list"></div>
+                <button type="button" id="add-status-notification-btn" class="add-status-notification-btn">+ Adicionar notificação</button>
+            </section>
+
+            <section id="avancado">
+                <h2>Avançado</h2>
+                <p>Configure uma tecla para clicar automaticamente no botão de aceitar chamado (útil para agilizar o trabalho).</p>
+                <label for="acceptShortcutKey">Tecla de atalho para aceitar:</label>
+                <input type="text" id="acceptShortcutKey" placeholder="Ex: F2" maxlength="20" style="width: 120px;">
+                <small style="display: block; margin-top: 6px;">Pressione a tecla quando estiver na página da fila (não dentro de um campo de texto).</small>
+            </section>
+
+            <section id="export-import">
+                <h2>Exportar / Importar Configurações</h2>
+                <p>Faça backup das suas configurações ou restaure de um backup anterior.</p>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" id="export-settings-btn" class="export-import-btn">📥 Exportar</button>
+                    <label for="import-settings-input" class="export-import-btn" style="cursor: pointer; display: inline-block;">
+                        📤 Importar
+                        <input type="file" id="import-settings-input" accept=".json" style="display: none;">
+                    </label>
+                </div>
+            </section>
+
+            <section id="appearance">
+                <h2>Aparência</h2>
+                <label>
+                    <input type="checkbox" id="darkModeToggle"> Modo escuro
+                </label>
+            </section>
 
         </main>
     </div>

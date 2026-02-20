@@ -5,34 +5,26 @@
   "manifest_version": 3,
   "content_scripts": [
     {
-      "matches": [
-        "*://*.lightning.force.com/*"
-      ],
-      "js": [
-        "gridRefresh.js"
-      ],
+      "matches": ["*://*.lightning.force.com/*"],
+      "js": ["gridRefresh.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://extensionpay.com/*"],
+      "js": ["ExtPay.js"],
+      "run_at": "document_start"
     }
   ],
-  "host_permissions": [
-    "*://*.lightning.force.com/*"
-  ],
+  "host_permissions": ["*://*.lightning.force.com/*", "https://extensionpay.com/*"],
   "action": {
-    "default_icon": {
-      "128": "assets/icons/INSVRefresh.png"
-    },
+    "default_icon": {"128": "assets/icons/INSVRefresh.png"},
     "default_popup": "popup.html",
     "default_title": "Grid Refresher"
   },
-  "permissions": [
-    "storage"
-  ],
-  "icons": {
-    "128": "assets/icons/INSVRefresh.png"
-  },
+  "permissions": ["storage"],
+  "icons": {"128": "assets/icons/INSVRefresh.png"},
   "background": {
-    "service_worker": "service-worker.js",
-    "type": "module"
+    "service_worker": "service-worker.js"
   },
   "web_accessible_resources": [
     {
@@ -43,17 +35,17 @@
         "assets/icons/notification.png",
         "assets/icons/settings.svg",
         "assets/icons/trash-bin.png",
+        "assets/icons/INSVRefresh-grey.png",
         "assets/sounds/bubble.mp3",
         "assets/sounds/interface.mp3",
         "assets/sounds/limba.mp3",
         "assets/sounds/lis.mp3",
         "assets/sounds/notification.mp3",
         "assets/sounds/tech.mp3",
-        "assets/video/mockup.svg"
+        "assets/video/mockup.svg",
+        "page-context-helper.js"
       ],
-      "matches": [
-        "*://*.lightning.force.com/*"
-      ]
+      "matches": ["*://*.lightning.force.com/*"]
     }
   ]
 }

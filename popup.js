@@ -67,7 +67,10 @@ function createQueueElement(queue) {
 <div class="drag-handle" title="Arrastar para reordenar">☰</div>
 <div class="adjustments-containers-1-and-2">
 <div class="container-1">
+<div class="queue-name-wrapper">
 <input type="text" placeholder="Nome da fila" value="${queue.name || ""}" class="queue-name">
+<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="Copiar nome da fila" title="Copiar nome da fila">📋</button>
+</div>
 <label class="active-toggle">
 <button class="${queue.active ? "queue-active" : "queue-inactive"}">${queue.active ? "Ativo" : "Inativo"}</button>
 </label>
@@ -96,15 +99,54 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     deleteBtn.addEventListener("click", () => {
       div.remove();
       saveOptions();
+      chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+        if (!chrome.runtime.lastError) applyPaidGate(!!(user && user.paid));
+      });
     });
   } else {
     div.setAttribute("draggable", "false");
   }
 
   div.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("input", saveOptions);
-    input.addEventListener("change", saveOptions);
+    input.addEventListener("input", saveOptionsDebounced);
+    input.addEventListener("change", saveOptionsDebounced);
   });
+
+  const copyBtn = div.querySelector(".copy-queue-name-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs[0] || !tabs[0].url || !tabs[0].url.includes("lightning.force.com")) {
+          if (typeof statusSpan !== "undefined") statusSpan.textContent = "Abra uma página do Salesforce";
+          setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
+          return;
+        }
+        chrome.tabs.sendMessage(tabs[0].id, { type: "GET_QUEUE_NAME" }, (response) => {
+          if (chrome.runtime.lastError) {
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Recarregue a página do Salesforce";
+            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
+            return;
+          }
+          const queueName = (response && response.queueName || "").trim();
+          if (!queueName) {
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Não foi possível detectar a fila";
+            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
+            return;
+          }
+          navigator.clipboard.writeText(queueName).then(() => {
+            const nameInput = div.querySelector(".queue-name");
+            if (nameInput) nameInput.value = queueName;
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = `"${queueName}" copiado!`;
+            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
+            saveOptions();
+          }).catch(() => {
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Não foi possível copiar";
+            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
+          });
+        });
+      });
+    });
+  }
 
   if (!isFirst) {
     div.setAttribute("draggable", "true");
@@ -125,7 +167,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     activeBtn.classList.toggle("queue-active", !isActive);
     activeBtn.classList.toggle("queue-inactive", isActive);
     activeBtn.textContent = isActive ? "Inativo" : "Ativo";
-    saveOptions();
+    saveOptionsDebounced();
   });
 
   const soundBtn = div.querySelector(".queue-sound");
@@ -137,7 +179,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     } else {
       soundContainer.style.display = "none";
     }
-    saveOptions();
+    saveOptionsDebounced();
   });
 
   const queueSoundSelect = div.querySelector(".queue-sound-select");
@@ -147,7 +189,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
       if (queueSoundSelect.value) {
         playQueueTestSound(queueSoundSelect.value);
       }
-      saveOptions();
+      saveOptionsDebounced();
     });
 
     loadSoundOptionsForQueue(queueSoundSelect, queue.customSound || "");
@@ -198,6 +240,18 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
   });
 }
 
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 function saveOptions() {
   const queues = [];
   queueList.querySelectorAll(".queue-item").forEach((item) => {
@@ -223,6 +277,27 @@ function saveOptions() {
   };
 
   chrome.storage.local.set({ queues, general }, showSaving);
+}
+
+const saveOptionsDebounced = debounce(saveOptions, 500);
+
+function applyPaidGate(isPaid) {
+  const count = queueList.querySelectorAll(".queue-item").length;
+  const upgrade = document.getElementById("upgrade-multi-queue");
+  if (upgrade) upgrade.remove();
+  if (addQueueBtn) {
+    addQueueBtn.style.display = "flex";
+    addQueueBtn.disabled = !isPaid && count >= 1;
+    if (!isPaid && count >= 1) {
+      const link = document.createElement("a");
+      link.id = "upgrade-multi-queue";
+      link.href = chrome.runtime.getURL("pricing.html");
+      link.target = "_blank";
+      link.textContent = "Assine para múltiplas filas";
+      link.style.cssText = "font-size: 12px; margin-top: 4px; display: block; color: var(--light-blue-color);";
+      normalMode.appendChild(link);
+    }
+  }
 }
 
 function restoreOptions() {
@@ -253,20 +328,31 @@ function restoreOptions() {
     };
 
     volumeSlider.value = general.volume * 100;
+
+    chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+      if (chrome.runtime.lastError) return;
+      applyPaidGate(!!(user && user.paid));
+    });
   });
 }
 
 function addQueueHandler() {
-  const newQueue = {
-    name: "",
-    active: true,
-    interval: 15,
-    soundEnabled: false,
-    customSound: "",
-  };
-  const el = createQueueElement(newQueue);
-  queueList.appendChild(el);
-  saveOptions();
+  chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+    const isPaid = !!(user && user.paid);
+    const count = queueList.querySelectorAll(".queue-item").length;
+    if (!isPaid && count >= 1) return;
+    const newQueue = {
+      name: "",
+      active: true,
+      interval: 15,
+      soundEnabled: false,
+      customSound: "",
+    };
+    const el = createQueueElement(newQueue);
+    queueList.appendChild(el);
+    saveOptions();
+    applyPaidGate(isPaid);
+  });
 }
 
 function playQueueTestSound(soundValue) {
@@ -297,7 +383,7 @@ if (addQueueBtn) {
 if (volumeSlider) {
   volumeSlider.addEventListener("mouseup", () => {
     playQueueTestSound("notification.mp3");
-    saveOptions();
+    saveOptionsDebounced();
   });
 }
 

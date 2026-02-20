@@ -582,38 +582,77 @@ function addStatusNotification() {
 
 function applyPaidGateOptions(isPaid) {
   try {
-    const uploadSection = document.getElementById("upload-audio");
-    const statusSection = document.getElementById("status-notification");
-    const payMsg = '<p class="paid-gate-msg">Disponível no plano pago. <a href="' + chrome.runtime.getURL('pricing.html') + '" target="_blank">Ver planos</a>.</p>';
-    if (!isPaid && uploadSection && !uploadSection.querySelector(".paid-gate-msg")) {
-      const wrap = document.createElement("div");
-      wrap.className = "paid-gate-msg";
-      wrap.innerHTML = payMsg;
-      uploadSection.insertBefore(wrap, uploadSection.firstChild);
-      const dropArea = document.getElementById("drop-area");
-      if (dropArea) {
-        dropArea.style.pointerEvents = "none";
-        dropArea.style.opacity = "0.7";
+    // Marcar h2 de seções premium com badge visual
+    const premiumSections = [
+      document.getElementById("upload-audio"),
+      document.getElementById("status-notification"),
+    ];
+
+    premiumSections.forEach((section) => {
+      if (!section) return;
+      const h2 = section.querySelector("h2");
+
+      // Adicionar badge premium no título se ainda não existir
+      if (h2 && !h2.querySelector(".premium-badge")) {
+        const badge = document.createElement("span");
+        badge.className = "premium-badge";
+        badge.textContent = "⭐ Premium";
+        h2.appendChild(badge);
       }
-    }
-    if (!isPaid && statusSection && !statusSection.querySelector(".paid-gate-msg")) {
-      const wrap = document.createElement("div");
-      wrap.className = "paid-gate-msg";
-      wrap.innerHTML = payMsg;
-      statusSection.insertBefore(wrap, statusSection.firstChild);
-      const addBtn = document.getElementById("add-status-notification-btn");
-      if (addBtn) {
-        addBtn.disabled = true;
-        addBtn.style.opacity = "0.7";
+
+      if (!isPaid) {
+        section.classList.add("section-locked");
+
+        // Banner "Disponível no plano pago" — apenas 1, sem double wrapper
+        if (!section.querySelector(".paid-gate-banner")) {
+          const banner = document.createElement("div");
+          banner.className = "paid-gate-banner";
+          banner.innerHTML = `
+            🔒 Disponível no plano pago.
+            <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">Ver planos →</a>
+          `;
+          section.insertBefore(banner, section.firstChild);
+        }
+
+        // Desabilitar todos inputs/buttons/selects dentro da seção
+        section.querySelectorAll("input, button, select, textarea").forEach((el) => {
+          el.disabled = true;
+          el.setAttribute("data-locked", "true");
+        });
+
+        // Bloquear drop area visualmente
+        const dropArea = section.querySelector("#drop-area");
+        if (dropArea) {
+          dropArea.style.pointerEvents = "none";
+        }
+
+      } else {
+        section.classList.remove("section-locked");
+
+        // Remover banner se existir
+        const banner = section.querySelector(".paid-gate-banner");
+        if (banner) banner.remove();
+
+        // Reabilitar elementos
+        section.querySelectorAll("[data-locked='true']").forEach((el) => {
+          el.disabled = false;
+          el.removeAttribute("data-locked");
+        });
+
+        const dropArea = section.querySelector("#drop-area");
+        if (dropArea) {
+          dropArea.style.pointerEvents = "";
+        }
       }
+    });
+
+    // Gerenciar botão add-status-notification especificamente
+    const addBtn = document.getElementById("add-status-notification-btn");
+    if (addBtn) {
+      addBtn.disabled = !isPaid;
+      addBtn.style.opacity = isPaid ? "1" : "0.6";
     }
-    if (isPaid) {
-      const addBtn = document.getElementById("add-status-notification-btn");
-      if (addBtn) {
-        addBtn.disabled = false;
-        addBtn.style.opacity = "1";
-      }
-    }
+
   } catch (e) {
     console.error("Error applying paid gate:", e);
   }
@@ -720,22 +759,28 @@ document.querySelectorAll(".menu a").forEach(link => {
         const targetId = this.getAttribute("href").substring(1);
         var section = document.getElementById(targetId);
 
+        // Remove highlight de todos os h1/h2 e dos links da nav
         document.querySelectorAll(".highlight").forEach(el => {
             el.classList.remove("highlight");
         });
+        document.querySelectorAll(".menu a.highlight-nav").forEach(el => {
+            el.classList.remove("highlight-nav");
+        });
+
+        // Marcar o link clicado na nav
+        this.classList.add("highlight-nav");
 
         if (targetId == "top"){
           window.scrollTo({ top: 0, behavior: "smooth" });
           section = document.getElementById('intro');
         }
 
-
         if (section) {
             const title = section.querySelector("h1, h2");
-            title.classList.add("highlight");
+            if (title) title.classList.add("highlight");
 
             if (targetId !== "top"){
-            section.scrollIntoView({ behavior: "smooth", block: "start" });
+              section.scrollIntoView({ behavior: "smooth", block: "start" });
             }
         }
     });

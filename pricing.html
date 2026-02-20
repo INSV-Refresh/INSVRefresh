@@ -4,62 +4,327 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>INSV Refresh - Planos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="variaveis.css">
-  <link rel="stylesheet" href="options.css">
+  <script>
+    // Aplicar dark mode ANTES do render para evitar flash
+    try {
+      chrome.storage.local.get("darkMode", (data) => {
+        if (data.darkMode) document.documentElement.setAttribute("data-theme", "dark");
+      });
+    } catch(e) {}
+  </script>
   <style>
-    .pricing-layout { max-width: 900px; margin: 0 auto; padding: 2rem; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .plan-card { border: 2px solid var(--ice-white-color); border-radius: 12px; padding: 1.5rem; background: #f8f9ff; }
-    .plan-card.featured { border-color: var(--light-blue-color); background: #e8f4fd; }
-    .plan-card h3 { margin: 0 0 0.5rem; color: var(--light-blue-color); }
-    .plan-card .price { font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0; }
-    .plan-card ul { list-style: none; padding: 0; margin: 1rem 0; }
-    .plan-card li { padding: 0.3rem 0; padding-left: 1.2rem; position: relative; }
-    .plan-card li::before { content: "✓"; position: absolute; left: 0; color: var(--green-color); font-weight: bold; }
-    .plan-card .cta { display: inline-block; margin-top: 1rem; padding: 0.6rem 1.2rem; background: var(--light-blue-color); color: white; border-radius: 6px; text-decoration: none; font-weight: 600; }
-    .plan-card .cta:hover { opacity: 0.9; }
-    .plan-card .cta.secondary { background: #555; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Outfit", "Segoe UI", sans-serif;
+      background: #f5f6fb;
+      color: #2d2d2d;
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .pricing-layout {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Back link ─────────────────────────────── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #777;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 7px;
+      border: 1px solid #e0e0e0;
+      background: white;
+      transition: all 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--light-blue-color);
+      border-color: var(--light-blue-color);
+      background: #f0f8ff;
+      transform: translateX(-2px);
+    }
+
+    /* ── Header ────────────────────────────────── */
+    .pricing-header {
+      margin-bottom: 2.2rem;
+    }
+
+    .pricing-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--light-blue-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-header p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    /* ── Grid ──────────────────────────────────── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.4rem;
+    }
+
+    /* ── Cards ─────────────────────────────────── */
+    .plan-card {
+      background: white;
+      border: 2px solid #e8ecf5;
+      border-radius: 16px;
+      padding: 1.8rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+    }
+
+    .plan-card:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+      transform: translateY(-3px);
+    }
+
+    .plan-card.featured {
+      border-color: var(--light-blue-color);
+      box-shadow: 0 4px 20px rgba(0,161,224,0.15);
+    }
+
+    .plan-card.featured::before {
+      content: "MAIS POPULAR";
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--light-blue-color);
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      padding: 3px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* ── Plan tier label ───────────────────────── */
+    .plan-tier {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--light-blue-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-tier.enterprise { color: #7b4fa6; }
+
+    /* ── Price ─────────────────────────────────── */
+    .plan-price {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #1a1a2e;
+      line-height: 1;
+      margin-bottom: 1.4rem;
+    }
+
+    .plan-price small {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #888;
+    }
+
+    /* ── Features list ─────────────────────────── */
+    .plan-features {
+      list-style: none;
+      margin-bottom: 1.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.9rem;
+      color: #444;
+      line-height: 1.4;
+    }
+
+    .plan-features li .check {
+      color: var(--green-color);
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── CTA buttons ───────────────────────────── */
+    .plan-cta {
+      display: flex;
+      justify-content: center;
+      margin-top: auto;
+    }
+
+    .btn-plan {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-plan.primary {
+      background: var(--light-blue-color);
+      color: white;
+    }
+
+    .btn-plan.primary:hover {
+      background: #0091c7;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,161,224,0.3);
+    }
+
+    .btn-plan.secondary {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    .btn-plan.secondary:hover {
+      background: #e4e4e4;
+    }
+
+    .btn-plan.outlined {
+      background: transparent;
+      color: #7b4fa6;
+      border: 2px solid #7b4fa6;
+    }
+
+    .btn-plan.outlined:hover {
+      background: #7b4fa6;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    /* ── Dark mode ─────────────────────────────── */
+    [data-theme="dark"] body {
+      background: #0f0f1a;
+      color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .plan-card {
+      background: #1a1a2e;
+      border-color: #2a2a4a;
+    }
+
+    [data-theme="dark"] .plan-card.featured {
+      border-color: var(--light-blue-color);
+    }
+
+    [data-theme="dark"] .plan-price {
+      color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .plan-features li {
+      color: #bbb;
+    }
+
+    [data-theme="dark"] .pricing-header p {
+      color: #aaa;
+    }
+
+    [data-theme="dark"] .back-link {
+      background: #1a1a2e;
+      border-color: #2a2a4a;
+      color: #aaa;
+    }
+
+    [data-theme="dark"] .back-link:hover {
+      color: var(--light-blue-color);
+      border-color: var(--light-blue-color);
+      background: #1a2535;
+    }
+
+    [data-theme="dark"] .btn-plan.secondary {
+      background: #2a2a4a;
+      color: #aaa;
+    }
+
+    [data-theme="dark"] .btn-plan.secondary:hover {
+      background: #333355;
+    }
   </style>
 </head>
 <body>
   <div class="pricing-layout">
-    <h1>Planos INSV Refresh</h1>
-    <p>Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
+    <a href="options.html" class="back-link">← Voltar às configurações</a>
+
+    <div class="pricing-header">
+      <h1>Planos INSV Refresh</h1>
+      <p>Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
+    </div>
+
     <div class="pricing-grid">
       <div class="plan-card">
-        <h3>Grátis</h3>
-        <div class="price">R$ 0</div>
-        <ul>
-          <li>1 fila de monitoramento</li>
-          <li>Sons padrão da extensão</li>
-          <li>Notificação de novos chamados</li>
-          <li>Modo Legacy</li>
+        <div class="plan-tier">Grátis</div>
+        <div class="plan-price">R$ 0</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> 1 fila de monitoramento</li>
+          <li><span class="check">✓</span> Sons padrão da extensão</li>
+          <li><span class="check">✓</span> Notificação de novos chamados</li>
+          <li><span class="check">✓</span> Modo Legacy</li>
         </ul>
-        <span class="cta secondary">Já incluso</span>
+        <div class="plan-cta">
+          <span class="btn-plan secondary">Já incluso</span>
+        </div>
       </div>
+
       <div class="plan-card featured">
-        <h3>Normal</h3>
-        <div class="price">Pago</div>
-        <ul>
-          <li>Tudo do plano Grátis</li>
-          <li>Múltiplas filas</li>
-          <li>Áudios personalizados (upload)</li>
-          <li>Notificação por mudança de status</li>
+        <div class="plan-tier">Normal</div>
+        <div class="plan-price">Pago</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Tudo do plano Grátis</li>
+          <li><span class="check">✓</span> Múltiplas filas</li>
+          <li><span class="check">✓</span> Áudios personalizados (upload)</li>
+          <li><span class="check">✓</span> Notificação por mudança de status</li>
         </ul>
-        <button type="button" id="pay-normal-btn" class="cta">Assinar</button>
+        <div class="plan-cta">
+          <button type="button" id="pay-normal-btn" class="btn-plan primary">Assinar</button>
+        </div>
       </div>
+
       <div class="plan-card">
-        <h3>Empresa</h3>
-        <div class="price">Sob consulta</div>
-        <ul>
-          <li>Para times/empresas inteiros</li>
-          <li>Preço negociado</li>
-          <li>Suporte dedicado</li>
+        <div class="plan-tier enterprise">Empresa</div>
+        <div class="plan-price">Sob consulta</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Para times/empresas inteiros</li>
+          <li><span class="check">✓</span> Preço negociado</li>
+          <li><span class="check">✓</span> Suporte dedicado</li>
         </ul>
-        <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="cta">Contatar por e-mail</a>
+        <div class="plan-cta">
+          <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="btn-plan outlined">Contatar por e-mail</a>
+        </div>
       </div>
     </div>
-    <p style="margin-top: 2rem;"><a href="options.html">← Voltar às configurações</a></p>
   </div>
   <script src="pricing.js"></script>
 </body>

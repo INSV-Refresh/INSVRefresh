@@ -4,8 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INSV Refresh - Configs</title>
+    <title>INSV Refresh - Configurações</title>
     <link rel="shortcut icon" href="assets/icons/INSVRefresh.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="reset.css">
     <link rel="stylesheet" href="options.css">
     <link rel="stylesheet" href="variaveis.css">
@@ -14,28 +17,32 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <div class="logo">INSV Refresh</div>
+            <div class="logo">
+                <span>⚡</span> INSV Refresh
+            </div>
             <nav class="menu">
-                <a href="#top">Introdução</a>
-                <a href="#funcionalidades">Funcionalidades</a>
-                <a href="#upload-audio">Upload de Áudio</a>
-                <a href="#saved-audios">Áudios salvos</a>
-                <a href="#modo-legacy">Modo Legacy</a>
-                <a href="#status-notification">Notificar status</a>
-                <a href="#avancado">Avançado</a>
-                <a href="#" id="nav-pricing">Planos</a>
+                <a href="#top">🏠 Introdução</a>
+                <a href="#funcionalidades">✨ Funcionalidades</a>
+                <a href="#upload-audio">🎵 Upload de Áudio</a>
+                <a href="#saved-audios">🎧 Áudios salvos</a>
+                <a href="#modo-legacy">⚙️ Modo Legacy</a>
+                <a href="#status-notification">🔔 Notificar status</a>
+                <a href="#avancado">🛠️ Avançado</a>
+                <a href="#export-import">💾 Backup</a>
+                <a href="#" id="nav-pricing" class="menu-plans">⭐ Planos</a>
             </nav>
-            <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb" class="review" target="_blank">Avalie nossa extensão!
-                <span class="glowPulse">✨</span></a>
+            <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb"
+                class="review" target="_blank">Avalie nossa extensão! <span class="glowPulse">✨</span></a>
         </aside>
 
         <main class="content">
             <div id="changelog-banner" class="changelog-banner" style="display: none;"></div>
+
             <section id="intro">
                 <h1>Bem-vindo!</h1>
-                <p>Aqui você encontra um tutorial de como utilizar a extensão e configurar os recursos disponíveis.</p>
-                <div style="filter: grayscale(1); opacity: 50%;">
-                    <p style="position: absolute; top: 15%; font-size: 150px; font-weight: bolder; left: 50%; transform: translateX(-50%);">EM BREVE</p>
+                <p>Aqui você encontra as configurações e recursos disponíveis na extensão INSV Refresh.</p>
+                <div class="coming-soon-block">
+                    <span class="coming-soon-tag">EM BREVE</span>
                     <div class="demo">
                         <video src="" controls width="100%" poster="/assets/video/mockup.svg">
                             Seu navegador não suporta a visualização de vídeos.
@@ -47,18 +54,37 @@
 
             <section id="funcionalidades">
                 <h2>Funcionalidades</h2>
-                <ul>
-                    <li><strong>Monitoramento Inteligente:</strong> Atualiza filas automaticamente em intervalos configuráveis em segundos.</li>
-                    <li><strong>Notificações Sonoras:</strong> Emite som personalizado ao detectar novos chamados na fila.</li>
-                    <li><strong>Proteção Anti-Interrupção:</strong> Pausa automaticamente o refresh quando há chamados selecionados para evitar perder a seleção.</li>
-                    <li><strong>Áudios Personalizados:</strong> Faça upload dos seus próprios sons de notificação (MP3, WAV, OGG, etc.).</li>
-                    <li><strong>Gestão de Múltiplas Filas:</strong> Configure diferentes intervalos e sons para cada fila que você monitora.</li>
-                    <li><strong>Modo Legacy:</strong> Versão simplificada que apenas atualiza a página em intervalos regulares, ideal para quando você só precisa do refresh básico.</li>
-                </ul>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔄</span>
+                        <div><strong>Monitoramento Inteligente</strong><p>Atualiza filas automaticamente sem interromper pesquisas ou seleções.</p></div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔔</span>
+                        <div><strong>Notificações Sonoras</strong><p>Emite som ao detectar novos chamados ou mudanças de status.</p></div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🛡️</span>
+                        <div><strong>Anti-Interrupção</strong><p>Pausa o refresh quando há chamados selecionados.</p></div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🎵</span>
+                        <div><strong>Áudios Personalizados</strong><p>Faça upload dos seus próprios sons de notificação.</p></div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">📋</span>
+                        <div><strong>Múltiplas Filas</strong><p>Intervalos e sons diferentes para cada fila monitorada.</p></div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⌨️</span>
+                        <div><strong>Atalho de Teclado</strong><p>Aceite chamados instantaneamente com uma tecla configurável.</p></div>
+                    </div>
+                </div>
             </section>
 
             <section id="upload-audio">
                 <h2>Upload de Som Personalizado</h2>
+                <p>Adicione seus próprios arquivos de áudio para usar como notificações.</p>
 
                 <div id="drop-area" class="drop-area">
                     <div class="drop-content">
@@ -67,33 +93,29 @@
                             <strong>Arraste um arquivo de áudio aqui</strong>
                             <p>ou <button type="button" id="browse-btn" class="browse-btn">clique para procurar</button></p>
                         </div>
-                        <div class="drop-formats">
-                            Formatos: MP3, WAV, OGG, MP4, WebM (máx. 5MB)
-                        </div>
+                        <div class="drop-formats">Formatos: MP3, WAV, OGG, MP4, WebM (máx. 5MB)</div>
                     </div>
                 </div>
 
                 <input type="file" accept="audio/*" id="custom-audio" style="display: none;">
                 <div id="audio-preview"></div>
-                <div>
-                    <label for="custom-audio-name" >
-                        Nome para exibir:
-                        <input type="text" id="custom-audio-name" placeholder="Ex: Meu Som Favorito">
-                        <button class="save-audio-btn" id="save-audio-btn">Salvar Áudio</button>
-                    </label>
+
+                <div class="audio-name-row">
+                    <label for="custom-audio-name">Nome para exibir:</label>
+                    <input type="text" id="custom-audio-name" placeholder="Ex: Meu Som Favorito">
+                    <button class="save-audio-btn" id="save-audio-btn">💾 Salvar Áudio</button>
                 </div>
-                </section>
-                <section id="saved-audios">
+            </section>
+
+            <section id="saved-audios">
                 <h2>Áudios Personalizados Salvos</h2>
                 <div id="custom-audios-list">
                     <p>Carregando áudios personalizados...</p>
                 </div>
-
                 <div class="how-to-audio">
                     <h3>ℹ️ Como usar áudios personalizados</h3>
                     <ul>
-                        <li>Após salvar um áudio, ele ficará disponível no popup da extensão</li>
-                        <li>Você pode dar um nome personalizado para cada áudio</li>
+                        <li>Após salvar, o áudio ficará disponível no popup da extensão</li>
                         <li>Formatos suportados: MP3, WAV, OGG, MP4, WebM</li>
                         <li>Tamanho máximo: 5MB por arquivo</li>
                         <li>Os áudios são salvos localmente no seu navegador</li>
@@ -103,33 +125,36 @@
 
             <section id="modo-legacy">
                 <h2>Modo Legacy</h2>
-                <p>Ative o modo simples da extensão (sem notificações ou validações).</p>
-                <p>Neste modo, a extensão apenas atualiza a fila a cada intervalo definido, desativando todas as outras funcionalidades.</p>
-                <label>
+                <p>Versão simplificada que apenas atualiza a página em intervalos regulares, sem notificações ou validações avançadas.</p>
+                <label class="checkbox-label">
                     <input type="checkbox" id="legacyMode"> Ativar Modo Legacy
                 </label>
             </section>
+
             <section id="status-notification">
                 <h2>Notificar mudança de status</h2>
-                <p>Seja notificado com um som quando um chamado na fila for atualizado para um dos status abaixo.</p>
+                <p>Seja notificado com um som quando um chamado for atualizado para um dos status configurados. Útil para acompanhar chamados sem precisar ficar olhando a tela.</p>
                 <div id="status-notifications-list"></div>
                 <button type="button" id="add-status-notification-btn" class="add-status-notification-btn">+ Adicionar notificação</button>
             </section>
 
             <section id="avancado">
                 <h2>Avançado</h2>
-                <p>Configure uma tecla para clicar automaticamente no botão de aceitar chamado (útil para agilizar o trabalho).</p>
-                <label for="acceptShortcutKey">Tecla de atalho para aceitar:</label>
-                <input type="text" id="acceptShortcutKey" placeholder="Ex: F2" maxlength="20" style="width: 120px;">
-                <small style="display: block; margin-top: 6px;">Pressione a tecla quando estiver na página da fila (não dentro de um campo de texto).</small>
+                <div class="avancado-field">
+                    <label class="field-label" for="acceptShortcutKey">Tecla de atalho para aceitar chamado</label>
+                    <p class="field-desc">Pressione a tecla configurada enquanto estiver na página da fila (fora de campos de texto) para aceitar automaticamente.</p>
+                    <div class="shortcut-row">
+                        <input type="text" id="acceptShortcutKey" placeholder="Ex: F2" maxlength="20" class="shortcut-input">
+                    </div>
+                </div>
             </section>
 
             <section id="export-import">
                 <h2>Exportar / Importar Configurações</h2>
-                <p>Faça backup das suas configurações ou restaure de um backup anterior.</p>
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <p>Faça backup das suas configurações ou restaure de um backup anterior. Útil ao trocar de computador ou reinstalar o navegador.</p>
+                <div class="export-import-row">
                     <button type="button" id="export-settings-btn" class="export-import-btn">📥 Exportar</button>
-                    <label for="import-settings-input" class="export-import-btn" style="cursor: pointer; display: inline-block;">
+                    <label for="import-settings-input" class="export-import-btn import-label">
                         📤 Importar
                         <input type="file" id="import-settings-input" accept=".json" style="display: none;">
                     </label>
@@ -138,8 +163,12 @@
 
             <section id="appearance">
                 <h2>Aparência</h2>
-                <label>
-                    <input type="checkbox" id="darkModeToggle"> Modo escuro
+                <label class="toggle-switch-label">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="darkModeToggle">
+                        <span class="toggle-slider"></span>
+                    </div>
+                    Modo escuro
                 </label>
             </section>
 

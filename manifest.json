@@ -1,7 +1,7 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "4.0.1",
+  "version": "4.1.1",
   "manifest_version": 3,
   "content_scripts": [
     {
@@ -21,7 +21,7 @@
     "default_popup": "popup.html",
     "default_title": "Grid Refresher"
   },
-  "permissions": ["storage"],
+  "permissions": ["storage", "scripting"],
   "icons": {"128": "assets/icons/INSVRefresh.png"},
   "background": {
     "service_worker": "service-worker.js"

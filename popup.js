@@ -283,19 +283,59 @@ const saveOptionsDebounced = debounce(saveOptions, 500);
 
 function applyPaidGate(isPaid) {
   const count = queueList.querySelectorAll(".queue-item").length;
+
+  // Remover elementos antigos
   const upgrade = document.getElementById("upgrade-multi-queue");
   if (upgrade) upgrade.remove();
-  if (addQueueBtn) {
-    addQueueBtn.style.display = "flex";
-    addQueueBtn.disabled = !isPaid && count >= 1;
-    if (!isPaid && count >= 1) {
-      const link = document.createElement("a");
-      link.id = "upgrade-multi-queue";
-      link.href = chrome.runtime.getURL("pricing.html");
-      link.target = "_blank";
-      link.textContent = "Assine para múltiplas filas";
-      link.style.cssText = "font-size: 12px; margin-top: 4px; display: block; color: var(--light-blue-color);";
-      normalMode.appendChild(link);
+  const banner = document.getElementById("popup-lock-banner");
+  if (banner) banner.remove();
+
+  if (!addQueueBtn) return;
+
+  if (!isPaid && count >= 1) {
+    // Botão amarelo premium
+    addQueueBtn.classList.add("premium-locked");
+    addQueueBtn.title = "Múltiplas filas disponível no plano pago";
+    addQueueBtn.setAttribute("data-tooltip", "⭐ Premium — ver planos");
+
+    // Link sutil embaixo
+    const link = document.createElement("a");
+    link.id = "upgrade-multi-queue";
+    link.href = chrome.runtime.getURL("pricing.html");
+    link.target = "_blank";
+    link.textContent = "⭐ Assine para múltiplas filas";
+    normalMode.appendChild(link);
+
+    // Ao clicar no botão travado, mostrar banner em vez de ignorar
+    addQueueBtn._premiumClickHandler = (e) => {
+      e.stopPropagation();
+      // Remover banner existente se houver
+      const existing = document.getElementById("popup-lock-banner");
+      if (existing) { existing.remove(); return; }
+
+      const lockBanner = document.createElement("div");
+      lockBanner.id = "popup-lock-banner";
+      lockBanner.className = "popup-lock-banner";
+      lockBanner.innerHTML = `
+        🔒 Disponível no plano pago.
+        <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">Ver planos →</a>
+      `;
+      normalMode.insertBefore(lockBanner, addQueueBtn);
+
+      // Auto-esconder após 3s
+      setTimeout(() => lockBanner.remove(), 3500);
+    };
+    addQueueBtn.addEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
+
+  } else {
+    // Resetar botão
+    addQueueBtn.classList.remove("premium-locked");
+    addQueueBtn.removeAttribute("title");
+    addQueueBtn.setAttribute("data-tooltip", "Adicionar fila");
+
+    if (addQueueBtn._premiumClickHandler) {
+      addQueueBtn.removeEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
+      delete addQueueBtn._premiumClickHandler;
     }
   }
 }
@@ -337,6 +377,9 @@ function restoreOptions() {
 }
 
 function addQueueHandler() {
+  // Se está travado no modo premium, o handler de capture já tratou — não fazer nada
+  if (addQueueBtn.classList.contains("premium-locked")) return;
+
   chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
     const isPaid = !!(user && user.paid);
     const count = queueList.querySelectorAll(".queue-item").length;
@@ -457,6 +500,23 @@ chrome.storage.onChanged.addListener((changes, area) => {
     } else {
       toggleMode(false);
       restoreOptions();
+    }
+  }
+});
+
+// ── Dark mode no popup ──────────────────────────────
+chrome.storage.local.get("darkMode", (data) => {
+  if (data.darkMode) {
+    document.documentElement.classList.add("dark-popup");
+  }
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.darkMode !== undefined) {
+    if (changes.darkMode.newValue) {
+      document.documentElement.classList.add("dark-popup");
+    } else {
+      document.documentElement.classList.remove("dark-popup");
     }
   }
 });

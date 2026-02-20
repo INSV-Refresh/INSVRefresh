@@ -1,61 +1,112 @@
+/* =============================================
+   INSV Refresh — Popup
+   Design: dark purple gradient, clean cards
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
 html {
-  min-height: 5em;
-  min-width: 24em;
+  min-width: 320px;
   background: var(--background-color);
   border-radius: 12px;
-  font-family: "Poppins", sans-serif;
+  font-family: "Outfit", "Poppins", sans-serif;
+  font-size: 14px;
+  overflow: hidden;
 }
 
-.queue-active {
-  width: 75px;
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Header ──────────────────────────────────── */
+.header {
+  padding: 0;
+  display: block;
+}
+
+.insvRefresh {
+  width: 100%;
   height: auto;
-  padding: 8px 17px 8px 17px;
-  border-radius: 5px;
-  background-color: var(--green-color);
-  color: var(--white-color);
-  box-shadow: var(--box-shadow);
-  cursor: pointer;
-  margin-left: 25px;
+  display: block;
 }
 
-.queue-inactive {
-  width: 75px;
-  height: auto;
-  padding: 8px 17px 8px 17px;
-  border-radius: 5px;
-  background-color: var(--red-color);
-  color: var(--white-color);
-  box-shadow: var(--box-shadow);
-  cursor: pointer;
-  margin-left: 25px;
-}
-
-.btn-queue {
-  padding: 8px 10px 8px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-input {
-  padding: 8px 17px 8px 17px;
-  border-radius: 5px;
+hr {
   border: none;
-  font-size: 14px;
-  outline: none;
-  box-shadow: var(--box-shadow);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  margin: 0 16px 16px;
 }
 
-label {
-  font-size: 14px;
-  color: var(--white-color);
+body > hr:nth-of-type(2) {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* ── Queue items ─────────────────────────────── */
+#normal-mode {
+  padding: 0 16px;
+  position: relative;
+}
+
+.queue-item {
   display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+  -webkit-user-drag: none;
 }
 
+.queue-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.queue-item.dragging {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+/* ── Drag handle ────────────────────────────── */
+.drag-handle {
+  cursor: grab;
+  font-size: 16px;
+  color: rgba(255,255,255,0.35);
+  user-select: none;
+  padding: 2px 0;
+  flex-shrink: 0;
+  align-self: center;
+  -webkit-user-drag: element;
+}
+
+.drag-handle:hover {
+  color: rgba(255,255,255,0.6);
+}
+
+.queue-item:first-child .drag-handle {
+  opacity: 0.2;
+  cursor: default;
+}
+
+/* ── Queue body ──────────────────────────────── */
+.adjustments-containers-1-and-2 {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Row 1: name + toggle ───────────────────── */
 .container-1 {
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 8px;
 }
 
 .queue-name-wrapper {
@@ -71,320 +122,498 @@ label {
   min-width: 0;
 }
 
+input[type="text"].queue-name {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  box-shadow: none;
+}
+
+input[type="text"].queue-name::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+input[type="text"].queue-name:focus {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.4);
+}
+
 .copy-queue-name-btn {
   flex-shrink: 0;
-  padding: 6px 8px !important;
-  font-size: 14px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 5px;
+  padding: 5px 7px !important;
+  font-size: 13px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
 }
 
 .copy-queue-name-btn:hover {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.22);
 }
 
-.container-2, #legacy-mode > div{
-  gap: 14px;
-  display: flex;
-  align-items: center;
-  padding: 10px 0 20px 0;
-
-  & input {
-    width: 35px;
-    padding: 8px 17px 8px 8px;
-    border-radius: 5px;
-    border: none;
-    font-size: 13px;
-    outline: none;
-    box-shadow: var(--box-shadow);
-    direction: rtl;
-  }
-}
-
-.add-queue-btn img,
-.delete-queue img {
-  width: 20px;
-  height: 20px;
-}
-
-.add-queue-btn {
-  position: relative;
-  bottom: 44px;
-  left: 155px;
-}
-
-.add-queue-btn.centralizado-add-button {
-  left: 137px;
-}
-
-.queue-item button.delete-queue {
-  right: 40px;
-  position: absolute;
-}
-
-.queue-item:last-child button.delete-queue {
-  right: 55px;
-}
-
-.adjustments-containers-1-and-2 {
-  display: flex;
-  flex-direction: column;
-}
-
-.input-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.input-wrapper {
-  & .seconds {
-    position: absolute;
-    right: 10px;
-    top: 45%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    font-size: 14px;
-  }
-}
-
-select {
-  padding: 8px 17px 8px 17px;
-  border-radius: 5px;
-  border: none;
-  font-size: 14px;
-  outline: none;
-  margin-bottom: 20px;
+/* ── Toggle buttons ──────────────────────────── */
+.queue-active,
+.queue-inactive {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-}
-
-hr {
-  margin-bottom: 30px;
-  border: 1.5px solid var(--light-purple-color);
-  width: 94.5%;
-}
-
-body > hr:nth-of-type(2) {
-  margin-top: -10px;
-  margin-bottom: 20px;
-}
-
-button {
-  border-radius: 5px;
   border: none;
-  font-size: 14px;
-  outline: none;
-  cursor: pointer;
-  color: var(--white-color);
-  background-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0;
   width: auto;
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  margin: 0 auto;
-}
-
-.sound-and-range {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 20px 15px 20px;
-  & input {
-    box-shadow: none;
-  }
-}
-
-.button-alignment {
-  display: flex;
   justify-content: center;
 }
 
-input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--light-purple-color);
-  cursor: pointer;
-  margin-left: 25px;
+.queue-active {
+  background: var(--green-color);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(50,154,67,0.35);
+}
+
+.queue-inactive {
+  background: rgba(200,52,27,0.85);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(200,52,27,0.25);
+}
+
+/* ── Row 2: interval + sound + sound select ─── */
+.container-2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Legacy mode container */
+#legacy-mode > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 16px;
+  justify-content: center;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+input[type="number"].queue-interval {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px;
+  color: #fff;
+  padding: 5px 22px 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 58px;
+  box-shadow: none;
+  text-align: right;
+  direction: rtl;
+  transition: border-color 0.2s;
+}
+
+input[type="number"].queue-interval:focus {
+  border-color: rgba(255,255,255,0.4);
+}
+
+.seconds {
+  position: absolute;
+  right: 7px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  pointer-events: none;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-  opacity: 1;
+  opacity: 0.6;
   cursor: pointer;
 }
 
-input[type="range"] {
-  accent-color: var(--light-blue-color);
-  height: 10px;
-  cursor: grab;
-  padding: 0;
-  width: 150px;
-}
-
-.queue-item {
+/* ── Sound button ───────────────────────────── */
+.queue-sound {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 7px;
+  padding: 5px 7px;
+  cursor: pointer;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  height: 100px;
-  border: 1px solid transparent;
+  margin: 0;
+  transition: background 0.2s;
+  width: auto;
 }
 
-.drag-handle {
-  cursor: grab;
-  font-size: 18px;
-  padding: 4px 0 4px 0;
-  user-select: none;
-  margin-right: 25px;
-  color: var(--white-color);
-}
-.queue-item.dragging {
-  opacity: 0.5;
-}
-
-.queue-item:first-child .drag-handle {
-  opacity: 30%;
-}
-
-.queue-sound img {
-  width: 20px;
-  height: 20px;
+.queue-sound:hover {
+  background: rgba(255,255,255,0.2);
 }
 
 .queue-sound.off {
-  opacity: 0.5;
+  opacity: 0.38;
 }
 
-.insvRefresh {
-  width: auto;
-  height: auto;
+.queue-sound img {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
-.has-tooltip {
-  position: relative;
-}
-
-.has-tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 120%;
-  transform: translateX(-50%);
-  background: var(--medium-gray-color);
-  color: var(--white-color);
-  padding: 6px 10px;
-  margin-bottom: 5px;
-  border-radius: 6px;
+/* ── Sound select ───────────────────────────── */
+select.queue-sound-select {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 7px;
+  color: #fff;
+  padding: 5px 8px;
   font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease-in-out;
-  z-index: 999;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  height: auto;
+  width: auto;
+  max-width: 90px;
+  margin: 0;
 }
 
-.has-tooltip:hover::after {
-  opacity: 1;
+select.queue-sound-select option {
+  background: #411e5a;
+  color: #fff;
 }
 
-.has-tooltip-default::after {
-  left: 50%;
-}
-
-.has-tooltip-settings::after {
-  left: 380%;
-}
-
-.has-tooltip-add-queue-btn::after {
-  left: 0;
-}
-
-.has-tooltip-legacy-text::after{
-  width: 150px!important;
-  left: 0;
-  white-space: normal !important;
-  font-weight: normal;
-}
-
-.flex-between {
+/* ── Delete button ──────────────────────────── */
+.delete-queue {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 7px;
+  padding: 5px 7px;
+  cursor: pointer;
   display: flex;
-  justify-content: space-between;
-  color: var(--white-color);
-  margin: 0 24px 0 12px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 0 auto;
+  opacity: 0.55;
+  transition: opacity 0.2s, background 0.2s;
+  width: auto;
+}
 
-  & a {
-    color: var(--white-color);
-    font-weight: bold;
-    opacity: 50%;
-  }
+.delete-queue:hover {
+  opacity: 1;
+  background: rgba(200,52,27,0.3);
+}
+
+.delete-queue img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* ── Add queue button ───────────────────────── */
+.add-queue-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px dashed rgba(255,255,255,0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  margin: 4px auto 12px;
+  position: static;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.add-queue-btn:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* Premium state — amarelo */
+.add-queue-btn.premium-locked {
+  border-color: #ffd166;
+  background: rgba(255, 209, 102, 0.1);
+}
+
+.add-queue-btn.premium-locked:hover {
+  background: rgba(255, 209, 102, 0.2);
+}
+
+.add-queue-btn.premium-locked img {
+  filter: sepia(1) saturate(5) hue-rotate(5deg);
+}
+
+.add-queue-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Upgrade link under queue list ─────────── */
+#upgrade-multi-queue {
+  display: block;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffd166 !important;
+  text-decoration: none;
+  margin: -4px 0 10px;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+#upgrade-multi-queue:hover { opacity: 1; }
+
+/* ── Premium lock banner ────────────────────── */
+.popup-lock-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 16px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffd166;
+  animation: fadeSlideIn 0.2s ease;
+}
+
+.popup-lock-banner a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.popup-lock-banner a:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Legacy mode ────────────────────────────── */
+#legacy-mode {
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.legacy-mode-containers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 16px;
 }
 
 #legacy-mode .container-1 {
-    padding: 0; 
+  padding: 0;
 }
 
-#legacy-mode{
-  justify-content: center;
+#legacy-mode .seconds {
+  top: 50%;
+  transform: translateY(-50%);
+  right: 7px;
 }
 
-.legacy-mode-containers{
-    padding: 0!important;
-    position: relative;
-    top: -15px
+/* ── Bottom bar ─────────────────────────────── */
+.sound-and-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 10px;
 }
 
-#legacy-mode .seconds{
-  top: 46%;
+.sound-and-range img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-#legacy-text{
+.sound-and-range img:hover { opacity: 1; }
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--light-blue-color);
+  height: 4px;
+  cursor: grab;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+.plans-link {
+  color: #ffd166;
   text-decoration: none;
-  color: var(--white-color);
-  font-weight: bold;
-  right: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: color 0.2s;
+  letter-spacing: 0.3px;
 }
 
-.queue-item {
-  -webkit-user-drag: none;
+.plans-link:hover { color: #ffe599; }
+
+#legacy-text {
+  text-decoration: none;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.drag-handle {
-  cursor: drag;
-  -webkit-user-drag: element;
+#legacy-text:hover { color: #fff; }
+
+/* ── Status + feedback row ──────────────────── */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 16px 10px;
+  font-size: 11.5px;
 }
 
-@keyframes glowPulse {
-  0% {
-    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-  }
-  50% {
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
-      0 0 12px rgba(249, 135, 100, 0.6);
-  }
-  100% {
-    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-  }
+.flex-between #status {
+  color: rgba(255,255,255,0.6);
+  font-weight: 500;
 }
 
+.flex-between a {
+  color: rgba(255,255,255,0.45);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.flex-between a:hover { color: rgba(255,255,255,0.75); }
+
+/* ── Review sparkle ─────────────────────────── */
 .glowPulse {
   animation: glowPulse 2s ease-in-out infinite;
-  font-size: 16px;
+  font-size: 15px;
   text-decoration: none;
   position: absolute;
   top: 10px;
   right: 11px;
 }
 
-.queue-sound-select {
-  width: 85px;
+@keyframes glowPulse {
+  0%   { text-shadow: 0 0 0 rgba(255,255,255,0); }
+  50%  { text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 12px rgba(249,135,100,0.6); }
+  100% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+}
+
+/* ── Tooltips ───────────────────────────────── */
+.has-tooltip { position: relative; }
+
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 20, 50, 0.95);
+  color: #fff;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 999;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.has-tooltip:hover::after { opacity: 1; }
+
+.has-tooltip-settings::after { left: 300%; }
+.has-tooltip-add-queue-btn::after { left: 50%; }
+.has-tooltip-default::after { left: 50%; }
+
+.has-tooltip-legacy-text::after {
+  width: 140px;
+  white-space: normal;
+  left: auto;
+  right: 0;
+  transform: none;
+  text-align: center;
+  font-weight: 400;
+}
+
+/* ── Misc ───────────────────────────────────── */
+label {
   font-size: 13px;
-  box-shadow: var(--box-shadow);
-  padding: 8px 2px 8px 8px;
-  margin-bottom: 0;
-  height: 31px;
+  color: var(--white-color);
+  display: flex;
+  align-items: center;
 }
 
-::-webkit-scrollbar {
-  display: none !important;
+button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
-::-webkit-scrollbar-button {
-  display: none !important;
+.button-alignment { display: flex; justify-content: center; }
+
+input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--light-purple-color);
+  cursor: pointer;
+}
+
+::-webkit-scrollbar { display: none !important; }
+::-webkit-scrollbar-button { display: none !important; }
+
+/* ── Dark mode popup ─────────────────────────── */
+html.dark-popup {
+  background: linear-gradient(135deg, #0a0a14 0%, #12101e 100%);
+}
+
+html.dark-popup .queue-item {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.07);
+}
+
+html.dark-popup input[type="text"].queue-name,
+html.dark-popup input[type="number"].queue-interval,
+html.dark-popup select.queue-sound-select {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+}
+
+html.dark-popup .add-queue-btn {
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.05);
 }

@@ -1000,15 +1000,21 @@ audio{
 /* ── Dark mode ─────────────────────────────────────── */
 [data-theme="dark"] body { background: #0f0f1a; color: #e0e0e0; }
 [data-theme="dark"] .content { background: #0f0f1a; }
-[data-theme="dark"] section { background: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+[data-theme="dark"] section { background: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 [data-theme="dark"] h2 { color: var(--light-blue-color); border-color: #2a2a4a; }
 [data-theme="dark"] h1 { color: var(--light-blue-color); }
 [data-theme="dark"] p { color: #aaa; }
-[data-theme="dark"] strong { color: #ddd; }
+[data-theme="dark"] label { color: #aaa; }
+[data-theme="dark"] .status-notification-fields small { color: #aaa; }
+[data-theme="dark"] .checkbox-label input[type="checkbox"] { accent-color: #555; }
+[data-theme="dark"] #custom-audios-list p { color: #aaa; }
+[data-theme="dark"] ul { color: #aaa; }
+[data-theme="dark"] .export-import-row label { color: #ffffff; }
+[data-theme="dark"] strong { color: #ffffff; }
 [data-theme="dark"] .feature-card { background: #1e1e35; border-color: #2a2a4a; }
-[data-theme="dark"] .feature-card strong { color: #e0e0e0; }
+[data-theme="dark"] .feature-card strong { color: #ffffff; }
 [data-theme="dark"] .status-notification-item { background: #1e1e35; border-color: #2a2a4a; }
-[data-theme="dark"] .status-notification-header strong { color: #ddd; }
+[data-theme="dark"] .status-notification-header strong { color: #ffffff; }
 [data-theme="dark"] input, [data-theme="dark"] select,
 [data-theme="dark"] .status-notification-fields input[type="text"],
 [data-theme="dark"] .status-notification-fields select {
@@ -1023,7 +1029,7 @@ audio{
 [data-theme="dark"] .changelog-banner { background: #1a2a3a; border-color: var(--light-blue-color); }
 [data-theme="dark"] .changelog-banner strong { color: var(--light-blue-color); }
 [data-theme="dark"] .field-label, [data-theme="dark"] .field-desc { color: #bbb; }
-[data-theme="dark"] .toggle-switch-label, [data-theme="dark"] .checkbox-label { color: #ddd; }
+[data-theme="dark"] .toggle-switch-label, [data-theme="dark"] .checkbox-label { color: #aaa; }
 [data-theme="dark"] .drop-area { background: #1e1e35; border-color: #3a3a5a; }
 [data-theme="dark"] #audio-preview { background: #1e1e35; border-color: #2a2a4a; }
 [data-theme="dark"] #custom-audios-list > div { background: #1e1e35; border-color: #2a2a4a; }

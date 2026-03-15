@@ -218,7 +218,7 @@ input[type="text"].queue-name:focus {
   display: inline-flex;
   align-items: center;
 }
-
+ 
 input[type="number"].queue-interval {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.18);
@@ -228,7 +228,7 @@ input[type="number"].queue-interval {
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  width: 58px;
+  width: 70px;
   box-shadow: none;
   text-align: right;
   direction: rtl;
@@ -300,7 +300,7 @@ select.queue-sound-select {
 }
 
 select.queue-sound-select option {
-  background: #411e5a;
+  background:#6e4b87;
   color: #fff;
 }
 
@@ -596,9 +596,21 @@ input[type="checkbox"] {
 ::-webkit-scrollbar { display: none !important; }
 ::-webkit-scrollbar-button { display: none !important; }
 
+.light-dark-mode{
+  filter: invert(1);
+  zoom: 1.20;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
 /* ── Dark mode popup ─────────────────────────── */
 html.dark-popup {
   background: linear-gradient(135deg, #0a0a14 0%, #12101e 100%);
+}
+
+html.dark-popup select.queue-sound-select option {
+  background:#25242e;
+  color: #fff;
 }
 
 html.dark-popup .queue-item {

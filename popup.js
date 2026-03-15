@@ -505,18 +505,32 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // ── Dark mode no popup ──────────────────────────────
-chrome.storage.local.get("darkMode", (data) => {
-  if (data.darkMode) {
+chrome.storage.local.get("popupDarkMode", (data) => {
+  if (data.popupDarkMode) {
     document.documentElement.classList.add("dark-popup");
   }
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.darkMode !== undefined) {
-    if (changes.darkMode.newValue) {
+  if (area === "local" && changes.popupDarkMode !== undefined) {
+    if (changes.popupDarkMode.newValue) {
       document.documentElement.classList.add("dark-popup");
     } else {
       document.documentElement.classList.remove("dark-popup");
     }
   }
 });
+
+const BtnlightDarkMode = document.querySelector(".light-dark-mode");
+
+if (BtnlightDarkMode) {
+  BtnlightDarkMode.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.contains("dark-popup");
+
+    document.documentElement.classList.toggle("dark-popup");
+
+    chrome.storage.local.set({
+      popupDarkMode: !isDark
+    });
+  });
+}

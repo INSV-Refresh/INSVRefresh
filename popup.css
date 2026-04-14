@@ -3,15 +3,20 @@
    Design: dark purple gradient, clean cards
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
   min-width: 320px;
   background: var(--background-color);
+
   border-radius: 12px;
-  font-family: "Outfit", "Poppins", sans-serif;
   font-size: 14px;
   overflow: hidden;
 }
@@ -21,10 +26,47 @@ body {
   padding: 0;
 }
 
+a {
+  text-decoration: none;
+}
+
 /* ── Header ──────────────────────────────────── */
+
+@font-face {
+  font-family: "insvRefresh";
+  src: url(./assets/fonts/youre_gone/Youre\ Gone.otf);
+}
+
 .header {
   padding: 0;
   display: block;
+  height: 63px;
+}
+
+.header h1 a {
+  color: var(--light-blue-color);
+  display: flex;
+  justify-content: center;
+  font-size: 30px;
+  font-family: "insvRefresh";
+  letter-spacing: 3px;
+}
+
+small {
+  text-align: right;
+  position: absolute;
+  display: flex;
+  justify-content: right;
+  width: 284px;
+  top: 47px;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 9px;
+  color: #fcb40e;
+
+  & a {
+    color: var(--white-color);
+  }
 }
 
 .insvRefresh {
@@ -35,7 +77,7 @@ body {
 
 hr {
   border: none;
-  border-top: 1px solid rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   margin: 0 16px 16px;
 }
 
@@ -55,8 +97,8 @@ body > hr:nth-of-type(2) {
   align-items: flex-start;
   gap: 8px;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   margin-bottom: 8px;
   transition: background 0.2s;
@@ -64,7 +106,7 @@ body > hr:nth-of-type(2) {
 }
 
 .queue-item:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .queue-item.dragging {
@@ -76,7 +118,7 @@ body > hr:nth-of-type(2) {
 .drag-handle {
   cursor: grab;
   font-size: 16px;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255, 255, 255, 0.35);
   user-select: none;
   padding: 2px 0;
   flex-shrink: 0;
@@ -85,7 +127,7 @@ body > hr:nth-of-type(2) {
 }
 
 .drag-handle:hover {
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .queue-item:first-child .drag-handle {
@@ -106,13 +148,13 @@ body > hr:nth-of-type(2) {
 .container-1 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .queue-name-wrapper {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -123,8 +165,8 @@ body > hr:nth-of-type(2) {
 }
 
 input[type="text"].queue-name {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
   color: #fff;
   padding: 6px 10px;
@@ -132,26 +174,28 @@ input[type="text"].queue-name {
   font-family: inherit;
   outline: none;
   width: 100%;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   box-shadow: none;
 }
 
 input[type="text"].queue-name::placeholder {
-  color: rgba(255,255,255,0.4);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 input[type="text"].queue-name:focus {
-  background: rgba(255,255,255,0.18);
-  border-color: rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .copy-queue-name-btn {
   flex-shrink: 0;
   padding: 5px 7px !important;
   font-size: 13px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: white;
   cursor: pointer;
   transition: background 0.2s;
@@ -162,7 +206,7 @@ input[type="text"].queue-name:focus {
 }
 
 .copy-queue-name-btn:hover {
-  background: rgba(255,255,255,0.22);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* ── Toggle buttons ──────────────────────────── */
@@ -187,13 +231,13 @@ input[type="text"].queue-name:focus {
 .queue-active {
   background: var(--green-color);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(50,154,67,0.35);
+  box-shadow: 0 2px 8px rgba(50, 154, 67, 0.35);
 }
 
 .queue-inactive {
-  background: rgba(200,52,27,0.85);
+  background: rgba(200, 52, 27, 0.85);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(200,52,27,0.25);
+  box-shadow: 0 2px 8px rgba(200, 52, 27, 0.25);
 }
 
 /* ── Row 2: interval + sound + sound select ─── */
@@ -218,17 +262,17 @@ input[type="text"].queue-name:focus {
   display: inline-flex;
   align-items: center;
 }
- 
+
 input[type="number"].queue-interval {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
   color: #fff;
-  padding: 5px 22px 5px 8px;
+  padding: 5px 13px 5px 7px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  width: 70px;
+  width: 72px;
   box-shadow: none;
   text-align: right;
   direction: rtl;
@@ -236,14 +280,14 @@ input[type="number"].queue-interval {
 }
 
 input[type="number"].queue-interval:focus {
-  border-color: rgba(255,255,255,0.4);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .seconds {
   position: absolute;
   right: 7px;
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
   pointer-events: none;
 }
 
@@ -255,8 +299,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 /* ── Sound button ───────────────────────────── */
 .queue-sound {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 7px;
   padding: 5px 7px;
   cursor: pointer;
@@ -269,7 +313,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .queue-sound:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .queue-sound.off {
@@ -284,11 +328,11 @@ input[type="number"]::-webkit-outer-spin-button {
 
 /* ── Sound select ───────────────────────────── */
 select.queue-sound-select {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
   color: #fff;
-  padding: 5px 8px;
+  padding: 5px 4px;
   font-size: 12px;
   font-family: inherit;
   outline: none;
@@ -300,14 +344,14 @@ select.queue-sound-select {
 }
 
 select.queue-sound-select option {
-  background:#6e4b87;
+  background: #6e4b87;
   color: #fff;
 }
 
 /* ── Delete button ──────────────────────────── */
 .delete-queue {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
   padding: 5px 7px;
   cursor: pointer;
@@ -316,13 +360,15 @@ select.queue-sound-select option {
   justify-content: center;
   margin: 0 0 0 auto;
   opacity: 0.55;
-  transition: opacity 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
   width: auto;
 }
 
 .delete-queue:hover {
   opacity: 1;
-  background: rgba(200,52,27,0.3);
+  background: rgba(200, 52, 27, 0.3);
 }
 
 .delete-queue img {
@@ -338,18 +384,20 @@ select.queue-sound-select option {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(255,255,255,0.1);
-  border: 1.5px dashed rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px dashed rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   cursor: pointer;
   margin: 4px auto 12px;
   position: static;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .add-queue-btn:hover {
-  background: rgba(255,255,255,0.18);
-  border-color: rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Premium state — amarelo */
@@ -384,7 +432,9 @@ select.queue-sound-select option {
   transition: opacity 0.2s;
 }
 
-#upgrade-multi-queue:hover { opacity: 1; }
+#upgrade-multi-queue:hover {
+  opacity: 1;
+}
 
 /* ── Premium lock banner ────────────────────── */
 .popup-lock-banner {
@@ -415,8 +465,14 @@ select.queue-sound-select option {
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Legacy mode ────────────────────────────── */
@@ -457,7 +513,9 @@ select.queue-sound-select option {
   transition: opacity 0.2s;
 }
 
-.sound-and-range img:hover { opacity: 1; }
+.sound-and-range img:hover {
+  opacity: 1;
+}
 
 input[type="range"] {
   flex: 1;
@@ -480,17 +538,21 @@ input[type="range"] {
   letter-spacing: 0.3px;
 }
 
-.plans-link:hover { color: #ffe599; }
+.plans-link:hover {
+  color: #ffe599;
+}
 
 #legacy-text {
   text-decoration: none;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
 }
 
-#legacy-text:hover { color: #fff; }
+#legacy-text:hover {
+  color: #fff;
+}
 
 /* ── Status + feedback row ──────────────────── */
 .flex-between {
@@ -502,37 +564,52 @@ input[type="range"] {
 }
 
 .flex-between #status {
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
 
 .flex-between a {
-  color: rgba(255,255,255,0.45);
+  color: rgba(255, 255, 255, 0.45);
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s;
 }
 
-.flex-between a:hover { color: rgba(255,255,255,0.75); }
+.flex-between a:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
 
 /* ── Review sparkle ─────────────────────────── */
 .glowPulse {
-  animation: glowPulse 2s ease-in-out infinite;
-  font-size: 15px;
+  animation: glowPulse 4s ease-in-out infinite;
   text-decoration: none;
+}
+
+.review {
   position: absolute;
+  font-size: 15px;
   top: 10px;
-  right: 11px;
+  right: 10px;
 }
 
 @keyframes glowPulse {
-  0%   { text-shadow: 0 0 0 rgba(255,255,255,0); }
-  50%  { text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 12px rgba(249,135,100,0.6); }
-  100% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+  0% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  30% {
+    text-shadow:
+      0 0 2px rgba(255, 255, 255, 0.8),
+      0 0 3px rgba(249, 135, 100, 0.6);
+  }
+  60% {
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
 }
 
 /* ── Tooltips ───────────────────────────────── */
-.has-tooltip { position: relative; }
+.has-tooltip {
+  position: relative;
+}
 
 .has-tooltip::after {
   content: attr(data-tooltip);
@@ -550,14 +627,22 @@ input[type="range"] {
   pointer-events: none;
   transition: opacity 0.18s ease;
   z-index: 999;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.has-tooltip:hover::after { opacity: 1; }
+.has-tooltip:hover::after {
+  opacity: 1;
+}
 
-.has-tooltip-settings::after { left: 300%; }
-.has-tooltip-add-queue-btn::after { left: 50%; }
-.has-tooltip-default::after { left: 50%; }
+.has-tooltip-settings::after {
+  left: 300%;
+}
+.has-tooltip-add-queue-btn::after {
+  left: 50%;
+}
+.has-tooltip-default::after {
+  left: 50%;
+}
 
 .has-tooltip-legacy-text::after {
   width: 140px;
@@ -584,7 +669,10 @@ button {
   font-family: inherit;
 }
 
-.button-alignment { display: flex; justify-content: center; }
+.button-alignment {
+  display: flex;
+  justify-content: center;
+}
 
 input[type="checkbox"] {
   width: 14px;
@@ -593,14 +681,18 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-::-webkit-scrollbar { display: none !important; }
-::-webkit-scrollbar-button { display: none !important; }
+::-webkit-scrollbar {
+  display: none !important;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+}
 
-.light-dark-mode{
+.light-dark-mode {
   filter: invert(1);
-  zoom: 1.20;
+  zoom: 1.2;
   cursor: pointer;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 /* ── Dark mode popup ─────────────────────────── */
@@ -609,23 +701,23 @@ html.dark-popup {
 }
 
 html.dark-popup select.queue-sound-select option {
-  background:#25242e;
+  background: #25242e;
   color: #fff;
 }
 
 html.dark-popup .queue-item {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.07);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
 html.dark-popup input[type="text"].queue-name,
 html.dark-popup input[type="number"].queue-interval,
 html.dark-popup select.queue-sound-select {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 html.dark-popup .add-queue-btn {
-  border-color: rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
 }

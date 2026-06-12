@@ -1,13 +1,17 @@
+// Logger de debug — mude para true para habilitar logs em desenvolvimento
+const DEBUG = false;
+const log = (...args) => DEBUG && console.log(...args);
+
 window.onload = function () {
-  console.log("[Debug] GRID REFRESH ATIVADO");
+  log("[Debug] GRID REFRESH ATIVADO");
 
   chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
     if (result.legacyMode) {
       if (result.legacyActive) {
-        console.log("[Debug] LEGACY MODE ATIVADO");
+        log("[Debug] LEGACY MODE ATIVADO");
         initLegacyMode(result.legacyInterval || 10);
       } else {
-        console.log("[Debug] LEGACY MODE CONFIGURADO MAS INATIVO");
+        log("[Debug] LEGACY MODE CONFIGURADO MAS INATIVO");
         initLegacyModeListener();
       }
       return;
@@ -18,19 +22,19 @@ window.onload = function () {
 };
 
 function initLegacyModeListener() {
-  console.log("[Debug] Aguardando ativação do Legacy Mode");
+  log("[Debug] Aguardando ativação do Legacy Mode");
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync") {
       if (changes.legacyMode && !changes.legacyMode.newValue) {
-        console.log("[Debug] Legacy Mode desativado. Recarregando página...");
+        log("[Debug] Legacy Mode desativado. Recarregando página...");
         window.location.reload();
         return;
       }
 
       if (changes.legacyActive && changes.legacyActive.newValue) {
         chrome.storage.sync.get(["legacyInterval"], (result) => {
-          console.log("[Debug] Legacy Mode foi ativado");
+          log("[Debug] Legacy Mode foi ativado");
           initLegacyMode(result.legacyInterval || 10);
         });
       }
@@ -48,12 +52,12 @@ function doRefresh() {
 }
 
 function initLegacyMode(intervalSeconds) {
-  console.log(`[Debug] Iniciando Legacy Mode com intervalo de ${intervalSeconds} segundos`);
+  log(`[Debug] Iniciando Legacy Mode com intervalo de ${intervalSeconds} segundos`);
 
   let legacyTimer = null;
 
   function legacyRefresh() {
-    console.log("[Debug] Executando refresh legacy");
+    log("[Debug] Executando refresh legacy");
     doRefresh();
   }
 
@@ -62,14 +66,14 @@ function initLegacyMode(intervalSeconds) {
       clearInterval(legacyTimer);
     }
     legacyTimer = setInterval(legacyRefresh, interval * 1000);
-    console.log(`[Debug] Timer do Legacy Mode configurado para ${interval} segundos`);
+    log(`[Debug] Timer do Legacy Mode configurado para ${interval} segundos`);
   }
 
   function stopLegacyTimer() {
     if (legacyTimer) {
       clearInterval(legacyTimer);
       legacyTimer = null;
-      console.log("[Debug] Timer do Legacy Mode parado");
+      log("[Debug] Timer do Legacy Mode parado");
     }
   }
 
@@ -80,7 +84,7 @@ function initLegacyMode(intervalSeconds) {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync") {
       if (changes.legacyMode && !changes.legacyMode.newValue) {
-        console.log("[Debug] Legacy Mode desativado. Recarregando página...");
+        log("[Debug] Legacy Mode desativado. Recarregando página...");
         stopLegacyTimer();
         window.location.reload();
         return;
@@ -91,27 +95,27 @@ function initLegacyMode(intervalSeconds) {
 
         if (changes.legacyActive) {
           if (changes.legacyActive.newValue) {
-            console.log("[Debug] Legacy Mode ativado");
+            log("[Debug] Legacy Mode ativado");
             startLegacyTimer(result.legacyInterval || 10);
           } else {
-            console.log("[Debug] Legacy Mode pausado");
+            log("[Debug] Legacy Mode pausado");
             stopLegacyTimer();
           }
         }
 
         if (changes.legacyInterval && result.legacyActive) {
-          console.log(`[Debug] Intervalo do Legacy Mode alterado para ${changes.legacyInterval.newValue} segundos`);
+          log(`[Debug] Intervalo do Legacy Mode alterado para ${changes.legacyInterval.newValue} segundos`);
           startLegacyTimer(changes.legacyInterval.newValue);
         }
       });
     }
   });
 
-  console.log("[Debug] Legacy Mode configurado com sucesso");
+  log("[Debug] Legacy Mode configurado com sucesso");
 }
 
 function initNormalMode() {
-  console.log("[Debug] Iniciando modo normal com todas as funcionalidades");
+  log("[Debug] Iniciando modo normal com todas as funcionalidades");
 
   let audioEnabled = false;
 
@@ -119,7 +123,7 @@ function initNormalMode() {
     "click",
     () => {
       audioEnabled = true;
-      console.log("[Debug] Som ativado após clique");
+      log("[Debug] Som ativado após clique");
       if (typeof reportExtensionActive === "function") reportExtensionActive();
     },
     { once: true }
@@ -174,7 +178,7 @@ function initNormalMode() {
   function tocarSom(soundName, volume) {
     try {
       if (!audioEnabled) {
-        console.log("[Debug] Audio desabilitado, clique na tela");
+        log("[Debug] Audio desabilitado, clique na tela");
         return;
       }
 
@@ -184,7 +188,7 @@ function initNormalMode() {
         const customAudio = customAudios[soundName];
 
         if (customAudio && customAudio.data) {
-          console.log(`[Debug] Tocando áudio personalizado: ${customAudio.name}`);
+          log(`[Debug] Tocando áudio personalizado: ${customAudio.name}`);
           try {
             const base64Data = customAudio.data.split(",")[1];
             const mimeType = customAudio.data.split(",")[0].split(":")[1].split(";")[0];
@@ -215,7 +219,7 @@ function initNormalMode() {
             tocarSomPadrao("notification.mp3", volume);
           }
         } else {
-          console.error(`[Debug] Áudio personalizado não encontrado: ${soundName}`);
+          console.warn(`[INSV] Áudio personalizado não encontrado: ${soundName}`);
           tocarSomPadrao("notification.mp3", volume);
         }
       });
@@ -233,7 +237,7 @@ function initNormalMode() {
   }
 
   function tocarSomPadrao(soundName, volume) {
-    console.log(`[Debug] Tocando áudio padrão: ${soundName}`);
+    log(`[Debug] Tocando áudio padrão: ${soundName}`);
     const audioSrc = chrome.runtime.getURL("assets/sounds/" + soundName);
     const audio = new Audio(audioSrc);
     audio.volume = volume;
@@ -248,26 +252,26 @@ function initNormalMode() {
 
     const loop = () => {
       if (!isRightQueue(fila.name)) {
-        console.log(`[Debug] Retornando, fila incorreta: ${fila.name}`);
+        log(`[Debug] Retornando, fila incorreta: ${fila.name}`);
         return;
       }
 
       const userIsEditing = document.querySelector(".mainContentMark .split-left .slds-checkbox [type=checkbox]:checked");
 
       if (!userIsEditing) {
-        console.log(`[Debug] Executando refresh da fila: "${fila.name}"`);
+        log(`[Debug] Executando refresh da fila: "${fila.name}"`);
         doRefresh();
       } else {
-        console.log("[Debug] Ignorou refresh - usuário está com chamado selecionado");
+        log("[Debug] Ignorou refresh - usuário está com chamado selecionado");
       }
 
       function afterRefreshReady() {
         const novos = getNewCaseIds(seenCaseIds);
 
         if (novos.length > 0 && fila.soundEnabled) {
-          console.log(`[Debug] Novos casos na fila "${fila.name}": "${novos}"`);
+          log(`[Debug] Novos casos na fila "${fila.name}": "${novos}"`);
           const soundToUse = fila.customSound || globalSound;
-          console.log(`[Debug] Som para fila "${fila.name}": ${soundToUse}`);
+          log(`[Debug] Som para fila "${fila.name}": ${soundToUse}`);
           if (isRightQueue(fila.name)) {
             tocarSom(soundToUse, globalVolume);
           }
@@ -339,7 +343,7 @@ function initNormalMode() {
   function pararMonitoramentosAtuais() {
     filaMonitores.forEach((intervalId, nomeFila) => {
       clearInterval(intervalId);
-      console.log(`[Debug] Parando monitoramento da fila: ${nomeFila}`);
+      log(`[Debug] Parando monitoramento da fila: ${nomeFila}`);
     });
     filaMonitores.clear();
   }
@@ -359,14 +363,14 @@ function initNormalMode() {
               const defaultSound = "notification.mp3";
               const volume = (data.general && data.general.volume) || 0.5;
 
-              console.log(`[Debug] Som padrão: ${defaultSound}`);
-              console.log(`[Debug] Volume: ${volume}`);
+              log(`[Debug] Som padrão: ${defaultSound}`);
+              log(`[Debug] Volume: ${volume}`);
 
               pararMonitoramentosAtuais();
 
               filas.forEach((fila) => {
                 if (fila.name) {
-                  console.log(`[Debug] Iniciando monitoramento da fila: "${fila.name}"`);
+                  log(`[Debug] Iniciando monitoramento da fila: "${fila.name}"`);
                   iniciarMonitoramentoFila(fila, defaultSound, volume);
                 }
               });
@@ -400,11 +404,11 @@ function initNormalMode() {
       const hasAcceptText = /aceitar|accept|assumir|assume|take|tomar/i.test(text + " " + ariaLabel + " " + title);
       if (hasAcceptText && !btn.disabled && btn.offsetParent !== null) {
         btn.click();
-        console.log("[Debug] Botão Aceitar clicado via atalho");
+        log("[Debug] Botão Aceitar clicado via atalho");
         return;
       }
     }
-    console.log("[Debug] Botão Aceitar não encontrado");
+    log("[Debug] Botão Aceitar não encontrado");
   }
 
   function setupAcceptShortcut() {
@@ -445,7 +449,7 @@ function initNormalMode() {
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && (changes.queues || changes.general || changes.audiosPersonalizados)) {
-      console.log("[Debug] Alterações detectadas no storage. Reiniciando monitoramento...");
+      log("[Debug] Alterações detectadas no storage. Reiniciando monitoramento...");
       carregarEIniciarTodos();
       if (typeof reportExtensionActive === "function") reportExtensionActive();
     }
@@ -454,7 +458,7 @@ function initNormalMode() {
     }
 
     if (area === "sync" && changes.legacyMode && changes.legacyMode.newValue && !changes.legacyMode.oldValue) {
-      console.log("[Debug] Legacy Mode foi ativado pela primeira vez. Recarregando página...");
+      log("[Debug] Legacy Mode foi ativado pela primeira vez. Recarregando página...");
       window.location.reload();
     }
   });

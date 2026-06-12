@@ -269,10 +269,7 @@ function deleteCustomAudio(audioKey) {
 function showToast(message, type = "success", duration = 5000) {
   const container = document.getElementById("toast-container");
   
-  if (!container) {
-    console.error("Toast container não encontrado");
-    return;
-  }
+  if (!container) return;
 
   const toast = document.createElement("div");
   toast.classList.add("toast", `toast-${type}`);
@@ -292,10 +289,7 @@ function setupDragAndDrop() {
   const fileInput = document.getElementById('custom-audio');
   const browseBtn = document.getElementById('browse-btn');
 
-  if (!dropArea || !fileInput || !browseBtn) {
-    console.error('Elementos do drag & drop não encontrados');
-    return;
-  }
+  if (!dropArea || !fileInput || !browseBtn) return;
 
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false);

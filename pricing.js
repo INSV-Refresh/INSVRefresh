@@ -1,7 +1,7 @@
 document.getElementById("pay-normal-btn").addEventListener("click", () => {
-  chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+  chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
     if (chrome.runtime.lastError) return;
-    if (user && user.paid) {
+    if (access && access.level === "paid") {
       window.alert("Você já é assinante. Aproveite todos os recursos!");
       return;
     }

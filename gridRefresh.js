@@ -280,8 +280,8 @@ function initNormalMode() {
         novos.forEach((id) => seenCaseIds.add(id));
 
         chrome.storage.local.get(["statusNotifications", "general"], (data) => {
-          chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
-            const isPaid = !!(user && user.paid);
+          chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
+            const isPaid = !!(access && access.isPaid);
             if (!isPaid) return;
             const configs = data.statusNotifications || [];
             const volume = (data.general && data.general.volume) || 0.5;
@@ -352,12 +352,12 @@ function initNormalMode() {
     try {
       chrome.storage.local.get(["queues", "general"], (data) => {
         try {
-          chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+          chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
             try {
               if (chrome.runtime.lastError) {
-                console.warn("[Debug] Erro ao obter status de pagamento:", chrome.runtime.lastError);
+                console.warn("[INSV] Erro ao obter nível de acesso:", chrome.runtime.lastError);
               }
-              const isPaid = !!(user && user.paid);
+              const isPaid = !!(access && access.isPaid);
               let filas = (data.queues || []).filter((q) => q.active);
               if (!isPaid && filas.length > 1) filas = filas.slice(0, 1);
               const defaultSound = "notification.mp3";

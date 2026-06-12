@@ -12,6 +12,26 @@ function setExtensionIcon(active) {
 }
 
 
+// ── Nível de acesso (free / trial / paid) ───────────────────
+// Fonte única da regra de acesso, usada por popup, options e gridRefresh
+// via mensagem GET_ACCESS_LEVEL. Usuário em trial é tratado como pago.
+const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 1 mês
+
+function computeAccessLevel(user) {
+  if (user && user.paid) {
+    return { level: "paid", isPaid: true, trialDaysLeft: 0 };
+  }
+  if (user && user.trialStartedAt) {
+    const startedAt = new Date(user.trialStartedAt).getTime();
+    const elapsed = Date.now() - startedAt;
+    if (!isNaN(startedAt) && elapsed >= 0 && elapsed < TRIAL_DURATION_MS) {
+      const trialDaysLeft = Math.max(1, Math.ceil((TRIAL_DURATION_MS - elapsed) / (24 * 60 * 60 * 1000)));
+      return { level: "trial", isPaid: true, trialDaysLeft };
+    }
+  }
+  return { level: "free", isPaid: false, trialDaysLeft: 0 };
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   try {
     if (msg && msg.type === "INSV_EXTENSION_ACTIVE") {
@@ -26,9 +46,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       });
       return true;
     }
+    if (msg && msg.type === "GET_ACCESS_LEVEL") {
+      extpay.getUser().then((user) => {
+        sendResponse(computeAccessLevel(user));
+      }).catch((err) => {
+        console.error("[INSV] ExtPay getUser error:", err);
+        sendResponse({ level: "free", isPaid: false, trialDaysLeft: 0, error: err?.message || "Unknown error" });
+      });
+      return true;
+    }
     if (msg && msg.type === "OPEN_PAYMENT_PAGE") {
       extpay.openPaymentPage().then(() => sendResponse({ ok: true })).catch((err) => {
         console.error("[INSV] ExtPay openPaymentPage error:", err);
+        sendResponse({ ok: false, error: err?.message || "Unknown error" });
+      });
+      return true;
+    }
+    if (msg && msg.type === "OPEN_TRIAL_PAGE") {
+      extpay.openTrialPage(msg.period || "1 month").then(() => sendResponse({ ok: true })).catch((err) => {
+        console.error("[INSV] ExtPay openTrialPage error:", err);
+        sendResponse({ ok: false, error: err?.message || "Unknown error" });
+      });
+      return true;
+    }
+    if (msg && msg.type === "OPEN_LOGIN_PAGE") {
+      extpay.openLoginPage().then(() => sendResponse({ ok: true })).catch((err) => {
+        console.error("[INSV] ExtPay openLoginPage error:", err);
         sendResponse({ ok: false, error: err?.message || "Unknown error" });
       });
       return true;

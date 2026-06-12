@@ -411,16 +411,38 @@ function initNormalMode() {
     log("[Debug] Botão Aceitar não encontrado");
   }
 
+  function matchesShortcut(e, sc) {
+    return (
+      e.ctrlKey === !!sc.ctrl &&
+      e.altKey === !!sc.alt &&
+      e.shiftKey === !!sc.shift &&
+      e.metaKey === !!sc.meta &&
+      e.code === sc.code
+    );
+  }
+
   function setupAcceptShortcut() {
     chrome.storage.local.get("advanced", (data) => {
-      const key = (data.advanced && data.advanced.acceptShortcutKey || "").trim();
-      if (!key) return;
-      document.removeEventListener("keydown", window._insvAcceptShortcutHandler);
+      const adv = data.advanced || {};
+      const shortcut = adv.acceptShortcut && adv.acceptShortcut.code ? adv.acceptShortcut : null;
+      const legacyKey = (adv.acceptShortcutKey || "").trim();
+      if (window._insvAcceptShortcutHandler) {
+        document.removeEventListener("keydown", window._insvAcceptShortcutHandler);
+        window._insvAcceptShortcutHandler = null;
+      }
+      if (!shortcut && !legacyKey) return;
       window._insvAcceptShortcutHandler = (e) => {
         if (e.target && (e.target.matches("input, textarea, select") || e.target.isContentEditable)) return;
-        const k = (e.key || e.code || "").toUpperCase();
-        const keyUpper = key.toUpperCase();
-        if (k === keyUpper || e.code === key || e.code === "Key" + keyUpper) {
+        let match = false;
+        if (shortcut) {
+          match = matchesShortcut(e, shortcut);
+        } else {
+          // Retrocompat: atalho antigo salvo como string de tecla única
+          const k = (e.key || e.code || "").toUpperCase();
+          const keyUpper = legacyKey.toUpperCase();
+          match = k === keyUpper || e.code === legacyKey || e.code === "Key" + keyUpper;
+        }
+        if (match) {
           e.preventDefault();
           clickAcceptButton();
         }

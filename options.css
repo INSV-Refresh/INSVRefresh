@@ -808,26 +808,114 @@ audio{
   gap: 0.8rem;
 }
 
-.shortcut-input {
-  width: 100px;
-  padding: 9px 13px;
-  border: 1.5px solid var(--ice-white-color);
+.shortcut-capture {
+  min-width: 220px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: 1.5px dashed var(--ice-white-color);
   border-radius: 7px;
-  font-family: "Courier New", monospace;
-  font-size: 15px;
-  letter-spacing: 2px;
-  font-weight: 600;
-  text-align: center;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
   background: #f8f9ff;
   color: #333;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
-.shortcut-input:focus {
+.shortcut-capture:hover {
   border-color: var(--light-blue-color);
-  box-shadow: 0 0 0 3px rgba(0,161,224,0.1);
+}
+
+.shortcut-capture:focus-visible {
+  border-color: var(--light-blue-color);
+  box-shadow: 0 0 0 3px rgba(0,161,224,0.15);
+}
+
+.shortcut-capture.capturing {
+  border-style: solid;
+  border-color: var(--light-blue-color);
+  background: #eef7ff;
+  box-shadow: 0 0 0 3px rgba(0,161,224,0.15);
+  animation: pulse 1.5s infinite;
+}
+
+.shortcut-capture.capture-error {
+  border-color: #dc3545;
+  background: #ffeaea;
+  animation: shake 0.4s ease-in-out;
+}
+
+.shortcut-capture.has-shortcut {
+  border-style: solid;
+}
+
+.shortcut-placeholder {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.shortcut-capture kbd {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid #c9d2e8;
+  border-bottom-width: 2.5px;
+  border-radius: 6px;
   background: #fff;
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+}
+
+.kbd-plus {
+  color: #999;
+  font-weight: 600;
+  margin: 0 2px;
+}
+
+.shortcut-clear {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid rgba(220,53,69,0.35);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.shortcut-clear:hover {
+  background: #dc3545;
+  color: white;
+}
+
+[data-theme="dark"] .shortcut-capture {
+  background: #232340;
+  color: #e0e0e0;
+  border-color: #3a3a5a;
+}
+
+[data-theme="dark"] .shortcut-capture.capturing {
+  background: #1a2535;
+  border-color: var(--light-blue-color);
+}
+
+[data-theme="dark"] .shortcut-capture.capture-error {
+  background: #3a1e22;
+  border-color: #dc3545;
+}
+
+[data-theme="dark"] .shortcut-capture kbd {
+  background: #1a1a2e;
+  border-color: #3a3a5a;
+  color: #e0e0e0;
 }
 
 /* ── Toggle switch (Aparência) ───────────────────────── */

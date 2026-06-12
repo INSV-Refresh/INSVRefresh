@@ -436,6 +436,38 @@ select.queue-sound-select option {
   opacity: 1;
 }
 
+/* ── Global pause banner ────────────────────── */
+.global-paused-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffd166;
+}
+
+.global-paused-banner button {
+  background: rgba(255, 209, 102, 0.2);
+  border: 1px solid rgba(255, 209, 102, 0.5);
+  border-radius: 6px;
+  color: #ffd166;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.global-paused-banner button:hover {
+  background: rgba(255, 209, 102, 0.35);
+}
+
 /* ── Premium lock banner ────────────────────── */
 .popup-lock-banner {
   display: flex;

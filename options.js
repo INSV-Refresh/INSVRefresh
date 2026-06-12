@@ -742,6 +742,12 @@ document.addEventListener('DOMContentLoaded', function() {
     storageProp: "acceptShortcut",
     legacyProp: "acceptShortcutKey",
   });
+
+  setupShortcutCapture({
+    captureBtnId: "pause-shortcut-capture",
+    clearBtnId: "pause-shortcut-clear",
+    storageProp: "pauseAllShortcut",
+  });
 });
 
 // ── Capturador de atalho de teclado ─────────────────────────

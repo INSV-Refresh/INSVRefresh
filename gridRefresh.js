@@ -247,7 +247,7 @@ function initNormalMode() {
   const filaMonitores = new Map();
   const statusNotificationPrevious = {};
 
-  function iniciarMonitoramentoFila(fila, globalSound, globalVolume) {
+  function iniciarMonitoramentoFila(fila, globalSound, globalVolume, isPaid) {
     let seenCaseIds = new Set();
 
     const loop = () => {
@@ -279,39 +279,26 @@ function initNormalMode() {
 
         novos.forEach((id) => seenCaseIds.add(id));
 
-        chrome.storage.local.get(["statusNotifications", "general"], (data) => {
-          chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-            const isPaid = !!(access && access.isPaid);
-            if (!isPaid) return;
-            const configs = data.statusNotifications || [];
-            const volume = (data.general && data.general.volume) || 0.5;
-            const currentMap = getCaseStatusMap();
-            let played = false;
-            configs.forEach((sn) => {
-              if (
-                sn.enabled &&
-                sn.queueName &&
-                (sn.statuses || []).length > 0 &&
-                isRightQueue(sn.queueName) &&
-                fila.name.toLowerCase().trim() === (sn.queueName || "").toLowerCase().trim()
-              ) {
-                const targetStatuses = new Set((sn.statuses || []).map((s) => s.trim().toLowerCase()));
-                for (const [caseId, status] of Object.entries(currentMap)) {
-                  const statusLower = status.toLowerCase();
-                  const key = `${sn.queueName}_${caseId}`;
-                  const prev = statusNotificationPrevious[key];
-                  if (targetStatuses.has(statusLower) && prev !== status) {
-                    if (!played) {
-                      tocarSom(sn.sound || "notification.mp3", volume);
-                      played = true;
-                    }
-                  }
-                  statusNotificationPrevious[key] = status;
-                }
+        // Notificação de mudança de status — config por fila
+        // (queues[].statusNotify), recurso premium
+        const sn = fila.statusNotify;
+        if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && isRightQueue(fila.name)) {
+          const currentMap = getCaseStatusMap();
+          const targetStatuses = new Set(sn.statuses.map((s) => s.trim().toLowerCase()));
+          let played = false;
+          for (const [caseId, status] of Object.entries(currentMap)) {
+            const statusLower = status.toLowerCase();
+            const key = `${fila.name}_${caseId}`;
+            const prev = statusNotificationPrevious[key];
+            if (targetStatuses.has(statusLower) && prev !== status) {
+              if (!played) {
+                tocarSom(sn.sound || "notification.mp3", globalVolume);
+                played = true;
               }
-            });
-          });
-        });
+            }
+            statusNotificationPrevious[key] = status;
+          }
+        }
       }
 
       (function waitForRefreshDone() {
@@ -419,7 +406,7 @@ function initNormalMode() {
               filas.forEach((fila) => {
                 if (fila.name) {
                   log(`[Debug] Iniciando monitoramento da fila: "${fila.name}"`);
-                  iniciarMonitoramentoFila(fila, defaultSound, volume);
+                  iniciarMonitoramentoFila(fila, defaultSound, volume, isPaid);
                 }
               });
             } catch (e) {

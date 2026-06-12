@@ -261,6 +261,10 @@ function debounce(func, wait) {
 // usuário voltar a ser pago.
 let hiddenPaidQueues = [];
 
+// Guarda da última gravação feita pelo próprio popup, para não
+// re-renderizar (e perder foco) quando o onChanged for nosso próprio save
+let popupSelfWriteQueues = null;
+
 function saveOptions() {
   const queues = [];
   queueList.querySelectorAll(".queue-item").forEach((item) => {
@@ -285,7 +289,9 @@ function saveOptions() {
     volume: parseInt(volumeSlider.value, 10) / 100,
   };
 
-  chrome.storage.local.set({ queues: queues.concat(hiddenPaidQueues), general }, showSaving);
+  const fullQueues = queues.concat(hiddenPaidQueues);
+  popupSelfWriteQueues = JSON.stringify(fullQueues);
+  chrome.storage.local.set({ queues: fullQueues, general }, showSaving);
 }
 
 const saveOptionsDebounced = debounce(saveOptions, 500);
@@ -375,6 +381,7 @@ function restoreOptions() {
           customSound: "notification.mp3",
         },
       ];
+      popupSelfWriteQueues = JSON.stringify(queues);
       chrome.storage.local.set({ queues });
     }
 
@@ -495,6 +502,17 @@ function getDragAfterElement(container, y) {
     { offset: Number.NEGATIVE_INFINITY }
   ).element;
 }
+
+// Sincronização com o gerenciador de filas do options: mudanças
+// externas em queues re-renderizam a lista do popup
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.queues) {
+    if (JSON.stringify(changes.queues.newValue || []) === popupSelfWriteQueues) return;
+    chrome.storage.sync.get("legacyMode", (result) => {
+      if (!result.legacyMode) restoreOptions();
+    });
+  }
+});
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.audiosPersonalizados) {

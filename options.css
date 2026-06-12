@@ -640,6 +640,111 @@ audio{
   background-color: #0091c7;
 }
 
+/* ── Gerenciador de filas (sincronizado com o popup) ── */
+.queue-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.queue-manager-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid #e8ecf5;
+  background: #f8f9ff;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  flex-shrink: 0;
+}
+
+.queue-manager-row input[type="text"],
+.queue-manager-row select {
+  padding: 7px 10px;
+  border: 1px solid var(--ice-white-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+  background: white;
+  color: #333;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.queue-manager-row input[type="text"]:focus,
+.queue-manager-row select:focus {
+  border-color: var(--light-blue-color);
+  box-shadow: 0 0 0 3px rgba(0,161,224,0.1);
+}
+
+.queue-manager-row .qm-name {
+  flex: 1 1 30%;
+  min-width: 120px;
+}
+
+.queue-manager-row .qm-statuses {
+  flex: 1 1 40%;
+  min-width: 140px;
+}
+
+.qm-enable {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.qm-enable input[type="checkbox"] {
+  accent-color: var(--light-blue-color);
+  cursor: pointer;
+}
+
+.qm-sound {
+  max-width: 130px;
+  flex-shrink: 0;
+}
+
+.qm-remove {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid rgba(220,53,69,0.3);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.qm-remove:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.qm-remove-placeholder {
+  width: 29px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .queue-manager-row {
+  background: #1e1e35;
+  border-color: #2a2a4a;
+}
+
+[data-theme="dark"] .queue-manager-row input[type="text"],
+[data-theme="dark"] .queue-manager-row select {
+  background: #232340;
+  color: #e0e0e0;
+  border-color: #3a3a5a;
+}
+
 /* ── Status notification items ─────────────────────── */
 .status-notification-item {
   border: 1px solid var(--ice-white-color);

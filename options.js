@@ -694,7 +694,21 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-    if (!chrome.runtime.lastError) applyPaidGateOptions(!!(access && access.isPaid));
+    if (chrome.runtime.lastError) return;
+    applyPaidGateOptions(!!(access && access.isPaid));
+
+    // Aviso de dias restantes do teste grátis
+    if (access && access.level === "trial") {
+      const trialBanner = document.getElementById("trial-banner");
+      if (trialBanner) {
+        const dias = access.trialDaysLeft;
+        trialBanner.innerHTML = `
+          ⏳ <strong>Teste grátis ativo</strong> — ${dias === 1 ? "resta 1 dia" : `restam ${dias} dias`}.
+          <a href="${chrome.runtime.getURL("pricing.html")}" target="_blank">Assinar agora →</a>
+        `;
+        trialBanner.style.display = "flex";
+      }
+    }
   });
 
   chrome.storage.local.get("pendingChangelogVersion", (data) => {

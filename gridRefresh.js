@@ -350,8 +350,15 @@ function initNormalMode() {
 
   function carregarEIniciarTodos() {
     try {
-      chrome.storage.local.get(["queues", "general"], (data) => {
+      chrome.storage.local.get(["queues", "general", "advanced"], (data) => {
         try {
+          // Pausa global: suspende todos os timers sem alterar o flag
+          // active de cada fila — ao retomar, o conjunto ativo é restaurado
+          if (data.advanced && data.advanced.globalPaused) {
+            log("[Debug] Pausa global ativa — monitoramento suspenso");
+            pararMonitoramentosAtuais();
+            return;
+          }
           chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
             try {
               if (chrome.runtime.lastError) {
@@ -388,9 +395,10 @@ function initNormalMode() {
   }
 
   function reportExtensionActive() {
-    chrome.storage.local.get(["queues"], (data) => {
+    chrome.storage.local.get(["queues", "advanced"], (data) => {
       const queues = (data.queues || []).filter((q) => q.active);
-      const active = audioEnabled && queues.length > 0;
+      const paused = !!(data.advanced && data.advanced.globalPaused);
+      const active = audioEnabled && queues.length > 0 && !paused;
       chrome.runtime.sendMessage({ type: "INSV_EXTENSION_ACTIVE", active }).catch(() => {});
     });
   }
@@ -452,6 +460,35 @@ function initNormalMode() {
   }
   setupAcceptShortcut();
 
+  function toggleGlobalPause() {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      adv.globalPaused = !adv.globalPaused;
+      chrome.storage.local.set({ advanced: adv });
+    });
+  }
+
+  function setupPauseShortcut() {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      const shortcut = adv.pauseAllShortcut && adv.pauseAllShortcut.code ? adv.pauseAllShortcut : null;
+      if (window._insvPauseShortcutHandler) {
+        document.removeEventListener("keydown", window._insvPauseShortcutHandler);
+        window._insvPauseShortcutHandler = null;
+      }
+      if (!shortcut) return;
+      window._insvPauseShortcutHandler = (e) => {
+        if (e.target && (e.target.matches("input, textarea, select") || e.target.isContentEditable)) return;
+        if (matchesShortcut(e, shortcut)) {
+          e.preventDefault();
+          toggleGlobalPause();
+        }
+      };
+      document.addEventListener("keydown", window._insvPauseShortcutHandler);
+    });
+  }
+  setupPauseShortcut();
+
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg && msg.type === "GET_QUEUE_NAME") {
       try {
@@ -475,8 +512,16 @@ function initNormalMode() {
       carregarEIniciarTodos();
       if (typeof reportExtensionActive === "function") reportExtensionActive();
     }
-    if (area === "local" && changes.advanced && typeof setupAcceptShortcut === "function") {
+    if (area === "local" && changes.advanced) {
       setupAcceptShortcut();
+      setupPauseShortcut();
+      const wasPaused = !!(changes.advanced.oldValue && changes.advanced.oldValue.globalPaused);
+      const isPaused = !!(changes.advanced.newValue && changes.advanced.newValue.globalPaused);
+      if (wasPaused !== isPaused) {
+        log(`[Debug] Pausa global ${isPaused ? "ativada" : "desativada"}`);
+        carregarEIniciarTodos();
+        reportExtensionActive();
+      }
     }
 
     if (area === "sync" && changes.legacyMode && changes.legacyMode.newValue && !changes.legacyMode.oldValue) {

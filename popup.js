@@ -478,6 +478,34 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+// ── Indicador de pausa global ───────────────────────
+const globalPausedBanner = document.getElementById("global-paused-banner");
+const resumeAllBtn = document.getElementById("resume-all-btn");
+
+function renderGlobalPaused(paused) {
+  if (globalPausedBanner) globalPausedBanner.style.display = paused ? "flex" : "none";
+}
+
+chrome.storage.local.get("advanced", (data) => {
+  renderGlobalPaused(!!(data.advanced && data.advanced.globalPaused));
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.advanced) {
+    renderGlobalPaused(!!(changes.advanced.newValue && changes.advanced.newValue.globalPaused));
+  }
+});
+
+if (resumeAllBtn) {
+  resumeAllBtn.addEventListener("click", () => {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      adv.globalPaused = false;
+      chrome.storage.local.set({ advanced: adv });
+    });
+  });
+}
+
 chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
   if (result.legacyMode) {
     toggleMode(true);

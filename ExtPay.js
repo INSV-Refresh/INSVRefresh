@@ -1281,7 +1281,7 @@ var ExtPay = (function () {
 You can copy and paste this to your manifest.json file to fix this error:
 
 "permissions": [
-    ${permissions.map(x => `"    ${x}"`).join(',\n')}${permissions.length > 0 ? ',' : ''}
+    ${permissions.map(x => `"    ${x}"`).join(',n')}${permissions.length > 0 ? ',' : ''}
     "storage"
 ]
 `
@@ -1348,7 +1348,7 @@ You can copy and paste this to your manifest.json file to fix this error:
 	        return null;
 	    }
 
-	    const datetime_re = /^\d\d\d\d-\d\d-\d\dT/;
+	    const datetime_re = /^dddd-dd-ddT/;
 
 	    async function fetch_user() {
 	        var storage = await get(['extensionpay_user', 'extensionpay_installed_at']);

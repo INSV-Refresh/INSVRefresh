@@ -123,7 +123,7 @@ function validateAudioFile(input) {
   
   const nameInput = document.getElementById('custom-audio-name');
   if (!nameInput.value) {
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
+    const fileName = file.name.replace(/.[^/.]+$/, "");
     nameInput.value = fileName;
   }
   

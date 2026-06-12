@@ -312,7 +312,7 @@ function initNormalMode() {
 
       (function waitForRefreshDone() {
         const grid = document.querySelector(".mainContentMark .split-left");
-        const spinner = grid && grid.querySelector(".slds-spinner, [class*=\"spinner\"], [role=\"progressbar\"]");
+        const spinner = grid && grid.querySelector(".slds-spinner, [class*="spinner"], [role="progressbar"]");
         if (!spinner) {
           setTimeout(afterRefreshReady, 400);
           return;
@@ -323,7 +323,7 @@ function initNormalMode() {
         };
         const fallback = setTimeout(done, 5000);
         const observer = new MutationObserver(() => {
-          const still = grid && grid.querySelector(".slds-spinner, [class*=\"spinner\"], [role=\"progressbar\"]");
+          const still = grid && grid.querySelector(".slds-spinner, [class*="spinner"], [role="progressbar"]");
           if (!still) {
             observer.disconnect();
             done();

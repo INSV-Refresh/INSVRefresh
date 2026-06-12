@@ -1,7 +1,7 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "4.1.3",
+  "version": "4.2.0",
   "manifest_version": 3,
   "content_scripts": [
     {

@@ -801,18 +801,13 @@ i18nReady.then(function() {
     const banner = document.getElementById("changelog-banner");
     if (!banner) return;
     banner.style.display = "block";
+    const items = ["cl_1", "cl_2", "cl_3", "cl_4", "cl_5", "cl_6", "cl_7", "cl_8"]
+      .map((k) => `<li>${t(k)}</li>`)
+      .join("");
     banner.innerHTML = `
-      <strong>Novidades da versão ${v}</strong>
-      <ul>
-        <li>Botão para copiar o nome da fila (evita erros de digitação)</li>
-        <li>Refresh sem interromper busca (usa atualização nativa da página)</li>
-        <li>Som quando o status do chamado muda (config. em Notificar status)</li>
-        <li>Ícone da extensão fica cinza quando não há filas ativas</li>
-        <li>Planos: Grátis, Normal e Empresa (página Planos)</li>
-        <li>Atalho de teclado para aceitar chamado (Avançado)</li>
-        <li>Validação mais rápida após o refresh</li>
-      </ul>
-      <button type="button" id="changelog-dismiss">Entendi</button>
+      <strong>${t("changelog_title", { v })}</strong>
+      <ul>${items}</ul>
+      <button type="button" id="changelog-dismiss">${t("changelog_dismiss")}</button>
     `;
     banner.querySelector("#changelog-dismiss").addEventListener("click", () => {
       chrome.storage.local.remove("pendingChangelogVersion");

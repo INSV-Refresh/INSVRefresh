@@ -30,11 +30,12 @@ function exportSettings() {
       const exportData = {
         version: chrome.runtime.getManifest().version,
         exportDate: new Date().toISOString(),
+        // statusNotifications legado agora vive dentro de queues[].statusNotify
         queues: allData.queues || [],
         general: allData.general || {},
-        statusNotifications: allData.statusNotifications || [],
         advanced: allData.advanced || {},
         audiosPersonalizados: allData.audiosPersonalizados || {},
+        darkMode: !!allData.darkMode,
       };
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -61,13 +62,18 @@ function importSettings(event) {
       if (!importData.queues && !importData.statusNotifications) {
         throw new Error("Arquivo inválido");
       }
+      // Backups antigos: mescla statusNotifications[] dentro de queues[]
+      let queues = importData.queues || [];
+      if (importData.statusNotifications && importData.statusNotifications.length) {
+        queues = mergeLegacyStatusNotifications(queues, importData.statusNotifications);
+      }
       const toImport = {
-        queues: importData.queues || [],
+        queues,
         general: importData.general || {},
-        statusNotifications: importData.statusNotifications || [],
         advanced: importData.advanced || {},
         audiosPersonalizados: importData.audiosPersonalizados || {},
       };
+      if (importData.darkMode !== undefined) toImport.darkMode = !!importData.darkMode;
       chrome.storage.local.set(toImport, () => {
         showToast("Configurações importadas! Recarregue a página.", "success");
         trackEvent("settings_imported");
@@ -488,91 +494,165 @@ function previewSound(soundValue) {
   }
 }
 
-function createStatusNotificationItem(cfg, index) {
+// ── Gerenciador de filas + notificação de status ─────────────
+// Lê e grava as MESMAS queues exibidas no popup
+// (chrome.storage.local.queues). Adicionar/remover/renomear aqui
+// reflete no popup e vice-versa, via chrome.storage.onChanged.
+// A config de notificação de status vive em cada fila:
+// queues[i].statusNotify = { enabled, statuses[], sound }.
+
+let qmQueues = [];
+let qmSelfWrite = null;
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Mescla o storage legado statusNotifications[] dentro de queues[].
+// Configs sem fila correspondente viram filas inativas para não perder dados.
+function mergeLegacyStatusNotifications(queues, legacy) {
+  (legacy || []).forEach((sn) => {
+    const name = (sn.queueName || "").trim();
+    if (!name) return;
+    let q = queues.find((x) => (x.name || "").toLowerCase().trim() === name.toLowerCase());
+    if (!q) {
+      q = { name, active: false, interval: 15, soundEnabled: false, customSound: "notification.mp3" };
+      queues.push(q);
+    }
+    q.statusNotify = {
+      enabled: !!sn.enabled,
+      statuses: sn.statuses || [],
+      sound: sn.sound || "notification.mp3",
+    };
+  });
+  return queues;
+}
+
+function createQueueManagerRow(queue, index) {
+  const sn = queue.statusNotify || { enabled: false, statuses: [], sound: "notification.mp3" };
   const div = document.createElement("div");
-  div.className = "status-notification-item";
-  div.dataset.index = index;
+  div.className = "queue-manager-row";
   div.innerHTML = `
-    <div class="status-notification-header">
-      <strong>Notificação ${index + 1}</strong>
-      <button type="button" class="remove-status-notification-btn" data-index="${index}">✕</button>
-    </div>
-    <div class="status-notification-fields">
-      <label>
-        <input type="checkbox" class="status-notification-enabled" ${cfg.enabled ? "checked" : ""}>
-        Ativar
-      </label>
-      <label>Fila: <input type="text" class="status-notification-queue" value="${cfg.queueName || ""}" placeholder="Nome exato da fila"></label>
-      <label>Status: <input type="text" class="status-notification-statuses" value="${(cfg.statuses || []).join(";")}" placeholder="Ex: Em andamento;Resolvido"></label>
-      <small>Separe vários status com <strong>;</strong></small>
-      <label>Som: <select class="status-notification-sound"></select></label>
-    </div>
+    <input type="text" class="qm-name" value="${escapeHtml(queue.name || "")}" placeholder="Nome da fila">
+    <label class="qm-enable" title="Notificar mudança de status desta fila">
+      <input type="checkbox" class="qm-enabled" ${sn.enabled ? "checked" : ""}>
+      <span aria-hidden="true">🔔</span>
+    </label>
+    <input type="text" class="qm-statuses" value="${escapeHtml((sn.statuses || []).join(";"))}" placeholder="Status (ex: Em andamento;Resolvido)" title="Separe vários status com ;">
+    <select class="qm-sound" title="Som da notificação de status"></select>
+    ${index === 0 ? '<span class="qm-remove-placeholder"></span>' : '<button type="button" class="qm-remove" title="Remover fila">✕</button>'}
   `;
-  const soundSelect = div.querySelector(".status-notification-sound");
-  loadStatusNotificationSounds(soundSelect, cfg.sound || "notification.mp3", true);
+
+  loadStatusNotificationSounds(div.querySelector(".qm-sound"), sn.sound || "notification.mp3", true);
+
+  div.querySelectorAll("input, select").forEach((inp) => {
+    inp.addEventListener("change", saveQueueManagerDebounced);
+    inp.addEventListener("input", saveQueueManagerDebounced);
+  });
+
+  const removeBtn = div.querySelector(".qm-remove");
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      qmQueues.splice(index, 1);
+      renderQueueManager();
+      persistQueueManager();
+    });
+  }
+
   return div;
 }
 
-function loadStatusNotificationOptions() {
+function renderQueueManager() {
   const container = document.getElementById("status-notifications-list");
   if (!container) return;
-  chrome.storage.local.get("statusNotifications", (data) => {
-    const configs = data.statusNotifications || [];
-    if (configs.length === 0) {
-      configs.push({ enabled: false, queueName: "", statuses: [], sound: "notification.mp3" });
-    }
-    container.innerHTML = "";
-    configs.forEach((cfg, idx) => {
-      container.appendChild(createStatusNotificationItem(cfg, idx));
-    });
-    attachStatusNotificationListeners();
+  container.innerHTML = "";
+  qmQueues.forEach((q, idx) => {
+    container.appendChild(createQueueManagerRow(q, idx));
   });
 }
 
-function attachStatusNotificationListeners() {
-  document.querySelectorAll(".status-notification-item").forEach((item) => {
-    const inputs = item.querySelectorAll("input, select");
-    inputs.forEach((inp) => {
-      inp.addEventListener("change", saveAllStatusNotificationsDebounced);
-      inp.addEventListener("input", saveAllStatusNotificationsDebounced);
-    });
-    const removeBtn = item.querySelector(".remove-status-notification-btn");
-    if (removeBtn) {
-      removeBtn.addEventListener("click", () => {
-        item.remove();
-        saveAllStatusNotifications();
-      });
-    }
+function collectQueueManagerRows() {
+  const container = document.getElementById("status-notifications-list");
+  if (!container) return qmQueues;
+  const rows = container.querySelectorAll(".queue-manager-row");
+  const result = [];
+  rows.forEach((row, i) => {
+    const base = qmQueues[i] || { active: true, interval: 15, soundEnabled: false, customSound: "notification.mp3" };
+    result.push(Object.assign({}, base, {
+      name: row.querySelector(".qm-name").value,
+      statusNotify: {
+        enabled: row.querySelector(".qm-enabled").checked,
+        statuses: row.querySelector(".qm-statuses").value.split(";").map((s) => s.trim()).filter(Boolean),
+        sound: row.querySelector(".qm-sound").value || "notification.mp3",
+      },
+    }));
+  });
+  return result;
+}
+
+function persistQueueManager() {
+  qmSelfWrite = JSON.stringify(qmQueues);
+  chrome.storage.local.set({ queues: qmQueues }, () => {
+    showToast("Filas salvas.", "success");
+    trackEvent("queue_manager_saved", { count: qmQueues.length });
   });
 }
 
-function saveAllStatusNotifications() {
-  const items = document.querySelectorAll(".status-notification-item");
-  const configs = [];
-  items.forEach((item) => {
-    const enabled = item.querySelector(".status-notification-enabled")?.checked || false;
-    const queueName = item.querySelector(".status-notification-queue")?.value.trim() || "";
-    const statusesStr = item.querySelector(".status-notification-statuses")?.value || "";
-    const statuses = statusesStr.split(";").map((s) => s.trim()).filter(Boolean);
-    const sound = item.querySelector(".status-notification-sound")?.value || "notification.mp3";
-    configs.push({ enabled, queueName, statuses, sound });
-  });
-  chrome.storage.local.set({ statusNotifications: configs }, () => {
-    showToast("Notificações de status salvas.", "success");
-    trackEvent("status_notification_saved", { count: configs.length });
-  });
+function saveQueueManager() {
+  qmQueues = collectQueueManagerRows();
+  persistQueueManager();
 }
 
-const saveAllStatusNotificationsDebounced = debounce(saveAllStatusNotifications, 500);
+const saveQueueManagerDebounced = debounce(saveQueueManager, 600);
 
-function addStatusNotification() {
+function loadQueueManager() {
   const container = document.getElementById("status-notifications-list");
   if (!container) return;
-  const newCfg = { enabled: false, queueName: "", statuses: [], sound: "notification.mp3" };
-  container.appendChild(createStatusNotificationItem(newCfg, container.children.length));
-  attachStatusNotificationListeners();
-  saveAllStatusNotifications();
+  chrome.storage.local.get(["queues", "statusNotifications"], (data) => {
+    let queues = data.queues || [];
+    if (data.statusNotifications && data.statusNotifications.length) {
+      queues = mergeLegacyStatusNotifications(queues, data.statusNotifications);
+      qmQueues = queues;
+      qmSelfWrite = JSON.stringify(queues);
+      chrome.storage.local.set({ queues });
+      chrome.storage.local.remove("statusNotifications");
+    } else {
+      qmQueues = queues;
+    }
+    if (qmQueues.length === 0) {
+      qmQueues = [{ name: "", active: true, interval: 15, soundEnabled: false, customSound: "notification.mp3" }];
+    }
+    renderQueueManager();
+  });
 }
+
+function addQueueFromManager() {
+  qmQueues = collectQueueManagerRows();
+  qmQueues.push({
+    name: "",
+    active: true,
+    interval: 15,
+    soundEnabled: false,
+    customSound: "notification.mp3",
+    statusNotify: { enabled: false, statuses: [], sound: "notification.mp3" },
+  });
+  renderQueueManager();
+  persistQueueManager();
+}
+
+// Sincronização: mudanças vindas do popup re-renderizam a lista
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.queues) {
+    const incoming = JSON.stringify(changes.queues.newValue || []);
+    if (incoming === qmSelfWrite) return; // gravação desta própria página
+    qmQueues = changes.queues.newValue || [];
+    renderQueueManager();
+  }
+});
 
 function applyPaidGateOptions(isPaid) {
   try {
@@ -674,8 +754,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  loadStatusNotificationOptions();
-  document.getElementById("add-status-notification-btn")?.addEventListener("click", addStatusNotification);
+  loadQueueManager();
+  document.getElementById("add-status-notification-btn")?.addEventListener("click", addQueueFromManager);
 
   document.getElementById("export-settings-btn")?.addEventListener("click", exportSettings);
   document.getElementById("import-settings-input")?.addEventListener("change", importSettings);

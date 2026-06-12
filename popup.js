@@ -561,32 +561,21 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // ── Dark mode no popup ──────────────────────────────
-chrome.storage.local.get("popupDarkMode", (data) => {
-  if (data.popupDarkMode) {
-    document.documentElement.classList.add("dark-popup");
+// Chave única darkMode (chrome.storage.local), controlada pelo toggle
+// do options — vale para popup, options e pricing. Migra a antiga
+// popupDarkMode na primeira carga.
+chrome.storage.local.get(["darkMode", "popupDarkMode"], (data) => {
+  let dark = data.darkMode;
+  if (dark === undefined && data.popupDarkMode !== undefined) {
+    dark = !!data.popupDarkMode;
+    chrome.storage.local.set({ darkMode: dark });
+    chrome.storage.local.remove("popupDarkMode");
   }
+  document.documentElement.classList.toggle("dark-popup", !!dark);
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.popupDarkMode !== undefined) {
-    if (changes.popupDarkMode.newValue) {
-      document.documentElement.classList.add("dark-popup");
-    } else {
-      document.documentElement.classList.remove("dark-popup");
-    }
+  if (area === "local" && changes.darkMode) {
+    document.documentElement.classList.toggle("dark-popup", !!changes.darkMode.newValue);
   }
 });
-
-const BtnlightDarkMode = document.querySelector(".light-dark-mode");
-
-if (BtnlightDarkMode) {
-  BtnlightDarkMode.addEventListener("click", () => {
-    const isDark = document.documentElement.classList.contains("dark-popup");
-
-    document.documentElement.classList.toggle("dark-popup");
-
-    chrome.storage.local.set({
-      popupDarkMode: !isDark
-    });
-  });
-}

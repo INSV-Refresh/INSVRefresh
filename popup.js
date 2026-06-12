@@ -192,7 +192,9 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
       saveOptionsDebounced();
     });
 
-    loadSoundOptionsForQueue(queueSoundSelect, queue.customSound || "");
+    // Fallback "Padrão" — filas antigas com customSound vazio mostram
+    // o som Padrão selecionado em vez de um select em branco
+    loadSoundOptionsForQueue(queueSoundSelect, queue.customSound || "notification.mp3");
   }
 
   return div;
@@ -368,7 +370,7 @@ function restoreOptions() {
           active: true,
           interval: 15,
           soundEnabled: false,
-          customSound: "",
+          customSound: "notification.mp3",
         },
       ];
       chrome.storage.local.set({ queues });
@@ -413,7 +415,7 @@ function addQueueHandler() {
       active: true,
       interval: 15,
       soundEnabled: false,
-      customSound: "",
+      customSound: "notification.mp3",
     };
     const el = createQueueElement(newQueue);
     queueList.appendChild(el);

@@ -336,13 +336,54 @@ function initNormalMode() {
         if (grid) observer.observe(grid, { childList: true, subtree: true });
       })();
     };
-    const intervalo = setInterval(loop, (fila.interval || 15) * 1000);
-    filaMonitores.set(fila.name, intervalo);
+    // Agendamento por timestamp em vez de setInterval: navegadores
+    // limitam timers em abas em background, então ao voltar a aba
+    // visível comparamos com lastRefreshAt para respeitar o intervalo
+    // configurado — no máximo 1 refresh imediato, nunca em rajada.
+    const intervalMs = (fila.interval || 15) * 1000;
+    let timerId = null;
+    let lastRefreshAt = Date.now();
+    let cancelled = false;
+
+    function schedule(delay) {
+      if (cancelled) return;
+      clearTimeout(timerId);
+      timerId = setTimeout(runCycle, delay);
+    }
+
+    function runCycle() {
+      if (cancelled) return;
+      lastRefreshAt = Date.now();
+      loop();
+      schedule(intervalMs);
+    }
+
+    function onVisibilityChange() {
+      if (cancelled || document.visibilityState !== "visible") return;
+      const elapsed = Date.now() - lastRefreshAt;
+      if (elapsed >= intervalMs) {
+        log(`[Debug] Aba voltou a ficar visível — refresh imediato da fila "${fila.name}"`);
+        runCycle();
+      } else {
+        schedule(intervalMs - elapsed);
+      }
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    schedule(intervalMs);
+
+    filaMonitores.set(fila.name, {
+      cancel() {
+        cancelled = true;
+        clearTimeout(timerId);
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+      },
+    });
   }
 
   function pararMonitoramentosAtuais() {
-    filaMonitores.forEach((intervalId, nomeFila) => {
-      clearInterval(intervalId);
+    filaMonitores.forEach((monitor, nomeFila) => {
+      monitor.cancel();
       log(`[Debug] Parando monitoramento da fila: ${nomeFila}`);
     });
     filaMonitores.clear();

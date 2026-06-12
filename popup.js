@@ -99,8 +99,8 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     deleteBtn.addEventListener("click", () => {
       div.remove();
       saveOptions();
-      chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
-        if (!chrome.runtime.lastError) applyPaidGate(!!(user && user.paid));
+      chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
+        if (!chrome.runtime.lastError) applyPaidGate(!!(access && access.isPaid));
       });
     });
   } else {
@@ -369,9 +369,9 @@ function restoreOptions() {
 
     volumeSlider.value = general.volume * 100;
 
-    chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
+    chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
       if (chrome.runtime.lastError) return;
-      applyPaidGate(!!(user && user.paid));
+      applyPaidGate(!!(access && access.isPaid));
     });
   });
 }
@@ -380,8 +380,8 @@ function addQueueHandler() {
   // Se está travado no modo premium, o handler de capture já tratou — não fazer nada
   if (addQueueBtn.classList.contains("premium-locked")) return;
 
-  chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
-    const isPaid = !!(user && user.paid);
+  chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
+    const isPaid = !!(access && access.isPaid);
     const count = queueList.querySelectorAll(".queue-item").length;
     if (!isPaid && count >= 1) return;
     const newQueue = {

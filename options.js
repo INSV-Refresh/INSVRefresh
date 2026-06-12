@@ -693,8 +693,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  chrome.runtime.sendMessage({ type: "GET_EXTPAY_USER" }, (user) => {
-    if (!chrome.runtime.lastError) applyPaidGateOptions(!!(user && user.paid));
+  chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
+    if (!chrome.runtime.lastError) applyPaidGateOptions(!!(access && access.isPaid));
   });
 
   chrome.storage.local.get("pendingChangelogVersion", (data) => {

@@ -252,6 +252,11 @@ function debounce(func, wait) {
   };
 }
 
+// Filas excedentes ocultadas no plano free. Não são apagadas do
+// storage — apenas deixam de ser renderizadas, e voltam quando o
+// usuário voltar a ser pago.
+let hiddenPaidQueues = [];
+
 function saveOptions() {
   const queues = [];
   queueList.querySelectorAll(".queue-item").forEach((item) => {
@@ -276,7 +281,7 @@ function saveOptions() {
     volume: parseInt(volumeSlider.value, 10) / 100,
   };
 
-  chrome.storage.local.set({ queues, general }, showSaving);
+  chrome.storage.local.set({ queues: queues.concat(hiddenPaidQueues), general }, showSaving);
 }
 
 const saveOptionsDebounced = debounce(saveOptions, 500);
@@ -340,6 +345,18 @@ function applyPaidGate(isPaid) {
   }
 }
 
+function renderHiddenQueuesNote() {
+  const existing = document.getElementById("hidden-queues-note");
+  if (existing) existing.remove();
+  if (hiddenPaidQueues.length === 0) return;
+
+  const note = document.createElement("div");
+  note.id = "hidden-queues-note";
+  note.className = "hidden-queues-note";
+  note.innerHTML = `🔒 ${hiddenPaidQueues.length === 1 ? "1 fila adicional disponível" : `${hiddenPaidQueues.length} filas adicionais disponíveis`} no plano pago`;
+  normalMode.insertBefore(note, addQueueBtn);
+}
+
 function restoreOptions() {
   chrome.storage.local.get(["queues", "general"], (data) => {
     let queues = data.queues || [];
@@ -357,12 +374,6 @@ function restoreOptions() {
       chrome.storage.local.set({ queues });
     }
 
-    queueList.innerHTML = "";
-    queues.forEach((queue) => {
-      const el = createQueueElement(queue);
-      queueList.appendChild(el);
-    });
-
     const general = data.general || {
       volume: 0.5,
     };
@@ -370,8 +381,21 @@ function restoreOptions() {
     volumeSlider.value = general.volume * 100;
 
     chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-      if (chrome.runtime.lastError) return;
-      applyPaidGate(!!(access && access.isPaid));
+      const isPaid = !chrome.runtime.lastError && !!(access && access.isPaid);
+
+      // No free, renderizar somente a fila principal (única funcional);
+      // as demais ficam guardadas em hiddenPaidQueues e preservadas no save
+      hiddenPaidQueues = isPaid ? [] : queues.slice(1);
+      const visibleQueues = isPaid ? queues : queues.slice(0, 1);
+
+      queueList.innerHTML = "";
+      visibleQueues.forEach((queue) => {
+        const el = createQueueElement(queue);
+        queueList.appendChild(el);
+      });
+
+      renderHiddenQueuesNote();
+      applyPaidGate(isPaid);
     });
   });
 }

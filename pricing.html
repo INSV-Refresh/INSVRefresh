@@ -8,14 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="variaveis.css">
-  <script>
-    // Aplicar dark mode ANTES do render para evitar flash
-    try {
-      chrome.storage.local.get("darkMode", (data) => {
-        if (data.darkMode) document.documentElement.setAttribute("data-theme", "dark");
-      });
-    } catch(e) {}
-  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -105,7 +97,7 @@
     }
 
     .plan-card.featured::before {
-      content: "MAIS POPULAR";
+      content: attr(data-popular);
       position: absolute;
       top: -13px;
       left: 50%;
@@ -335,63 +327,64 @@
 </head>
 <body>
   <div class="pricing-layout">
-    <a href="options.html" class="back-link">← Voltar às configurações</a>
+    <a href="options.html" class="back-link" data-i18n="back_to_settings">← Voltar às configurações</a>
 
     <div class="pricing-header">
-      <h1>Planos INSV Refresh</h1>
-      <p>Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
+      <h1 data-i18n="pricing_title">Planos INSV Refresh</h1>
+      <p data-i18n="pricing_sub">Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
     </div>
 
     <div class="pricing-grid">
       <div class="plan-card">
-        <div class="plan-tier">Grátis</div>
+        <div class="plan-tier" data-i18n="plan_free">Grátis</div>
         <div class="plan-price">R$ 0</div>
         <ul class="plan-features">
-          <li><span class="check">✓</span> 1 fila de monitoramento</li>
-          <li><span class="check">✓</span> Sons padrão da extensão</li>
-          <li><span class="check">✓</span> Notificação de novos chamados</li>
-          <li><span class="check">✓</span> Modo Legacy</li>
+          <li><span class="check">✓</span> <span data-i18n="free_f1">1 fila de monitoramento</span></li>
+          <li><span class="check">✓</span> <span data-i18n="free_f2">Sons padrão da extensão</span></li>
+          <li><span class="check">✓</span> <span data-i18n="free_f3">Notificação de novos chamados</span></li>
+          <li><span class="check">✓</span> <span data-i18n="free_f4">Modo Legacy</span></li>
         </ul>
         <div class="plan-cta">
-          <span class="btn-plan secondary">Já incluso</span>
+          <span class="btn-plan secondary" data-i18n="included">Já incluso</span>
         </div>
       </div>
 
-      <div class="plan-card featured">
-        <div class="plan-tier">Normal</div>
-        <div class="plan-price">Pago</div>
+      <div class="plan-card featured" data-popular="MAIS POPULAR">
+        <div class="plan-tier" data-i18n="plan_normal">Normal</div>
+        <div class="plan-price" data-i18n="price_paid">Pago</div>
         <ul class="plan-features">
-          <li><span class="check">✓</span> Tudo do plano Grátis</li>
-          <li><span class="check">✓</span> Múltiplas filas</li>
-          <li><span class="check">✓</span> Áudios personalizados (upload)</li>
-          <li><span class="check">✓</span> Notificação por mudança de status</li>
+          <li><span class="check">✓</span> <span data-i18n="normal_f1">Tudo do plano Grátis</span></li>
+          <li><span class="check">✓</span> <span data-i18n="normal_f2">Múltiplas filas</span></li>
+          <li><span class="check">✓</span> <span data-i18n="normal_f3">Áudios personalizados (upload)</span></li>
+          <li><span class="check">✓</span> <span data-i18n="normal_f4">Notificação por mudança de status</span></li>
         </ul>
         <div class="plan-cta">
-          <button type="button" id="pay-normal-btn" class="btn-plan primary">Assinar</button>
+          <button type="button" id="pay-normal-btn" class="btn-plan primary" data-i18n="subscribe">Assinar</button>
         </div>
         <div class="plan-cta">
-          <button type="button" id="start-trial-btn" class="btn-plan trial">Iniciar teste grátis de 1 mês</button>
+          <button type="button" id="start-trial-btn" class="btn-plan trial" data-i18n="start_trial">Iniciar teste grátis de 1 mês</button>
         </div>
       </div>
 
       <div class="plan-card">
-        <div class="plan-tier enterprise">Empresa</div>
-        <div class="plan-price">Sob consulta</div>
+        <div class="plan-tier enterprise" data-i18n="plan_enterprise">Empresa</div>
+        <div class="plan-price" data-i18n="price_quote">Sob consulta</div>
         <ul class="plan-features">
-          <li><span class="check">✓</span> Para times/empresas inteiros</li>
-          <li><span class="check">✓</span> Preço negociado</li>
-          <li><span class="check">✓</span> Suporte dedicado</li>
+          <li><span class="check">✓</span> <span data-i18n="ent_f1">Para times/empresas inteiros</span></li>
+          <li><span class="check">✓</span> <span data-i18n="ent_f2">Preço negociado</span></li>
+          <li><span class="check">✓</span> <span data-i18n="ent_f3">Suporte dedicado</span></li>
         </ul>
         <div class="plan-cta">
-          <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="btn-plan outlined">Contatar por e-mail</a>
+          <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="btn-plan outlined" data-i18n="contact_email">Contatar por e-mail</a>
         </div>
       </div>
     </div>
 
     <div class="login-row">
-      <button type="button" id="login-btn" class="login-link">Já tem conta? Entrar</button>
+      <button type="button" id="login-btn" class="login-link" data-i18n="login_cta">Já tem conta? Entrar</button>
     </div>
   </div>
+  <script src="i18n.js"></script>
   <script src="pricing.js"></script>
 </body>
 </html>

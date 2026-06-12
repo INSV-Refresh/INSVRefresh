@@ -134,10 +134,14 @@
             <section id="avancado">
                 <h2>Avançado</h2>
                 <div class="avancado-field">
-                    <label class="field-label" for="acceptShortcutKey">Tecla de atalho para aceitar chamado</label>
-                    <p class="field-desc">Pressione a tecla configurada enquanto estiver na página da fila (fora de campos de texto) para aceitar automaticamente.</p>
+                    <span class="field-label">Atalho para aceitar chamado</span>
+                    <p class="field-desc">Pressione a combinação configurada enquanto estiver na página da fila (fora de campos de texto) para aceitar automaticamente. Mínimo de 2 teclas (ex: Ctrl+Shift+A).</p>
                     <div class="shortcut-row">
-                        <input type="text" id="acceptShortcutKey" placeholder="Ex: F2" maxlength="20" class="shortcut-input">
+                        <button type="button" id="accept-shortcut-capture" class="shortcut-capture"
+                            aria-label="Capturar atalho para aceitar chamado. Clique e pressione a combinação de teclas. Esc cancela.">
+                            <span class="shortcut-placeholder">Clique e pressione o atalho</span>
+                        </button>
+                        <button type="button" id="accept-shortcut-clear" class="shortcut-clear">Limpar</button>
                     </div>
                 </div>
             </section>

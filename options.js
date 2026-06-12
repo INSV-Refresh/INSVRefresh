@@ -736,24 +736,162 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  const acceptShortcutKey = document.getElementById("acceptShortcutKey");
-  if (acceptShortcutKey) {
+  setupShortcutCapture({
+    captureBtnId: "accept-shortcut-capture",
+    clearBtnId: "accept-shortcut-clear",
+    storageProp: "acceptShortcut",
+    legacyProp: "acceptShortcutKey",
+  });
+});
+
+// ── Capturador de atalho de teclado ─────────────────────────
+// Grava combinações como {ctrl, alt, shift, meta, code} em
+// chrome.storage.local.advanced[storageProp]. Exige >= 1 modificador
+// + 1 tecla. Esc cancela a captura.
+
+function shortcutCodeLabel(code) {
+  if (!code) return "";
+  if (code.startsWith("Key")) return code.slice(3);
+  if (code.startsWith("Digit")) return code.slice(5);
+  if (code.startsWith("Numpad")) return "Num " + code.slice(6);
+  const map = {
+    Space: "Espaço", Enter: "Enter", Tab: "Tab", Backspace: "Backspace",
+    ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→",
+    Minus: "-", Equal: "=", Comma: ",", Period: ".", Slash: "/",
+    Backslash: "\\", BracketLeft: "[", BracketRight: "]",
+    Semicolon: ";", Quote: "'", Backquote: "`",
+  };
+  return map[code] || code;
+}
+
+function shortcutChipsHTML(sc) {
+  const parts = [];
+  if (sc.ctrl) parts.push("Ctrl");
+  if (sc.alt) parts.push("Alt");
+  if (sc.shift) parts.push("Shift");
+  if (sc.meta) parts.push("Meta");
+  if (sc.code) parts.push(shortcutCodeLabel(sc.code));
+  return parts.map((p) => `<kbd>${p}</kbd>`).join('<span class="kbd-plus">+</span>');
+}
+
+function legacyKeyToShortcut(key) {
+  if (!key) return null;
+  const k = key.trim();
+  if (!k) return null;
+  let code = k;
+  if (/^[a-z]$/i.test(k)) code = "Key" + k.toUpperCase();
+  else if (/^[0-9]$/.test(k)) code = "Digit" + k;
+  return { ctrl: false, alt: false, shift: false, meta: false, code, legacy: true };
+}
+
+function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyProp }) {
+  const captureBtn = document.getElementById(captureBtnId);
+  const clearBtn = document.getElementById(clearBtnId);
+  if (!captureBtn) return;
+
+  let capturing = false;
+  let savedShortcut = null;
+
+  function render() {
+    if (savedShortcut && savedShortcut.code) {
+      captureBtn.innerHTML = shortcutChipsHTML(savedShortcut);
+      captureBtn.classList.add("has-shortcut");
+    } else {
+      captureBtn.innerHTML = '<span class="shortcut-placeholder">Clique e pressione o atalho</span>';
+      captureBtn.classList.remove("has-shortcut");
+    }
+  }
+
+  function stopCapture() {
+    capturing = false;
+    captureBtn.classList.remove("capturing", "capture-error");
+    render();
+  }
+
+  function startCapture() {
+    capturing = true;
+    captureBtn.classList.add("capturing");
+    captureBtn.classList.remove("capture-error");
+    captureBtn.innerHTML = '<span class="shortcut-placeholder">Pressione a combinação… (Esc cancela)</span>';
+  }
+
+  function showCaptureError(msg) {
+    captureBtn.classList.add("capture-error");
+    captureBtn.innerHTML = `<span class="shortcut-placeholder">${msg}</span>`;
+    setTimeout(() => {
+      if (capturing) startCapture();
+    }, 1200);
+  }
+
+  function persist(sc) {
     chrome.storage.local.get("advanced", (data) => {
       const adv = data.advanced || {};
-      acceptShortcutKey.value = adv.acceptShortcutKey || "";
-    });
-    const saveAcceptShortcut = debounce(() => {
-      chrome.storage.local.get("advanced", (data) => {
-        const adv = data.advanced || {};
-        adv.acceptShortcutKey = (acceptShortcutKey.value || "").trim();
-        chrome.storage.local.set({ advanced: adv });
-        showToast("Atalho salvo.", "success");
+      adv[storageProp] = sc;
+      if (legacyProp) delete adv[legacyProp];
+      chrome.storage.local.set({ advanced: adv }, () => {
+        savedShortcut = sc;
+        stopCapture();
+        showToast(sc ? "Atalho salvo." : "Atalho removido.", "success");
       });
-    }, 500);
-    acceptShortcutKey.addEventListener("change", saveAcceptShortcut);
-    acceptShortcutKey.addEventListener("input", saveAcceptShortcut);
+    });
   }
-});
+
+  chrome.storage.local.get("advanced", (data) => {
+    const adv = data.advanced || {};
+    savedShortcut = adv[storageProp] || (legacyProp ? legacyKeyToShortcut(adv[legacyProp]) : null);
+    render();
+  });
+
+  captureBtn.addEventListener("click", () => {
+    if (!capturing) startCapture();
+  });
+
+  captureBtn.addEventListener("keydown", (e) => {
+    if (!capturing) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        startCapture();
+      }
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.key === "Escape") {
+      stopCapture();
+      return;
+    }
+
+    const isModifierKey = ["Control", "Alt", "Shift", "Meta"].includes(e.key);
+    if (isModifierKey) {
+      // Mostra os modificadores pressionados em tempo real
+      const partial = { ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey, meta: e.metaKey, code: "" };
+      const chips = shortcutChipsHTML(partial);
+      captureBtn.innerHTML = chips
+        ? chips + '<span class="kbd-plus">+</span><span class="shortcut-placeholder">…</span>'
+        : '<span class="shortcut-placeholder">Pressione a combinação…</span>';
+      return;
+    }
+
+    const sc = { ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey, meta: e.metaKey, code: e.code };
+    const modCount = (sc.ctrl ? 1 : 0) + (sc.alt ? 1 : 0) + (sc.shift ? 1 : 0) + (sc.meta ? 1 : 0);
+    if (modCount < 1) {
+      showCaptureError("Mínimo 2 teclas (use um modificador)");
+      return;
+    }
+    persist(sc);
+  });
+
+  captureBtn.addEventListener("blur", () => {
+    if (capturing) stopCapture();
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      persist(null);
+    });
+  }
+}
 
 
 document.getElementById("nav-pricing") && document.getElementById("nav-pricing").addEventListener("click", (e) => {

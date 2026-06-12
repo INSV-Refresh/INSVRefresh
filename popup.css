@@ -152,9 +152,9 @@ body > hr:nth-of-type(2) {
 }
 
 .queue-name-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -169,7 +169,7 @@ input[type="text"].queue-name {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
   color: #fff;
-  padding: 6px 10px;
+  padding: 6px 30px 6px 10px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -189,16 +189,22 @@ input[type="text"].queue-name:focus {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Botão de copiar fica DENTRO do input, encostado à direita */
 .copy-queue-name-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   flex-shrink: 0;
-  padding: 5px 7px !important;
-  font-size: 13px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 2px 4px !important;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
+  opacity: 0.65;
+  transition: opacity 0.2s, background 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,7 +212,8 @@ input[type="text"].queue-name:focus {
 }
 
 .copy-queue-name-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* ── Toggle buttons ──────────────────────────── */

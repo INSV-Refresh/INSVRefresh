@@ -9,16 +9,18 @@ const addQueueBtn = document.getElementById("add-queue-btn");
 const legacyInterval = document.getElementById("legacyInterval");
 const legacyToggle = document.getElementById("legacyToggle");
 
+const volumeControl = document.getElementById("volume-control");
+
 function toggleMode(isLegacyMode) {
   if (isLegacyMode) {
     normalMode.style.display = "none";
     legacyMode.style.display = "flex";
-    volumeSlider.style.display = "none";
+    if (volumeControl) volumeControl.style.display = "none";
     legacyText.style.display = "block";
   } else {
     normalMode.style.display = "block";
     legacyMode.style.display = "none";
-    volumeSlider.style.display = "block";
+    if (volumeControl) volumeControl.style.display = "flex";
     legacyText.style.display = "none";
   }
 }

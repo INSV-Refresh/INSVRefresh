@@ -566,8 +566,28 @@ select.queue-sound-select option {
   opacity: 1;
 }
 
+/* ── Volume estilo YouTube: ícone fixo, slider aparece no hover ── */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.volume-icon {
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+  user-select: none;
+  line-height: 1;
+}
+
+.volume-control:hover .volume-icon,
+.volume-control:focus-within .volume-icon {
+  opacity: 1;
+}
+
 input[type="range"] {
-  flex: 1;
   accent-color: var(--light-blue-color);
   height: 4px;
   cursor: grab;
@@ -575,6 +595,18 @@ input[type="range"] {
   box-shadow: none;
   border: none;
   background: transparent;
+}
+
+.volume-control input[type="range"] {
+  width: 0;
+  opacity: 0;
+  transition: width 0.25s ease, opacity 0.2s ease;
+}
+
+.volume-control:hover input[type="range"],
+.volume-control:focus-within input[type="range"] {
+  width: 90px;
+  opacity: 1;
 }
 
 .plans-link {
@@ -603,28 +635,30 @@ input[type="range"] {
   color: #fff;
 }
 
-/* ── Status + feedback row ──────────────────── */
-.flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 16px 10px;
-  font-size: 11.5px;
-}
-
-.flex-between #status {
+/* ── Status + feedback (mesma linha do volume) ─ */
+#status {
+  flex: 1;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.flex-between a {
+.feedback-link {
+  font-size: 11.5px;
   color: rgba(255, 255, 255, 0.45);
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
-.flex-between a:hover {
+.feedback-link:hover {
   color: rgba(255, 255, 255, 0.75);
 }
 

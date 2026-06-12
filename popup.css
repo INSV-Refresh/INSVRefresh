@@ -419,6 +419,16 @@ select.queue-sound-select option {
   height: 18px;
 }
 
+/* ── Hidden queues note (free plan) ─────────── */
+.hidden-queues-note {
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffd166;
+  opacity: 0.85;
+  margin: 0 0 6px;
+}
+
 /* ── Upgrade link under queue list ─────────── */
 #upgrade-multi-queue {
   display: block;

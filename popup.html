@@ -28,12 +28,12 @@
 
     <div id="normal-mode">
         <div id="global-paused-banner" class="global-paused-banner" style="display: none;">
-            <span>⏸️ Atualização pausada</span>
-            <button type="button" id="resume-all-btn">Retomar</button>
+            <span data-i18n="paused_banner">⏸️ Atualização pausada</span>
+            <button type="button" id="resume-all-btn" data-i18n="resume">Retomar</button>
         </div>
         <div id="queue-list"></div>
         <button id="add-queue-btn" class="add-queue-btn has-tooltip has-tooltip-add-queue-btn"
-            data-tooltip="Adicionar fila">
+            data-tooltip="Adicionar fila" data-i18n-tooltip="tt_add_queue">
             <img class src="./assets/icons/add.png" alt="Icone de adicionar">
         </button>
     </div>
@@ -47,7 +47,7 @@
                 </div>
             </div>
             <div class="container-2">
-                <button id="legacyToggle" class="queue-inactive">Inativo</button>
+                <button id="legacyToggle" class="queue-inactive" data-i18n="inactive">Inativo</button>
             </div>
         </div>
     </div>
@@ -56,23 +56,24 @@
 
     <div class="sound-and-range">
         <a href="/options.html" target="_blank" class="has-tooltip has-tooltip-settings"
-            data-tooltip="Conheça mais sobre a extensão">
+            data-tooltip="Conheça mais sobre a extensão" data-i18n-tooltip="tt_settings">
             <img src="/assets/icons/settings.svg" alt="Configurações">
         </a>
 
         <div class="volume-control" id="volume-control">
-            <span class="volume-icon" title="Volume da notificação">🔊</span>
+            <span class="volume-icon" title="Volume da notificação" data-i18n-title="volume_title">🔊</span>
             <input type="range" id="volumeSlider" min="0" max="100" value="50" />
         </div>
         <span id="status"></span>
-        <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="feedback-link">Enviar feedback</a>
+        <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="feedback-link" data-i18n="feedback">Enviar feedback</a>
         <a href="/options.html#modo-legacy" target="_blank" id="legacy-text" class="has-tooltip has-tooltip-legacy-text"
-            data-tooltip="Desative o modo legacy para mais funcionalidades!">Modo Legacy</a>
+            data-tooltip="Desative o modo legacy para mais funcionalidades!" data-i18n-tooltip="tt_legacy" data-i18n="legacy_mode">Modo Legacy</a>
     </div>
 
     <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead/reviews?utm_source=item-share-cb"
         target="_blank" class="glowPulse review">✨</a>
 
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
 </body>
 

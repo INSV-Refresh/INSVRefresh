@@ -26,17 +26,17 @@ function toggleMode(isLegacyMode) {
 }
 
 function showSaving() {
-  statusSpan.textContent = "Salvando configurações...";
+  statusSpan.textContent = t("saving");
   setTimeout(() => (statusSpan.textContent = ""), 1800);
 }
 
 function updateLegacyToggle(active) {
   if (active) {
     legacyToggle.className = "queue-active";
-    legacyToggle.textContent = "Ativo";
+    legacyToggle.textContent = t("active");
   } else {
     legacyToggle.className = "queue-inactive";
-    legacyToggle.textContent = "Inativo";
+    legacyToggle.textContent = t("inactive");
   }
 }
 
@@ -66,15 +66,15 @@ function createQueueElement(queue) {
   div.className = "queue-item";
 
   div.innerHTML = `
-<div class="drag-handle" title="Arrastar para reordenar">☰</div>
+<div class="drag-handle" title="${t("drag_reorder")}">☰</div>
 <div class="adjustments-containers-1-and-2">
 <div class="container-1">
 <div class="queue-name-wrapper">
-<input type="text" placeholder="Nome da fila" value="${queue.name || ""}" class="queue-name">
-<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="Copiar nome da fila" title="Copiar nome da fila">📋</button>
+<input type="text" placeholder="${t("queue_name_ph")}" value="${queue.name || ""}" class="queue-name">
+<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" title="${t("copy_queue_name")}">📋</button>
 </div>
 <label class="active-toggle">
-<button class="${queue.active ? "queue-active" : "queue-inactive"}">${queue.active ? "Ativo" : "Inativo"}</button>
+<button class="${queue.active ? "queue-active" : "queue-inactive"}">${queue.active ? t("active") : t("inactive")}</button>
 </label>
 </div>
 <div class="container-2">
@@ -83,7 +83,7 @@ function createQueueElement(queue) {
 <span class="seconds">s</span>
 </div>
 <label>
-<button class="queue-sound has-tooltip has-tooltip-default ${queue.soundEnabled ? "" : "off"}" data-tooltip="Notificar novos chamados">
+<button class="queue-sound has-tooltip has-tooltip-default ${queue.soundEnabled ? "" : "off"}" data-tooltip="${t("tt_notify_new")}">
 <img src="./assets/icons/notification.png" alt="Icone de notificação">
 </button>
 </label>
@@ -91,7 +91,7 @@ function createQueueElement(queue) {
 <select class="queue-sound-select">
 </select>
 </div>
-${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="Remover fila"><img src="./assets/icons/trash-bin.png" alt="Remover"></button>`}
+${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}"><img src="./assets/icons/trash-bin.png" alt="Remover"></button>`}
 </div>
 </div>
 `;
@@ -119,30 +119,30 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     copyBtn.addEventListener("click", () => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs[0] || !tabs[0].url || !tabs[0].url.includes("lightning.force.com")) {
-          if (typeof statusSpan !== "undefined") statusSpan.textContent = "Abra uma página do Salesforce";
+          if (typeof statusSpan !== "undefined") statusSpan.textContent = t("open_sf");
           setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
           return;
         }
         chrome.tabs.sendMessage(tabs[0].id, { type: "GET_QUEUE_NAME" }, (response) => {
           if (chrome.runtime.lastError) {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Recarregue a página do Salesforce";
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("reload_sf");
             setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
             return;
           }
           const queueName = (response && response.queueName || "").trim();
           if (!queueName) {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Não foi possível detectar a fila";
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("detect_fail");
             setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
             return;
           }
           navigator.clipboard.writeText(queueName).then(() => {
             const nameInput = div.querySelector(".queue-name");
             if (nameInput) nameInput.value = queueName;
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = `"${queueName}" copiado!`;
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("copied", { name: queueName });
             setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
             saveOptions();
           }).catch(() => {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = "Não foi possível copiar";
+            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("copy_fail");
             setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
           });
         });
@@ -168,7 +168,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     const isActive = activeBtn.classList.contains("queue-active");
     activeBtn.classList.toggle("queue-active", !isActive);
     activeBtn.classList.toggle("queue-inactive", isActive);
-    activeBtn.textContent = isActive ? "Inativo" : "Ativo";
+    activeBtn.textContent = isActive ? t("inactive") : t("active");
     saveOptionsDebounced();
   });
 
@@ -206,7 +206,7 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
   selectElement.innerHTML = "";
 
   const defaultSounds = [
-    { value: "notification.mp3", text: "Padrão" },
+    { value: "notification.mp3", text: t("sound_default") },
     { value: "tech.mp3", text: "Tech" },
     { value: "limba.mp3", text: "Limba" },
     { value: "lis.mp3", text: "LIS" },
@@ -310,15 +310,15 @@ function applyPaidGate(isPaid) {
   if (!isPaid && count >= 1) {
     // Botão amarelo premium
     addQueueBtn.classList.add("premium-locked");
-    addQueueBtn.title = "Múltiplas filas disponível no plano pago";
-    addQueueBtn.setAttribute("data-tooltip", "⭐ Premium — ver planos");
+    addQueueBtn.title = t("multi_queue_paid");
+    addQueueBtn.setAttribute("data-tooltip", t("tt_premium"));
 
     // Link sutil embaixo
     const link = document.createElement("a");
     link.id = "upgrade-multi-queue";
     link.href = chrome.runtime.getURL("pricing.html");
     link.target = "_blank";
-    link.textContent = "⭐ Assine para múltiplas filas";
+    link.textContent = t("subscribe_multi");
     normalMode.appendChild(link);
 
     // Ao clicar no botão travado, mostrar banner em vez de ignorar
@@ -332,8 +332,8 @@ function applyPaidGate(isPaid) {
       lockBanner.id = "popup-lock-banner";
       lockBanner.className = "popup-lock-banner";
       lockBanner.innerHTML = `
-        🔒 Disponível no plano pago.
-        <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">Ver planos →</a>
+        ${t("locked_paid")}
+        <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">${t("see_plans")}</a>
       `;
       normalMode.insertBefore(lockBanner, addQueueBtn);
 
@@ -346,7 +346,7 @@ function applyPaidGate(isPaid) {
     // Resetar botão
     addQueueBtn.classList.remove("premium-locked");
     addQueueBtn.removeAttribute("title");
-    addQueueBtn.setAttribute("data-tooltip", "Adicionar fila");
+    addQueueBtn.setAttribute("data-tooltip", t("tt_add_queue"));
 
     if (addQueueBtn._premiumClickHandler) {
       addQueueBtn.removeEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
@@ -363,7 +363,7 @@ function renderHiddenQueuesNote() {
   const note = document.createElement("div");
   note.id = "hidden-queues-note";
   note.className = "hidden-queues-note";
-  note.innerHTML = `🔒 ${hiddenPaidQueues.length === 1 ? "1 fila adicional disponível" : `${hiddenPaidQueues.length} filas adicionais disponíveis`} no plano pago`;
+  note.innerHTML = hiddenPaidQueues.length === 1 ? t("hidden_one") : t("hidden_many", { n: hiddenPaidQueues.length });
   normalMode.insertBefore(note, addQueueBtn);
 }
 
@@ -552,15 +552,29 @@ if (resumeAllBtn) {
   });
 }
 
-chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
-  if (result.legacyMode) {
-    toggleMode(true);
-    legacyInterval.value = result.legacyInterval || 10;
-    updateLegacyToggle(result.legacyActive || false);
-  } else {
-    toggleMode(false);
-    restoreOptions();
-  }
+// Aguarda o idioma carregar antes de renderizar conteúdo dinâmico
+i18nReady.then(() => {
+  chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
+    if (result.legacyMode) {
+      toggleMode(true);
+      legacyInterval.value = result.legacyInterval || 10;
+      updateLegacyToggle(result.legacyActive || false);
+    } else {
+      toggleMode(false);
+      restoreOptions();
+    }
+  });
+});
+
+// Troca de idioma em runtime: re-renderiza as partes dinâmicas
+document.addEventListener("insv-lang-changed", () => {
+  chrome.storage.sync.get(["legacyMode", "legacyActive"], (result) => {
+    if (result.legacyMode) {
+      updateLegacyToggle(result.legacyActive || false);
+    } else {
+      restoreOptions();
+    }
+  });
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {

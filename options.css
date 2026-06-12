@@ -1144,6 +1144,43 @@ audio{
   cursor: pointer;
 }
 
+/* ── Seletor de idioma (Aparência) ───────────────────── */
+.language-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+  margin-top: 1rem;
+  cursor: default;
+}
+
+.lang-select {
+  padding: 7px 11px;
+  border: 1.5px solid var(--ice-white-color);
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lang-select:focus {
+  border-color: var(--light-blue-color);
+  box-shadow: 0 0 0 3px rgba(0,161,224,0.1);
+}
+
+[data-theme="dark"] .language-label { color: #aaa; }
+[data-theme="dark"] .lang-select {
+  background: #232340;
+  color: #e0e0e0;
+  border-color: #3a3a5a;
+}
+
 /* ── Premium badge no título ─────────────────────────── */
 .premium-badge {
   display: inline-flex;

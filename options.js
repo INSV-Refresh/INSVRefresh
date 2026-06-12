@@ -44,11 +44,11 @@ function exportSettings() {
       a.download = `insv-refresh-backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Configurações exportadas!", "success");
+      showToast(t("exported"), "success");
       trackEvent("settings_exported");
     });
   } catch (e) {
-    showToast("Erro ao exportar: " + e.message, "error");
+    showToast(t("export_error") + e.message, "error");
   }
 }
 
@@ -60,7 +60,7 @@ function importSettings(event) {
     try {
       const importData = JSON.parse(e.target.result);
       if (!importData.queues && !importData.statusNotifications) {
-        throw new Error("Arquivo inválido");
+        throw new Error(t("invalid_file"));
       }
       // Backups antigos: mescla statusNotifications[] dentro de queues[]
       let queues = importData.queues || [];
@@ -75,12 +75,12 @@ function importSettings(event) {
       };
       if (importData.darkMode !== undefined) toImport.darkMode = !!importData.darkMode;
       chrome.storage.local.set(toImport, () => {
-        showToast("Configurações importadas! Recarregue a página.", "success");
+        showToast(t("imported"), "success");
         trackEvent("settings_imported");
         setTimeout(() => window.location.reload(), 1500);
       });
     } catch (err) {
-      showToast("Erro ao importar: " + err.message, "error");
+      showToast(t("import_error") + err.message, "error");
     }
   };
   reader.readAsText(file);
@@ -108,7 +108,7 @@ function validateAudioFile(input) {
   const maxSizeMB = 5;
 
   if (!validTypes.includes(file.type)) {
-    showToast("Formato inválido. Por favor, envie um arquivo MP3, WAV, OGG, MP4 ou WebM.", "error");
+    showToast(t("invalid_format"), "error");
     input.value = "";
     document.getElementById('save-audio-btn').disabled = true;
     document.getElementById('audio-preview').innerHTML = '';
@@ -117,7 +117,7 @@ function validateAudioFile(input) {
   }
 
   if (file.size > maxSizeMB * 1024 * 1024) {
-    showToast("Arquivo muito grande. O tamanho máximo permitido é 5MB.", "error");
+    showToast(t("file_too_big"), "error");
     input.value = "";
     document.getElementById('save-audio-btn').disabled = true;
     document.getElementById('audio-preview').innerHTML = '';
@@ -161,12 +161,12 @@ function saveCustomAudio() {
   const customName = nameInput.value.trim();
   
   if (!file) {
-    showToast('Por favor, selecione um arquivo de áudio primeiro.', "warning");
+    showToast(t("select_audio_first"), "warning");
     return;
   }
-  
+
   if (!customName) {
-    showToast('Por favor, insira um nome para o áudio.', "warning");
+    showToast(t("enter_audio_name"), "warning");
     nameInput.focus();
     return;
   }
@@ -188,7 +188,7 @@ function saveCustomAudio() {
       };
       
       chrome.storage.local.set({ audiosPersonalizados: customAudios }, () => {
-        showToast('Áudio personalizado salvo com sucesso!', "success"); 
+        showToast(t("audio_saved"), "success");
         loadCustomAudios();
         clearAudioForm();
       });
@@ -225,28 +225,30 @@ function loadCustomAudios() {
     
     const audioKeys = Object.keys(customAudios);
     if (audioKeys.length === 0) {
-      container.innerHTML = '<p>Nenhum áudio personalizado encontrado.</p>';
+      container.innerHTML = `<p>${t("no_custom_audio")}</p>`;
       return;
     }
-    
+
+    const dateLocale = { pt_BR: "pt-BR", en: "en-US", es: "es-ES" }[I18N.lang] || "pt-BR";
+
     audioKeys.forEach(key => {
       const audioInfo = customAudios[key];
       const audioItem = document.createElement('div');
-      
+
       audioItem.innerHTML = `
         <div>
           <strong>${audioInfo.name}</strong>
           <div class="background-audio-viewer">
-            Arquivo: ${audioInfo.originalName}
-            ${audioInfo.createdAt ? ' • Adicionado em: ' + new Date(audioInfo.createdAt).toLocaleDateString('pt-BR') : ''}
+            ${t("audio_file")} ${audioInfo.originalName}
+            ${audioInfo.createdAt ? ' • ' + t("audio_added_on") + ' ' + new Date(audioInfo.createdAt).toLocaleDateString(dateLocale) : ''}
           </div>
           <audio controls>
             <source src="${audioInfo.data}" type="audio/mpeg">
-            Seu navegador não suporta áudio.
+            ${t("audio_no_support")}
           </audio>
         </div>
         <button class="delete-audio-btn" data-audio-key="${key}">
-          Excluir
+          ${t("delete")}
         </button>
       `;
       
@@ -266,7 +268,7 @@ function deleteCustomAudio(audioKey) {
     delete customAudios[audioKey];
     
     chrome.storage.local.set({ audiosPersonalizados: customAudios }, () => {
-      showToast('Áudio deletado com sucesso!', "success");
+      showToast(t("audio_deleted"), "success");
       loadCustomAudios();
     });
   });
@@ -349,7 +351,7 @@ function handleDrop(e) {
   const files = dt.files;
   
   if (files.length > 1) {
-    showDropError('Por favor, selecione apenas um arquivo por vez.');
+    showDropError(t("one_file_only"));
     return;
   }
   
@@ -362,7 +364,7 @@ function handleFiles(file) {
   const validTypes = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/webm"];
   
   if (!validTypes.includes(file.type)) {
-    showDropError('Tipo de arquivo não suportado. Use MP3, WAV, OGG, MP4 ou WebM.');
+    showDropError(t("unsupported_type"));
     return;
   }
 
@@ -392,8 +394,8 @@ function showDropSuccess() {
   dropContent.innerHTML = `
     <div class="drop-icon">✅</div>
     <div class="drop-text">
-      <strong>Arquivo carregado com sucesso!</strong>
-      <p>Preencha o nome e clique em "Salvar Áudio"</p>
+      <strong>${t("file_loaded")}</strong>
+      <p>${t("fill_and_save")}</p>
     </div>
   `;
   
@@ -410,11 +412,11 @@ function resetDropArea() {
   dropContent.innerHTML = `
     <div class="drop-icon">🎵</div>
     <div class="drop-text">
-      <strong>Arraste um arquivo de áudio aqui</strong>
-      <p>ou <button type="button" id="browse-btn" class="browse-btn">clique para procurar</button></p>
+      <strong>${t("drop_strong")}</strong>
+      <p>${t("drop_or")} <button type="button" id="browse-btn" class="browse-btn">${t("drop_browse")}</button></p>
     </div>
     <div class="drop-formats">
-      Formatos: MP3, WAV, OGG, MP4, WebM (máx. 5MB)
+      ${t("drop_formats")}
     </div>
   `;
   
@@ -432,7 +434,7 @@ function loadStatusNotificationSounds(selectEl, selectedValue, onPreview) {
   if (!selectEl) return;
   selectEl.innerHTML = "";
   const defaultSounds = [
-    { value: "notification.mp3", text: "Padrão" },
+    { value: "notification.mp3", text: t("sound_default") },
     { value: "tech.mp3", text: "Tech" },
     { value: "limba.mp3", text: "Limba" },
     { value: "lis.mp3", text: "LIS" },
@@ -537,14 +539,14 @@ function createQueueManagerRow(queue, index) {
   const div = document.createElement("div");
   div.className = "queue-manager-row";
   div.innerHTML = `
-    <input type="text" class="qm-name" value="${escapeHtml(queue.name || "")}" placeholder="Nome da fila">
-    <label class="qm-enable" title="Notificar mudança de status desta fila">
+    <input type="text" class="qm-name" value="${escapeHtml(queue.name || "")}" placeholder="${t("queue_name_ph")}">
+    <label class="qm-enable" title="${t("qm_bell_title")}">
       <input type="checkbox" class="qm-enabled" ${sn.enabled ? "checked" : ""}>
       <span aria-hidden="true">🔔</span>
     </label>
-    <input type="text" class="qm-statuses" value="${escapeHtml((sn.statuses || []).join(";"))}" placeholder="Status (ex: Em andamento;Resolvido)" title="Separe vários status com ;">
-    <select class="qm-sound" title="Som da notificação de status"></select>
-    ${index === 0 ? '<span class="qm-remove-placeholder"></span>' : '<button type="button" class="qm-remove" title="Remover fila">✕</button>'}
+    <input type="text" class="qm-statuses" value="${escapeHtml((sn.statuses || []).join(";"))}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}">
+    <select class="qm-sound" title="${t("qm_sound_title")}"></select>
+    ${index === 0 ? '<span class="qm-remove-placeholder"></span>' : `<button type="button" class="qm-remove" title="${t("remove_queue")}">✕</button>`}
   `;
 
   loadStatusNotificationSounds(div.querySelector(".qm-sound"), sn.sound || "notification.mp3", true);
@@ -597,7 +599,7 @@ function collectQueueManagerRows() {
 function persistQueueManager() {
   qmSelfWrite = JSON.stringify(qmQueues);
   chrome.storage.local.set({ queues: qmQueues }, () => {
-    showToast("Filas salvas.", "success");
+    showToast(t("queues_saved"), "success");
     trackEvent("queue_manager_saved", { count: qmQueues.length });
   });
 }
@@ -670,7 +672,7 @@ function applyPaidGateOptions(isPaid) {
       if (h2 && !h2.querySelector(".premium-badge")) {
         const badge = document.createElement("span");
         badge.className = "premium-badge";
-        badge.textContent = "⭐ Premium";
+        badge.textContent = t("premium_badge");
         h2.appendChild(badge);
       }
 
@@ -682,8 +684,8 @@ function applyPaidGateOptions(isPaid) {
           const banner = document.createElement("div");
           banner.className = "paid-gate-banner";
           banner.innerHTML = `
-            🔒 Disponível no plano pago.
-            <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">Ver planos →</a>
+            ${t("locked_paid")}
+            <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">${t("see_plans")}</a>
           `;
           section.insertBefore(banner, section.firstChild);
         }
@@ -732,7 +734,9 @@ function applyPaidGateOptions(isPaid) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// i18nReady resolve após DOMContentLoaded com o idioma carregado e o
+// DOM estático traduzido — só então renderizamos o conteúdo dinâmico
+i18nReady.then(function() {
   setupDragAndDrop();
   
   const saveBtn = document.getElementById('save-audio-btn');
@@ -750,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     legacyCheckbox.addEventListener('change', () => {
       chrome.storage.sync.set({ legacyMode: legacyCheckbox.checked });
-      showToast("Modo Legacy " + (legacyCheckbox.checked ? "ativado" : "desativado"), "success");
+      showToast(legacyCheckbox.checked ? t("legacy_on") : t("legacy_off"), "success");
     });
   }
 
@@ -783,8 +787,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (trialBanner) {
         const dias = access.trialDaysLeft;
         trialBanner.innerHTML = `
-          ⏳ <strong>Teste grátis ativo</strong> — ${dias === 1 ? "resta 1 dia" : `restam ${dias} dias`}.
-          <a href="${chrome.runtime.getURL("pricing.html")}" target="_blank">Assinar agora →</a>
+          ⏳ <strong>${t("trial_active")}</strong> — ${dias === 1 ? t("trial_days_left_one") : t("trial_days_left", { n: dias })}.
+          <a href="${chrome.runtime.getURL("pricing.html")}" target="_blank">${t("subscribe_now")}</a>
         `;
         trialBanner.style.display = "flex";
       }
@@ -828,6 +832,21 @@ document.addEventListener('DOMContentLoaded', function() {
     clearBtnId: "pause-shortcut-clear",
     storageProp: "pauseAllShortcut",
   });
+
+  // Seletor de idioma (Aparência)
+  const langSelect = document.getElementById("langSelect");
+  if (langSelect) {
+    langSelect.value = I18N.lang;
+    langSelect.addEventListener("change", () => {
+      chrome.storage.local.set({ lang: langSelect.value });
+    });
+  }
+});
+
+// Troca de idioma: recarrega a página para retraduzir todo o conteúdo
+// dinâmico (listas, capturadores, banners) de uma vez
+document.addEventListener("insv-lang-changed", () => {
+  window.location.reload();
 });
 
 // ── Capturador de atalho de teclado ─────────────────────────
@@ -883,7 +902,7 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
       captureBtn.innerHTML = shortcutChipsHTML(savedShortcut);
       captureBtn.classList.add("has-shortcut");
     } else {
-      captureBtn.innerHTML = '<span class="shortcut-placeholder">Clique e pressione o atalho</span>';
+      captureBtn.innerHTML = `<span class="shortcut-placeholder">${t("shortcut_click")}</span>`;
       captureBtn.classList.remove("has-shortcut");
     }
   }
@@ -898,7 +917,7 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
     capturing = true;
     captureBtn.classList.add("capturing");
     captureBtn.classList.remove("capture-error");
-    captureBtn.innerHTML = '<span class="shortcut-placeholder">Pressione a combinação… (Esc cancela)</span>';
+    captureBtn.innerHTML = `<span class="shortcut-placeholder">${t("shortcut_press")}</span>`;
   }
 
   function showCaptureError(msg) {
@@ -917,7 +936,7 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
       chrome.storage.local.set({ advanced: adv }, () => {
         savedShortcut = sc;
         stopCapture();
-        showToast(sc ? "Atalho salvo." : "Atalho removido.", "success");
+        showToast(sc ? t("shortcut_saved") : t("shortcut_removed"), "success");
       });
     });
   }
@@ -955,14 +974,14 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
       const chips = shortcutChipsHTML(partial);
       captureBtn.innerHTML = chips
         ? chips + '<span class="kbd-plus">+</span><span class="shortcut-placeholder">…</span>'
-        : '<span class="shortcut-placeholder">Pressione a combinação…</span>';
+        : `<span class="shortcut-placeholder">${t("shortcut_press")}</span>`;
       return;
     }
 
     const sc = { ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey, meta: e.metaKey, code: e.code };
     const modCount = (sc.ctrl ? 1 : 0) + (sc.alt ? 1 : 0) + (sc.shift ? 1 : 0) + (sc.meta ? 1 : 0);
     if (modCount < 1) {
-      showCaptureError("Mínimo 2 teclas (use um modificador)");
+      showCaptureError(t("shortcut_min2"));
       return;
     }
     persist(sc);

@@ -11,9 +11,10 @@
 
 <body>
     <div class="header">
-        <h1 class="glowPulse">
-            <a href="/options.html" target="_blank">
-                INSV REFRESH
+        <h1>
+            <a href="/options.html" target="_blank" class="logo-link">
+                <svg width="16" height="20" viewBox="0 0 24 24" fill="var(--spark-500)" stroke="var(--spark-500)" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+                <span>INSV Refresh</span>
             </a>
         </h1>
         <small>
@@ -28,13 +29,14 @@
 
     <div id="normal-mode">
         <div id="global-paused-banner" class="global-paused-banner" style="display: none;">
-            <span data-i18n="paused_banner">⏸️ Atualização pausada</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            <span data-i18n="paused_banner">Atualização pausada</span>
             <button type="button" id="resume-all-btn" data-i18n="resume">Retomar</button>
         </div>
         <div id="queue-list"></div>
         <button id="add-queue-btn" class="add-queue-btn has-tooltip has-tooltip-add-queue-btn"
-            data-tooltip="Adicionar fila" data-i18n-tooltip="tt_add_queue">
-            <img class src="./assets/icons/add.png" alt="Icone de adicionar">
+            data-tooltip="Adicionar fila" data-i18n-tooltip="tt_add_queue" aria-label="Adicionar fila">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         </button>
     </div>
 
@@ -55,13 +57,15 @@
     <hr>
 
     <div class="sound-and-range">
-        <a href="/options.html" target="_blank" class="has-tooltip has-tooltip-settings"
-            data-tooltip="Conheça mais sobre a extensão" data-i18n-tooltip="tt_settings">
-            <img src="/assets/icons/settings.svg" alt="Configurações">
+        <a href="/options.html" target="_blank" class="has-tooltip has-tooltip-settings icon-btn"
+            data-tooltip="Conheça mais sobre a extensão" data-i18n-tooltip="tt_settings" aria-label="Configurações">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         </a>
 
         <div class="volume-control" id="volume-control">
-            <span class="volume-icon" title="Volume da notificação" data-i18n-title="volume_title">🔊</span>
+            <span class="volume-icon" title="Volume da notificação" data-i18n-title="volume_title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4 6 9H3v6h3l5 5V4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+            </span>
             <input type="range" id="volumeSlider" min="0" max="100" value="50" />
         </div>
         <span id="status"></span>

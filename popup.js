@@ -66,12 +66,12 @@ function createQueueElement(queue) {
   div.className = "queue-item";
 
   div.innerHTML = `
-<div class="drag-handle" title="${t("drag_reorder")}">☰</div>
+<div class="drag-handle" title="${t("drag_reorder")}" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg></div>
 <div class="adjustments-containers-1-and-2">
 <div class="container-1">
 <div class="queue-name-wrapper">
 <input type="text" placeholder="${t("queue_name_ph")}" value="${queue.name || ""}" class="queue-name">
-<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" title="${t("copy_queue_name")}">📋</button>
+<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" title="${t("copy_queue_name")}" aria-label="${t("copy_queue_name")}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 </div>
 <label class="active-toggle">
 <button class="${queue.active ? "queue-active" : "queue-inactive"}">${queue.active ? t("active") : t("inactive")}</button>
@@ -82,16 +82,15 @@ function createQueueElement(queue) {
 <input type="number" class="queue-interval" value="${queue.interval || 15}" min="5" max="900">
 <span class="seconds">s</span>
 </div>
-<label>
-<button class="queue-sound has-tooltip has-tooltip-default ${queue.soundEnabled ? "" : "off"}" data-tooltip="${t("tt_notify_new")}">
-<img src="./assets/icons/notification.png" alt="Icone de notificação">
+<button class="queue-sound has-tooltip has-tooltip-default ${queue.soundEnabled ? "" : "off"}" data-tooltip="${t("tt_notify_new")}" aria-label="${t("tt_notify_new")}">
+<svg class="bell-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+<svg class="bell-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.9 17.9 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="m2 2 20 20"/></svg>
 </button>
-</label>
-<div class="sound-container" style="display: ${queue.soundEnabled ? "block" : "none"};">
+<div class="sound-container" style="display: ${queue.soundEnabled ? "inline-flex" : "none"};">
 <select class="queue-sound-select">
 </select>
 </div>
-${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}"><img src="./assets/icons/trash-bin.png" alt="Remover"></button>`}
+${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}" aria-label="${t("remove_queue")}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-dc-tpl="467" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" data-om-id="e0b415c9:493"></path></svg></button>`}
 </div>
 </div>
 `;
@@ -113,6 +112,14 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     input.addEventListener("input", saveOptionsDebounced);
     input.addEventListener("change", saveOptionsDebounced);
   });
+
+  const nameInput = div.querySelector(".queue-name");
+  if (nameInput) {
+    nameInput.addEventListener("change", () => {
+      nameInput.classList.add("queue-name-saved");
+      setTimeout(() => nameInput.classList.remove("queue-name-saved"), 1500);
+    });
+  }
 
   const copyBtn = div.querySelector(".copy-queue-name-btn");
   if (copyBtn) {
@@ -177,7 +184,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     soundBtn.classList.toggle("off");
     const soundContainer = div.querySelector(".sound-container");
     if (!soundBtn.classList.contains("off")) {
-      soundContainer.style.display = "block";
+      soundContainer.style.display = "inline-flex";
     } else {
       soundContainer.style.display = "none";
     }

@@ -234,28 +234,46 @@ function loadCustomAudios() {
     audioKeys.forEach(key => {
       const audioInfo = customAudios[key];
       const audioItem = document.createElement('div');
+      const sizeKB = audioInfo.data ? Math.round(audioInfo.data.length * 0.75 / 1024) : 0;
 
       audioItem.innerHTML = `
-        <div>
+        <button class="audio-play-btn" aria-label="${t('play') || 'Reproduzir'} ${audioInfo.name}">
+          <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <div class="audio-info">
           <strong>${audioInfo.name}</strong>
-          <div class="background-audio-viewer">
-            ${t("audio_file")} ${audioInfo.originalName}
-            ${audioInfo.createdAt ? ' • ' + t("audio_added_on") + ' ' + new Date(audioInfo.createdAt).toLocaleDateString(dateLocale) : ''}
-          </div>
-          <audio controls>
-            <source src="${audioInfo.data}" type="audio/mpeg">
-            ${t("audio_no_support")}
-          </audio>
+          <div class="audio-meta">${audioInfo.originalName}${sizeKB ? ' · ' + sizeKB + ' KB' : ''}</div>
         </div>
-        <button class="delete-audio-btn" data-audio-key="${key}">
-          ${t("delete")}
+        <button class="delete-audio-btn" data-audio-key="${key}" aria-label="${t('delete')} ${audioInfo.name}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-dc-tpl="467" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" data-om-id="e0b415c9:493"></path></svg>
         </button>
       `;
-      
+
       container.appendChild(audioItem);
-      
+
+      const playBtn = audioItem.querySelector('.audio-play-btn');
+      let audioObj = null;
+      playBtn.addEventListener('click', function() {
+        if (!audioObj) {
+          audioObj = new Audio(audioInfo.data);
+          audioObj.addEventListener('ended', () => {
+            playBtn.classList.remove('playing');
+          });
+        }
+        if (audioObj.paused) {
+          audioObj.play();
+          playBtn.classList.add('playing');
+        } else {
+          audioObj.pause();
+          audioObj.currentTime = 0;
+          playBtn.classList.remove('playing');
+        }
+      });
+
       const deleteBtn = audioItem.querySelector('.delete-audio-btn');
       deleteBtn.addEventListener('click', function() {
+        if (audioObj) { audioObj.pause(); audioObj = null; }
         deleteCustomAudio(this.dataset.audioKey);
       });
     });
@@ -392,7 +410,7 @@ function showDropSuccess() {
   
   const originalContent = dropContent.innerHTML;
   dropContent.innerHTML = `
-    <div class="drop-icon">✅</div>
+    <div class="drop-icon" style="color: var(--success-500)"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div class="drop-text">
       <strong>${t("file_loaded")}</strong>
       <p>${t("fill_and_save")}</p>
@@ -410,7 +428,7 @@ function resetDropArea() {
   
   dropArea.classList.remove('dragover', 'error');
   dropContent.innerHTML = `
-    <div class="drop-icon">🎵</div>
+    <div class="drop-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
     <div class="drop-text">
       <strong>${t("drop_strong")}</strong>
       <p>${t("drop_or")} <button type="button" id="browse-btn" class="browse-btn">${t("drop_browse")}</button></p>
@@ -536,17 +554,13 @@ function mergeLegacyStatusNotifications(queues, legacy) {
 
 function createQueueManagerRow(queue, index) {
   const sn = queue.statusNotify || { enabled: false, statuses: [], sound: "notification.mp3" };
+  const statusText = (sn.statuses || []).join(";");
   const div = document.createElement("div");
   div.className = "queue-manager-row";
   div.innerHTML = `
-    <input type="text" class="qm-name" value="${escapeHtml(queue.name || "")}" placeholder="${t("queue_name_ph")}">
-    <label class="qm-enable" title="${t("qm_bell_title")}">
-      <input type="checkbox" class="qm-enabled" ${sn.enabled ? "checked" : ""}>
-      <span aria-hidden="true">🔔</span>
-    </label>
-    <input type="text" class="qm-statuses" value="${escapeHtml((sn.statuses || []).join(";"))}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}">
+    <span class="status-rule-queue-label">${escapeHtml(queue.name || t("queue_name_ph"))}</span>
+    <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}">
     <select class="qm-sound" title="${t("qm_sound_title")}"></select>
-    ${index === 0 ? '<span class="qm-remove-placeholder"></span>' : `<button type="button" class="qm-remove" title="${t("remove_queue")}">✕</button>`}
   `;
 
   loadStatusNotificationSounds(div.querySelector(".qm-sound"), sn.sound || "notification.mp3", true);
@@ -584,11 +598,11 @@ function collectQueueManagerRows() {
   const result = [];
   rows.forEach((row, i) => {
     const base = qmQueues[i] || { active: true, interval: 15, soundEnabled: false, customSound: "notification.mp3" };
+    const statuses = row.querySelector(".qm-statuses").value.split(";").map((s) => s.trim()).filter(Boolean);
     result.push(Object.assign({}, base, {
-      name: row.querySelector(".qm-name").value,
       statusNotify: {
-        enabled: row.querySelector(".qm-enabled").checked,
-        statuses: row.querySelector(".qm-statuses").value.split(";").map((s) => s.trim()).filter(Boolean),
+        enabled: statuses.length > 0,
+        statuses,
         sound: row.querySelector(".qm-sound").value || "notification.mp3",
       },
     }));
@@ -625,25 +639,12 @@ function loadQueueManager() {
     } else {
       qmQueues = queues;
     }
-    if (qmQueues.length === 0) {
-      qmQueues = [{ name: "", active: true, interval: 15, soundEnabled: false, customSound: "notification.mp3" }];
-    }
     renderQueueManager();
   });
 }
 
 function addQueueFromManager() {
-  qmQueues = collectQueueManagerRows();
-  qmQueues.push({
-    name: "",
-    active: true,
-    interval: 15,
-    soundEnabled: false,
-    customSound: "notification.mp3",
-    statusNotify: { enabled: false, statuses: [], sound: "notification.mp3" },
-  });
-  renderQueueManager();
-  persistQueueManager();
+  showToast(t("add_queue_in_popup"), "warning");
 }
 
 // Sincronização: mudanças vindas do popup re-renderizam a lista

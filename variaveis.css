@@ -1,18 +1,71 @@
+/* INSV Refresh · brand tokens · v1.0 */
 :root {
-  /* Cor do fundo */
-  --background-color: #411e5a linear-gradient(45deg, #411e5a 0, #6e4b87);
+  /* ── Brand ───────────────────────── */
+  --brand-50:  #E5F6FD;
+  --brand-200: #B8E5F6;
+  --brand-300: #6FD2F5;
+  --brand-400: #29BBF0;
+  --brand-500: #00A1E0; /* primary */
+  --brand-600: #0085BB;
+  --brand-700: #006A95;
 
-  /* Cor para ativar fila */
-  --green-color: #329a43;
+  /* ── Ink (surfaces & text) ───────── */
+  --ink-50:  #F0F3FB;
+  --ink-100: #DDE2F1;
+  --ink-200: #B8BFDB;
+  --ink-300: #8E96BA;
+  --ink-400: #6A7299;
+  --ink-600: #3C4675;
+  --ink-700: #29325A;
+  --ink-800: #1B2340;
+  --ink-950: #0B0F1A; /* darkest surface */
 
-  /* Cor para inativar fila */
-  --red-color: #c8341b;
+  /* ── Accents ─────────────────────── */
+  --spark-500: #F98764;  /* warm coral, logo bolt */
+  --gold-500:  #FFD166;  /* premium / paused */
 
-  /* Cores padrão */
-  --white-color: #fff;
-  --ice-white-color: #cfd9f4;
-  --box-shadow: #00000029 0px 3px 6px, #0000003b 0px 1px 2px;
-  --light-purple-color: #8c50a2;
-  --medium-gray-color: #333;
-  --light-blue-color: #00a1e0;
+  /* ── Semantic ────────────────────── */
+  --success-500: #22C55E;
+  --danger-500:  #EF4444;
+  --info-500:    var(--brand-500);
+
+  /* ── Legacy aliases (kept for backward compat) */
+  --background-color:   var(--ink-950);
+  --green-color:        var(--success-500);
+  --red-color:          var(--danger-500);
+  --white-color:        #FFFFFF;
+  --ice-white-color:    var(--ink-100);
+  --light-blue-color:   var(--brand-500);
+  --medium-gray-color:  var(--ink-800);
+  --light-purple-color: var(--brand-400);
+  --box-shadow:         0 8px 24px -8px rgb(0 0 0 / 0.35),
+                        0 2px 6px -2px rgb(0 0 0 / 0.25);
+
+  /* ── Radius ──────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ── Type ────────────────────────── */
+  --font-display: 'YoureGone', sans-serif;  /* logo ONLY */
+  --font-ui:      'Outfit', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Dark popup & options share the same ink scale */
+[data-theme="dark"], html.dark-popup {
+  --surface:      var(--ink-950);
+  --surface-2:    var(--ink-800);
+  --border:       rgb(255 255 255 / 0.08);
+  --text:         var(--ink-50);
+  --text-muted:   var(--ink-300);
+}
+
+[data-theme="light"] {
+  --surface:      #FFFFFF;
+  --surface-2:    #F5F6FB;
+  --border:       #E5E7EF;
+  --text:         var(--ink-800);
+  --text-muted:   #6B7390;
 }

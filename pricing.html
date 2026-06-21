@@ -7,94 +7,125 @@
   <link rel="shortcut icon" href="assets/icons/INSVRefresh.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="variaveis.css">
   <style>
+    @font-face {
+      font-family: 'YoureGone';
+      src: url('./assets/fonts/youre_gone/Youre_Gone.otf') format('opentype');
+      font-display: swap;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: "Outfit", "Segoe UI", sans-serif;
-      background: #f5f6fb;
-      color: #2d2d2d;
+      background: #0B0F1A;
+      color: #DDE2F1;
       min-height: 100vh;
-      padding: 2.5rem 1.5rem;
-      transition: background 0.3s, color 0.3s;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .pricing-layout {
-      max-width: 960px;
-      margin: 0 auto;
+    /* ── Brand header ──────────────────────────── */
+    .pricing-topbar {
+      background: #080B14;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
 
-    /* ── Back link ─────────────────────────────── */
+    .pricing-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .pricing-logo span {
+      font-family: 'YoureGone', sans-serif;
+      color: #00A1E0;
+      font-size: 21px;
+      letter-spacing: 1px;
+    }
+
     .back-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      color: #777;
+      gap: 6px;
+      color: #8E96BA;
       text-decoration: none;
       font-size: 0.88rem;
       font-weight: 500;
-      margin-bottom: 2rem;
-      padding: 0.4rem 0.9rem;
-      border-radius: 7px;
-      border: 1px solid #e0e0e0;
-      background: white;
-      transition: all 0.2s;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
     }
 
     .back-link:hover {
-      color: var(--light-blue-color);
-      border-color: var(--light-blue-color);
-      background: #f0f8ff;
-      transform: translateX(-2px);
+      color: #DDE2F1;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
     }
 
-    /* ── Header ────────────────────────────────── */
+    /* ── Content ───────────────────────────────── */
+    .pricing-content {
+      flex: 1;
+      padding: 52px 40px 56px;
+    }
+
+    .pricing-layout {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Heading ───────────────────────────────── */
     .pricing-header {
-      margin-bottom: 2.2rem;
+      text-align: center;
+      margin-bottom: 48px;
     }
 
     .pricing-header h1 {
-      font-size: 2rem;
+      font-size: 2.1rem;
       font-weight: 700;
-      color: var(--light-blue-color);
-      margin-bottom: 0.5rem;
+      color: #F0F3FB;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
     }
 
     .pricing-header p {
-      color: #666;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      color: #8E96BA;
     }
 
     /* ── Grid ──────────────────────────────────── */
     .pricing-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.4rem;
+      gap: 18px;
     }
 
     /* ── Cards ─────────────────────────────────── */
     .plan-card {
-      background: white;
-      border: 2px solid #e8ecf5;
+      background: #11172A;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
-      padding: 1.8rem 1.6rem;
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
-      gap: 0;
-      transition: box-shadow 0.2s, transform 0.2s;
       position: relative;
     }
 
-    .plan-card:hover {
-      box-shadow: 0 6px 24px rgba(0,0,0,0.09);
-      transform: translateY(-3px);
-    }
-
     .plan-card.featured {
-      border-color: var(--light-blue-color);
-      box-shadow: 0 4px 20px rgba(0,161,224,0.15);
+      background: #0E1829;
+      border: 2px solid #00A1E0;
+      box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
     }
 
     .plan-card.featured::before {
@@ -103,128 +134,125 @@
       top: -13px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--light-blue-color);
-      color: white;
+      background: #00A1E0;
+      color: #fff;
       font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 1.2px;
-      padding: 3px 14px;
-      border-radius: 20px;
+      padding: 4px 16px;
+      border-radius: 999px;
       white-space: nowrap;
     }
 
     /* ── Plan tier label ───────────────────────── */
     .plan-tier {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--light-blue-color);
-      margin-bottom: 0.5rem;
+      letter-spacing: 1.2px;
+      color: #6FD2F5;
+      margin-bottom: 10px;
     }
 
-    .plan-tier.enterprise { color: #1a1a2e; }
+    .plan-tier.pro   { color: #29BBF0; }
+    .plan-tier.enterprise { color: #FFD166; }
 
     /* ── Price ─────────────────────────────────── */
     .plan-price {
       font-size: 2.2rem;
       font-weight: 800;
-      color: #1a1a2e;
+      color: #F0F3FB;
       line-height: 1;
-      margin-bottom: 1.4rem;
+      margin-bottom: 4px;
     }
 
-    .plan-price small {
-      font-size: 1rem;
-      font-weight: 500;
-      color: #888;
+    .plan-price-cadence {
+      font-size: 0.75rem;
+      color: #6A7299;
+      margin-bottom: 24px;
     }
 
     /* ── Features list ─────────────────────────── */
     .plan-features {
       list-style: none;
-      margin-bottom: 1.8rem;
+      margin-bottom: 28px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.55rem;
+      gap: 11px;
     }
 
     .plan-features li {
       display: flex;
       align-items: flex-start;
-      gap: 0.55rem;
-      font-size: 0.9rem;
-      color: #444;
+      gap: 9px;
+      font-size: 0.83rem;
+      color: #B8BFDB;
       line-height: 1.4;
     }
 
     .plan-features li .check {
-      color: var(--green-color);
-      font-weight: 800;
       flex-shrink: 0;
       margin-top: 1px;
+      color: #22C55E;
     }
 
     /* ── CTA buttons ───────────────────────────── */
     .plan-cta {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
       margin-top: auto;
     }
 
     .btn-plan {
       width: 100%;
-      padding: 0.7rem 1rem;
+      padding: 11px 1rem;
       border-radius: 9px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
       border: none;
       transition: all 0.2s;
       text-decoration: none;
       text-align: center;
+      font-family: inherit;
+      display: block;
     }
 
     .btn-plan.primary {
-      background: var(--light-blue-color);
-      color: white;
+      background: #00A1E0;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0, 161, 224, 0.35);
     }
 
     .btn-plan.primary:hover {
       background: #0091c7;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,161,224,0.3);
     }
 
     .btn-plan.secondary {
-      background: #f0f0f0;
-      color: #555;
-    }
-
-    .btn-plan.secondary:hover {
-      background: #e4e4e4;
+      background: rgba(255, 255, 255, 0.06);
+      color: #8E96BA;
+      border: none;
     }
 
     .btn-plan.outlined {
       background: transparent;
-      color: #1a1a2e;
-      border: 2px solid #1a1a2e;
+      color: #F0F3FB;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
     }
 
     .btn-plan.outlined:hover {
-      background: #1a1a2e;
-      color: white;
-      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.4);
     }
 
     .btn-plan.trial {
       background: transparent;
-      color: var(--light-blue-color);
-      border: 1.5px dashed var(--light-blue-color);
-      margin-top: 0.6rem;
-      font-weight: 600;
-      font-size: 0.88rem;
+      color: #29BBF0;
+      border: 1.5px dashed rgba(0, 161, 224, 0.6);
+      font-size: 0.85rem;
     }
 
     .btn-plan.trial:hover {
@@ -233,158 +261,190 @@
 
     /* ── Login row ─────────────────────────────── */
     .login-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1.4rem;
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.82rem;
+      color: #6A7299;
     }
 
-    .login-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      color: #777;
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 7px;
-      padding: 0.4rem 0.9rem;
+    .login-row button {
+      background: none;
+      border: none;
+      color: #6A7299;
+      font-size: 0.82rem;
       font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      padding: 0;
     }
 
-    .login-link:hover {
-      color: var(--light-blue-color);
-      border-color: var(--light-blue-color);
-      background: #f0f8ff;
+    .login-row button:hover { color: #29BBF0; }
+
+    /* ── Footer ────────────────────────────────── */
+    .pricing-footer {
+      background: #080B14;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
 
-    [data-theme="dark"] .login-link {
-      background: #1a1a2e;
-      border-color: #2a2a4a;
-      color: #aaa;
+    .pricing-footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #6A7299;
     }
 
-    [data-theme="dark"] .login-link:hover {
-      color: var(--light-blue-color);
-      border-color: var(--light-blue-color);
-      background: #1a2535;
+    .pricing-footer-links {
+      display: flex;
+      gap: 20px;
     }
 
-    [data-theme="dark"] .btn-plan.trial {
-      color: var(--light-blue-color);
-      border-color: var(--light-blue-color);
+    .pricing-footer-links a {
+      font-size: 0.75rem;
+      color: #6A7299;
+      text-decoration: none;
+      transition: color 0.2s;
     }
 
-    /* ── Dark mode ─────────────────────────────── */
-    [data-theme="dark"] body {
-      background: #0f0f1a;
-      color: #e0e0e0;
-    }
+    .pricing-footer-links a:hover { color: #DDE2F1; }
+    .pricing-footer-links a.accent { color: #6FD2F5; }
+    .pricing-footer-links a.accent:hover { color: #9BE4FA; }
 
-    [data-theme="dark"] .plan-card {
-      background: #1a1a2e;
-      border-color: #2a2a4a;
-    }
-
-    [data-theme="dark"] .plan-card.featured {
-      border-color: var(--light-blue-color);
-    }
-
-    [data-theme="dark"] .plan-price {
-      color: #e0e0e0;
-    }
-
-    [data-theme="dark"] .plan-features li {
-      color: #bbb;
-    }
-
-    [data-theme="dark"] .pricing-header p {
-      color: #aaa;
-    }
-
-    [data-theme="dark"] .back-link {
-      background: #1a1a2e;
-      border-color: #2a2a4a;
-      color: #aaa;
-    }
-
-    [data-theme="dark"] .back-link:hover {
-      color: var(--light-blue-color);
-      border-color: var(--light-blue-color);
-      background: #1a2535;
-    }
-
-    [data-theme="dark"] .btn-plan.secondary {
-      background: #2a2a4a;
-      color: #aaa;
-    }
-
-    [data-theme="dark"] .btn-plan.secondary:hover {
-      background: #333355;
+    /* ── SVG check ─────────────────────────────── */
+    .check-icon {
+      width: 15px;
+      height: 15px;
+      display: block;
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
-  <div class="pricing-layout">
-    <a href="options.html" class="back-link" data-i18n="back_to_settings">← Voltar às configurações</a>
+  <!-- Brand header -->
+  <header class="pricing-topbar">
+    <a href="options.html" class="pricing-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      <span>INSV REFRESH</span>
+    </a>
+    <a href="options.html" class="back-link" data-i18n="back_to_settings">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      Voltar às configurações
+    </a>
+  </header>
 
-    <div class="pricing-header">
-      <h1 data-i18n="pricing_title">Planos INSV Refresh</h1>
-      <p data-i18n="pricing_sub">Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
-    </div>
+  <!-- Content -->
+  <div class="pricing-content">
+    <div class="pricing-layout">
+      <div class="pricing-header">
+        <h1 data-i18n="pricing_title">Planos INSV Refresh</h1>
+        <p data-i18n="pricing_sub">Escolha o plano ideal para você. Recursos essenciais continuam gratuitos.</p>
+      </div>
 
-    <div class="pricing-grid">
-      <div class="plan-card">
-        <div class="plan-tier" data-i18n="plan_free">Grátis</div>
-        <div class="plan-price">R$ 0</div>
-        <ul class="plan-features">
-          <li><span class="check">✓</span> <span data-i18n="free_f1">1 fila de monitoramento</span></li>
-          <li><span class="check">✓</span> <span data-i18n="free_f2">Sons padrão da extensão</span></li>
-          <li><span class="check">✓</span> <span data-i18n="free_f3">Notificação de novos chamados</span></li>
-          <li><span class="check">✓</span> <span data-i18n="free_f4">Modo Legacy</span></li>
-        </ul>
-        <div class="plan-cta">
-          <span class="btn-plan secondary" data-i18n="included">Já incluso</span>
+      <div class="pricing-grid">
+        <!-- FREE -->
+        <div class="plan-card">
+          <div class="plan-tier" data-i18n="plan_free">Grátis</div>
+          <div class="plan-price">R$ 0</div>
+          <div class="plan-price-cadence">para sempre</div>
+          <ul class="plan-features">
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="free_f1">1 fila de monitoramento</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="free_f2">Sons padrão da extensão</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="free_f3">Notificação de novos chamados</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="free_f4">Modo Legacy</span>
+            </li>
+          </ul>
+          <div class="plan-cta">
+            <span class="btn-plan secondary" data-i18n="included">Já incluso</span>
+          </div>
+        </div>
+
+        <!-- PRO (featured) -->
+        <div class="plan-card featured" data-popular="MAIS POPULAR">
+          <div class="plan-tier pro" data-i18n="plan_normal">Pro</div>
+          <div class="plan-price" data-i18n="price_paid">Assinatura</div>
+          <div class="plan-price-cadence" data-i18n="price_cadence">pagamento mensal</div>
+          <ul class="plan-features">
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="normal_f1">Tudo do plano Grátis</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="normal_f2">Múltiplas filas</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="normal_f3">Áudios personalizados (upload)</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="normal_f4">Notificação por mudança de status</span>
+            </li>
+          </ul>
+          <div class="plan-cta">
+            <button type="button" id="pay-normal-btn" class="btn-plan primary" data-i18n="subscribe">Assinar</button>
+            <button type="button" id="start-trial-btn" class="btn-plan trial" data-i18n="start_trial">Iniciar teste grátis de 1 mês</button>
+          </div>
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div class="plan-card">
+          <div class="plan-tier enterprise" data-i18n="plan_enterprise">Empresa</div>
+          <div class="plan-price" data-i18n="price_quote">Sob consulta</div>
+          <div class="plan-price-cadence">preço negociado</div>
+          <ul class="plan-features">
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="ent_f1">Para times/empresas inteiros</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="ent_f2">Preço negociado</span>
+            </li>
+            <li>
+              <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
+              <span data-i18n="ent_f3">Suporte dedicado</span>
+            </li>
+          </ul>
+          <div class="plan-cta">
+            <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="btn-plan outlined" data-i18n="contact_email">Contatar por e-mail</a>
+          </div>
         </div>
       </div>
 
-      <div class="plan-card featured" data-popular="MAIS POPULAR">
-        <div class="plan-tier" data-i18n="plan_normal">Normal</div>
-        <div class="plan-price" data-i18n="price_paid">Pago</div>
-        <ul class="plan-features">
-          <li><span class="check">✓</span> <span data-i18n="normal_f1">Tudo do plano Grátis</span></li>
-          <li><span class="check">✓</span> <span data-i18n="normal_f2">Múltiplas filas</span></li>
-          <li><span class="check">✓</span> <span data-i18n="normal_f3">Áudios personalizados (upload)</span></li>
-          <li><span class="check">✓</span> <span data-i18n="normal_f4">Notificação por mudança de status</span></li>
-        </ul>
-        <div class="plan-cta">
-          <button type="button" id="pay-normal-btn" class="btn-plan primary" data-i18n="subscribe">Assinar</button>
-        </div>
-        <div class="plan-cta">
-          <button type="button" id="start-trial-btn" class="btn-plan trial" data-i18n="start_trial">Iniciar teste grátis de 1 mês</button>
-        </div>
+      <div class="login-row">
+        <button type="button" id="login-btn" data-i18n="login_cta">Já tem conta? Entrar</button>
       </div>
-
-      <div class="plan-card">
-        <div class="plan-tier enterprise" data-i18n="plan_enterprise">Empresa</div>
-        <div class="plan-price" data-i18n="price_quote">Sob consulta</div>
-        <ul class="plan-features">
-          <li><span class="check">✓</span> <span data-i18n="ent_f1">Para times/empresas inteiros</span></li>
-          <li><span class="check">✓</span> <span data-i18n="ent_f2">Preço negociado</span></li>
-          <li><span class="check">✓</span> <span data-i18n="ent_f3">Suporte dedicado</span></li>
-        </ul>
-        <div class="plan-cta">
-          <a href="mailto:programming@gmail.com.br?subject=INSV%20Refresh%20-%20Plano%20Empresa" class="btn-plan outlined" data-i18n="contact_email">Contatar por e-mail</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="login-row">
-      <button type="button" id="login-btn" class="login-link" data-i18n="login_cta">Já tem conta? Entrar</button>
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer class="pricing-footer">
+    <div class="pricing-footer-brand">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      INSV REFRESH · Vitor Rodrigues &amp; Douglas Rocha
+    </div>
+    <nav class="pricing-footer-links">
+      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="accent">Enviar feedback</a>
+    </nav>
+  </footer>
+
   <script src="i18n.js"></script>
   <script src="pricing.js"></script>
 </body>

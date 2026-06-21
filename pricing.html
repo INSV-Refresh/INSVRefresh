@@ -18,20 +18,22 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Light mode (default) ──────────────────── */
     body {
       font-family: "Outfit", "Segoe UI", sans-serif;
-      background: #0B0F1A;
-      color: #DDE2F1;
+      background: #f5f6fb;
+      color: #1B2340;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
     }
 
     /* ── Brand header ──────────────────────────── */
     .pricing-topbar {
-      background: #080B14;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      background: #fff;
+      border-bottom: 1px solid #E5E7EB;
       padding: 14px 40px;
       display: flex;
       align-items: center;
@@ -57,21 +59,21 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: #8E96BA;
+      color: #6B7280;
       text-decoration: none;
       font-size: 0.88rem;
       font-weight: 500;
       padding: 6px 14px;
       border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid #E5E7EB;
+      background: #fff;
       transition: color 0.2s, border-color 0.2s, background 0.2s;
     }
 
     .back-link:hover {
-      color: #DDE2F1;
-      border-color: rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.07);
+      color: #00A1E0;
+      border-color: #00A1E0;
+      background: #f0f8ff;
     }
 
     /* ── Content ───────────────────────────────── */
@@ -94,14 +96,14 @@
     .pricing-header h1 {
       font-size: 2.1rem;
       font-weight: 700;
-      color: #F0F3FB;
+      color: #1B2340;
       margin-bottom: 10px;
       letter-spacing: -0.5px;
     }
 
     .pricing-header p {
       font-size: 0.95rem;
-      color: #8E96BA;
+      color: #6B7280;
     }
 
     /* ── Grid ──────────────────────────────────── */
@@ -113,19 +115,20 @@
 
     /* ── Cards ─────────────────────────────────── */
     .plan-card {
-      background: #11172A;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #fff;
+      border: 1px solid #E5E7EB;
       border-radius: 16px;
       padding: 28px 24px;
       display: flex;
       flex-direction: column;
       position: relative;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     }
 
     .plan-card.featured {
-      background: #0E1829;
+      background: #f0f8ff;
       border: 2px solid #00A1E0;
-      box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 32px rgba(0, 161, 224, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
     }
 
     .plan-card.featured::before {
@@ -150,25 +153,25 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.2px;
-      color: #6FD2F5;
+      color: #00A1E0;
       margin-bottom: 10px;
     }
 
-    .plan-tier.pro   { color: #29BBF0; }
-    .plan-tier.enterprise { color: #FFD166; }
+    .plan-tier.pro        { color: #0091c7; }
+    .plan-tier.enterprise { color: #B45309; }
 
     /* ── Price ─────────────────────────────────── */
     .plan-price {
       font-size: 2.2rem;
       font-weight: 800;
-      color: #F0F3FB;
+      color: #1B2340;
       line-height: 1;
       margin-bottom: 4px;
     }
 
     .plan-price-cadence {
       font-size: 0.75rem;
-      color: #6A7299;
+      color: #9CA3AF;
       margin-bottom: 24px;
     }
 
@@ -187,7 +190,7 @@
       align-items: flex-start;
       gap: 9px;
       font-size: 0.83rem;
-      color: #B8BFDB;
+      color: #444;
       line-height: 1.4;
     }
 
@@ -223,7 +226,7 @@
     .btn-plan.primary {
       background: #00A1E0;
       color: #fff;
-      box-shadow: 0 4px 16px rgba(0, 161, 224, 0.35);
+      box-shadow: 0 4px 16px rgba(0, 161, 224, 0.3);
     }
 
     .btn-plan.primary:hover {
@@ -232,57 +235,57 @@
     }
 
     .btn-plan.secondary {
-      background: rgba(255, 255, 255, 0.06);
-      color: #8E96BA;
+      background: #f0f0f0;
+      color: #6B7280;
       border: none;
     }
 
+    .btn-plan.secondary:hover { background: #e4e4e4; }
+
     .btn-plan.outlined {
       background: transparent;
-      color: #F0F3FB;
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      color: #1B2340;
+      border: 1.5px solid #D1D5DB;
     }
 
     .btn-plan.outlined:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: #f5f5f5;
+      border-color: #9CA3AF;
     }
 
     .btn-plan.trial {
       background: transparent;
-      color: #29BBF0;
-      border: 1.5px dashed rgba(0, 161, 224, 0.6);
+      color: #00A1E0;
+      border: 1.5px dashed rgba(0, 161, 224, 0.5);
       font-size: 0.85rem;
     }
 
-    .btn-plan.trial:hover {
-      background: rgba(0, 161, 224, 0.08);
-    }
+    .btn-plan.trial:hover { background: rgba(0, 161, 224, 0.06); }
 
     /* ── Login row ─────────────────────────────── */
     .login-row {
       text-align: center;
       margin-top: 28px;
       font-size: 0.82rem;
-      color: #6A7299;
+      color: #9CA3AF;
     }
 
     .login-row button {
       background: none;
       border: none;
-      color: #6A7299;
+      color: #9CA3AF;
       font-size: 0.82rem;
       font-family: inherit;
       cursor: pointer;
       padding: 0;
     }
 
-    .login-row button:hover { color: #29BBF0; }
+    .login-row button:hover { color: #00A1E0; text-decoration: underline; }
 
     /* ── Footer ────────────────────────────────── */
     .pricing-footer {
-      background: #080B14;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      background: #fff;
+      border-top: 1px solid #E5E7EB;
       padding: 20px 40px;
       display: flex;
       align-items: center;
@@ -296,7 +299,7 @@
       gap: 8px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.72rem;
-      color: #6A7299;
+      color: #9CA3AF;
     }
 
     .pricing-footer-links {
@@ -306,14 +309,14 @@
 
     .pricing-footer-links a {
       font-size: 0.75rem;
-      color: #6A7299;
+      color: #9CA3AF;
       text-decoration: none;
       transition: color 0.2s;
     }
 
-    .pricing-footer-links a:hover { color: #DDE2F1; }
-    .pricing-footer-links a.accent { color: #6FD2F5; }
-    .pricing-footer-links a.accent:hover { color: #9BE4FA; }
+    .pricing-footer-links a:hover { color: #6B7280; }
+    .pricing-footer-links a.accent { color: #00A1E0; }
+    .pricing-footer-links a.accent:hover { color: #0091c7; }
 
     /* ── SVG check ─────────────────────────────── */
     .check-icon {
@@ -322,6 +325,91 @@
       display: block;
       flex-shrink: 0;
     }
+
+    /* ── Dark mode overrides ───────────────────── */
+    [data-theme="dark"] body {
+      background: #0B0F1A;
+      color: #DDE2F1;
+    }
+
+    [data-theme="dark"] .pricing-topbar {
+      background: #080B14;
+      border-bottom-color: rgba(255, 255, 255, 0.07);
+    }
+
+    [data-theme="dark"] .back-link {
+      color: #8E96BA;
+      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .back-link:hover {
+      color: #DDE2F1;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    [data-theme="dark"] .pricing-header h1 { color: #F0F3FB; }
+    [data-theme="dark"] .pricing-header p   { color: #8E96BA; }
+
+    [data-theme="dark"] .plan-card {
+      background: #11172A;
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: none;
+    }
+
+    [data-theme="dark"] .plan-card.featured {
+      background: #0E1829;
+      border-color: #00A1E0;
+      box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="dark"] .plan-tier        { color: #6FD2F5; }
+    [data-theme="dark"] .plan-tier.pro    { color: #29BBF0; }
+    [data-theme="dark"] .plan-tier.enterprise { color: #FFD166; }
+
+    [data-theme="dark"] .plan-price         { color: #F0F3FB; }
+    [data-theme="dark"] .plan-price-cadence { color: #6A7299; }
+
+    [data-theme="dark"] .plan-features li { color: #B8BFDB; }
+
+    [data-theme="dark"] .btn-plan.secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #8E96BA;
+    }
+
+    [data-theme="dark"] .btn-plan.secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+    [data-theme="dark"] .btn-plan.outlined {
+      color: #F0F3FB;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    [data-theme="dark"] .btn-plan.outlined:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .btn-plan.trial {
+      color: #29BBF0;
+      border-color: rgba(0, 161, 224, 0.6);
+    }
+
+    [data-theme="dark"] .login-row        { color: #6A7299; }
+    [data-theme="dark"] .login-row button { color: #6A7299; }
+    [data-theme="dark"] .login-row button:hover { color: #29BBF0; }
+
+    [data-theme="dark"] .pricing-footer {
+      background: #080B14;
+      border-top-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .pricing-footer-brand { color: #6A7299; }
+
+    [data-theme="dark"] .pricing-footer-links a        { color: #6A7299; }
+    [data-theme="dark"] .pricing-footer-links a:hover  { color: #DDE2F1; }
+    [data-theme="dark"] .pricing-footer-links a.accent       { color: #6FD2F5; }
+    [data-theme="dark"] .pricing-footer-links a.accent:hover { color: #9BE4FA; }
   </style>
 </head>
 <body>

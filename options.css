@@ -1537,6 +1537,48 @@ button.delete-audio-btn:hover {
   border-color: var(--ink-100);
 }
 
+/* ── Options footer ─────────────────────────── */
+.options-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 2rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #9CA3AF;
+}
+
+.options-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.options-footer-links {
+  display: flex;
+  gap: 16px;
+}
+
+.options-footer-links a {
+  font-size: 0.72rem;
+  color: #9CA3AF;
+  text-decoration: none;
+  font-family: 'Outfit', sans-serif;
+  transition: color 0.2s;
+}
+
+.options-footer-links a:hover { color: #6B7280; }
+
+[data-theme="dark"] .options-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+  color: #6A7299;
+}
+
+[data-theme="dark"] .options-footer-links a { color: #6A7299; }
+[data-theme="dark"] .options-footer-links a:hover { color: #9BA3C4; }
+
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

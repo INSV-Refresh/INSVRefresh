@@ -683,7 +683,7 @@ function applyPaidGateOptions(isPaid) {
           banner.className = "paid-gate-banner";
           banner.innerHTML = `
             ${t("locked_paid")}
-            <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">${t("see_plans")}</a>
+            <a href="${chrome.runtime.getURL('pricing.html')}">${t("see_plans")}</a>
           `;
           section.insertBefore(banner, section.firstChild);
         }
@@ -786,7 +786,7 @@ i18nReady.then(function() {
         const dias = access.trialDaysLeft;
         trialBanner.innerHTML = `
           ⏳ <strong>${t("trial_active")}</strong> — ${dias === 1 ? t("trial_days_left_one") : t("trial_days_left", { n: dias })}.
-          <a href="${chrome.runtime.getURL("pricing.html")}" target="_blank">${t("subscribe_now")}</a>
+          <a href="${chrome.runtime.getURL("pricing.html")}">${t("subscribe_now")}</a>
         `;
         trialBanner.style.display = "flex";
       }
@@ -994,7 +994,7 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
 
 document.getElementById("nav-pricing") && document.getElementById("nav-pricing").addEventListener("click", (e) => {
   e.preventDefault();
-  window.open(chrome.runtime.getURL("pricing.html"), "_blank");
+  window.location.href = chrome.runtime.getURL("pricing.html");
 });
 
 document.querySelectorAll(".menu a").forEach(link => {

@@ -10,6 +10,7 @@ const legacyInterval = document.getElementById("legacyInterval");
 const legacyToggle = document.getElementById("legacyToggle");
 
 const volumeControl = document.getElementById("volume-control");
+const feedbackLink = document.querySelector(".feedback-link");
 
 function toggleMode(isLegacyMode) {
   if (isLegacyMode) {
@@ -17,12 +18,19 @@ function toggleMode(isLegacyMode) {
     legacyMode.style.display = "flex";
     if (volumeControl) volumeControl.style.display = "none";
     legacyText.style.display = "block";
+    if (feedbackLink) feedbackLink.style.display = "none";
   } else {
     normalMode.style.display = "block";
     legacyMode.style.display = "none";
     if (volumeControl) volumeControl.style.display = "flex";
     legacyText.style.display = "none";
+    if (feedbackLink) feedbackLink.style.display = "";
   }
+}
+
+function updateSliderFill(slider) {
+  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.setProperty("--pct", pct + "%");
 }
 
 function showSaving() {
@@ -413,6 +421,7 @@ function restoreOptions() {
     };
 
     volumeSlider.value = general.volume * 100;
+    updateSliderFill(volumeSlider);
 
     chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
       const isPaid = !chrome.runtime.lastError && !!(access && access.isPaid);
@@ -482,6 +491,7 @@ if (addQueueBtn) {
 }
 
 if (volumeSlider) {
+  volumeSlider.addEventListener("input", () => updateSliderFill(volumeSlider));
   volumeSlider.addEventListener("mouseup", () => {
     playQueueTestSound("notification.mp3");
     saveOptionsDebounced();

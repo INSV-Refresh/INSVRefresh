@@ -1,3 +1,17 @@
+function applyDarkMode(enabled) {
+  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
+}
+
+chrome.storage.local.get("darkMode", (data) => {
+  applyDarkMode(!!data.darkMode);
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.darkMode) {
+    applyDarkMode(!!changes.darkMode.newValue);
+  }
+});
+
 document.getElementById("pay-normal-btn").addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
     if (chrome.runtime.lastError) return;

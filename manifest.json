@@ -17,12 +17,22 @@
   ],
   "host_permissions": ["*://*.lightning.force.com/*", "https://extensionpay.com/*"],
   "action": {
-    "default_icon": {"128": "assets/icons/INSVRefresh.png"},
+    "default_icon": {
+      "16": "assets/icons/INSVRefresh-16.png",
+      "32": "assets/icons/INSVRefresh-32.png",
+      "48": "assets/icons/INSVRefresh-48.png",
+      "128": "assets/icons/INSVRefresh.png"
+    },
     "default_popup": "popup.html",
-    "default_title": "Grid Refresher"
+    "default_title": "INSV Refresh"
   },
   "permissions": ["storage", "scripting"],
-  "icons": {"128": "assets/icons/INSVRefresh.png"},
+  "icons": {
+    "16": "assets/icons/INSVRefresh-16.png",
+    "32": "assets/icons/INSVRefresh-32.png",
+    "48": "assets/icons/INSVRefresh-48.png",
+    "128": "assets/icons/INSVRefresh.png"
+  },
   "background": {
     "service_worker": "service-worker.js"
   },
@@ -43,8 +53,7 @@
         "assets/sounds/lis.mp3",
         "assets/sounds/notification.mp3",
         "assets/sounds/tech.mp3",
-        "assets/video/mockup.svg",
-        "page-context-helper.js"
+        "assets/video/mockup.svg"
       ],
       "matches": ["*://*.lightning.force.com/*"]
     }

@@ -164,7 +164,7 @@ function initNormalMode() {
   log("[Debug] Iniciando modo normal com todas as funcionalidades");
 
   let audioEnabled = false;
-  let _initToastShown = false;
+  const _initToastShown = new Set();
   let _needsClickToastShown = false;
 
   document.addEventListener(
@@ -308,8 +308,8 @@ function initNormalMode() {
         return;
       }
 
-      if (!_initToastShown) {
-        _initToastShown = true;
+      if (!_initToastShown.has(fila.name)) {
+        _initToastShown.add(fila.name);
         showInsvToast('INSV ativo — monitorando ' + fila.name, 'info', 4000);
       }
 

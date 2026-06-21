@@ -1,3 +1,8 @@
+importScripts("ExtPay.js");
+
+const extpay = ExtPay("insv-refresh");
+extpay.startBackground();
+
 const ICON_ACTIVE = { 128: "assets/icons/INSVRefresh.png" };
 const ICON_INACTIVE = { 128: "assets/icons/INSVRefresh-grey.png" };
 
@@ -83,11 +88,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return false;
 });
 
-importScripts("ExtPay.js");
-
-const extpay = ExtPay("insv-refresh");
-extpay.startBackground();
-
 // ── Migração de storage (idempotente, versionada) ───────────
 // Roda no install/update e converte shapes antigos:
 //   v2: popupDarkMode → darkMode; advanced.acceptShortcutKey (string)
@@ -172,7 +172,7 @@ function migrateStorage() {
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
-    const internalUrl = chrome.runtime.getURL("/options.html");
+    const internalUrl = chrome.runtime.getURL("options.html");
     chrome.tabs.create({ url: internalUrl }, () => {});
   }
   if (reason === "update") {

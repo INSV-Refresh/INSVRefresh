@@ -108,7 +108,7 @@
   margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   flex-shrink: 0;
 }
 
@@ -151,7 +151,7 @@
   margin-left: 260px;
   flex: 1;
   background-color: #f5f6fb;
-  padding: 2rem 2.5rem;
+  padding: 2rem 2.5rem 0;
   box-sizing: border-box;
   height: 100vh;
   overflow-y: auto;
@@ -1545,9 +1545,9 @@ button.delete-audio-btn:hover {
   padding: 16px 2rem;
   margin-top: 1rem;
   border-top: 1px solid rgba(0, 0, 0, 0.07);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: #9CA3AF;
+  color: var(--text-muted, #9CA3AF);
 }
 
 .options-footer-brand {
@@ -1563,13 +1563,13 @@ button.delete-audio-btn:hover {
 
 .options-footer-links a {
   font-size: 0.72rem;
-  color: #9CA3AF;
+  color: var(--text-muted, #9CA3AF);
   text-decoration: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   transition: color 0.2s;
 }
 
-.options-footer-links a:hover { color: #6B7280; }
+.options-footer-links a:hover { color: var(--brand-500, #00A1E0); }
 
 [data-theme="dark"] .options-footer {
   border-top-color: rgba(255, 255, 255, 0.06);
@@ -1577,7 +1577,7 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .options-footer-links a { color: #6A7299; }
-[data-theme="dark"] .options-footer-links a:hover { color: #9BA3C4; }
+[data-theme="dark"] .options-footer-links a:hover { color: var(--brand-400, #29BBF0); }
 
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

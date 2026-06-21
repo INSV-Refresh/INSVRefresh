@@ -1031,8 +1031,8 @@ button.delete-audio-btn:hover {
 
 .shortcut-clear {
   background: transparent;
-  color: var(--danger-500);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #8E96BA;
+  border: 1px solid rgba(142, 150, 186, 0.4);
   border-radius: 6px;
   padding: 8px 14px;
   font-size: 0.85rem;
@@ -1043,8 +1043,8 @@ button.delete-audio-btn:hover {
 }
 
 .shortcut-clear:hover {
-  background: var(--danger-500);
-  color: white;
+  background: rgba(255, 255, 255, 0.06);
+  color: #DDE2F1;
 }
 
 /* ── Toggle switch ───────────────────────────── */

@@ -558,9 +558,15 @@ function createQueueManagerRow(queue, index) {
   const div = document.createElement("div");
   div.className = "queue-manager-row";
   div.innerHTML = `
-    <span class="status-rule-queue-label">${escapeHtml(queue.name || t("queue_name_ph"))}</span>
+    <span class="status-rule-queue-label">
+      <svg class="qm-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      ${escapeHtml(queue.name || t("queue_name_ph"))}
+    </span>
     <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}">
-    <select class="qm-sound" title="${t("qm_sound_title")}"></select>
+    <div class="qm-sound-wrapper">
+      <svg class="qm-bell-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <select class="qm-sound" title="${t("qm_sound_title")}"></select>
+    </div>
   `;
 
   loadStatusNotificationSounds(div.querySelector(".qm-sound"), sn.sound || "notification.mp3", true);
@@ -569,15 +575,6 @@ function createQueueManagerRow(queue, index) {
     inp.addEventListener("change", saveQueueManagerDebounced);
     inp.addEventListener("input", saveQueueManagerDebounced);
   });
-
-  const removeBtn = div.querySelector(".qm-remove");
-  if (removeBtn) {
-    removeBtn.addEventListener("click", () => {
-      qmQueues.splice(index, 1);
-      renderQueueManager();
-      persistQueueManager();
-    });
-  }
 
   return div;
 }

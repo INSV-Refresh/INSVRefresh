@@ -655,6 +655,9 @@ button.delete-audio-btn:hover {
 }
 
 .status-rule-queue-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--brand-500);
@@ -662,10 +665,9 @@ button.delete-audio-btn:hover {
   letter-spacing: 0.08em;
   font-family: var(--font-mono, monospace);
   min-width: 130px;
-  max-width: 160px;
+  max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   flex-shrink: 0;
 }
 
@@ -748,7 +750,45 @@ button.delete-audio-btn:hover {
 }
 
 .queue-manager-row .qm-statuses { flex: 1 1 0; min-width: 140px; }
-.qm-sound { max-width: 140px; min-width: 110px; flex-shrink: 0; }
+
+.qm-sound-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ink-100);
+  border-radius: 6px;
+  padding: 4px 6px 4px 9px;
+  background: white;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.qm-bell-icon {
+  width: 15px;
+  height: 15px;
+  stroke: var(--brand-500);
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.qm-sound-wrapper .qm-sound {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.85rem;
+  color: #333;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  min-width: 80px;
+}
+
+.qm-label-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
 
 .qm-remove, .remove-status-notification-btn {
   background: transparent;
@@ -1383,6 +1423,21 @@ button.delete-audio-btn:hover {
   background: var(--ink-950);
   color: var(--ink-100);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .qm-sound-wrapper {
+  background: var(--ink-950);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .qm-sound-wrapper .qm-sound {
+  background: transparent;
+  color: var(--ink-100);
+}
+
+[data-theme="dark"] .queue-manager-row {
+  background: var(--ink-900);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .audio-name-row input[type="text"] {

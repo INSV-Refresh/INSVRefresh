@@ -47,12 +47,17 @@
   };
 
   window.addEventListener('message', function(event) {
+    if (event.origin !== window.location.origin) return;
     if (event.data && event.data.type === 'INSV_EXECUTE' && event.source === window) {
       const funcName = event.data.funcName;
       const requestId = event.data.requestId;
-      if (window.INSVPageHelper && window.INSVPageHelper[funcName]) {
+      if (
+        window.INSVPageHelper &&
+        Object.prototype.hasOwnProperty.call(window.INSVPageHelper, funcName) &&
+        typeof window.INSVPageHelper[funcName] === 'function'
+      ) {
         const result = window.INSVPageHelper[funcName]();
-        window.postMessage({ type: 'INSV_RESULT', requestId, result }, '*');
+        window.postMessage({ type: 'INSV_RESULT', requestId, result }, window.location.origin);
       }
     }
   });

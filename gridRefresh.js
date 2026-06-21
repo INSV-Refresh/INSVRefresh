@@ -2,6 +2,52 @@
 const DEBUG = false;
 const log = (...args) => DEBUG && console.log(...args);
 
+// ── Toast de notificação visual na página do Salesforce ──────
+function showInsvToast(message, type, duration) {
+  if (!type) type = 'success';
+  if (!duration) duration = 3000;
+
+  if (!document.getElementById('insv-toast-style')) {
+    const s = document.createElement('style');
+    s.id = 'insv-toast-style';
+    s.textContent = [
+      '#insv-toast-container{position:fixed;bottom:24px;right:24px;z-index:2147483647;',
+      'display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;',
+      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
+      '.insv-toast{background:#1e2030;color:#e0e6ff;padding:10px 16px;border-radius:8px;',
+      'font-size:13px;line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.35);',
+      'opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;',
+      'border-left:3px solid #4a9eff;max-width:300px}',
+      '.insv-toast.show{opacity:1;transform:translateY(0)}',
+      '.insv-toast.success{border-left-color:#4caf50}',
+      '.insv-toast.warning{border-left-color:#ff9800}',
+      '.insv-toast.error{border-left-color:#f44336}',
+      '.insv-toast.info{border-left-color:#4a9eff}',
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  let container = document.getElementById('insv-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'insv-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'insv-toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { toast.classList.add('show'); });
+  });
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 250);
+  }, duration);
+}
+
 window.onload = function () {
   log("[Debug] GRID REFRESH ATIVADO");
 
@@ -118,6 +164,8 @@ function initNormalMode() {
   log("[Debug] Iniciando modo normal com todas as funcionalidades");
 
   let audioEnabled = false;
+  let _initToastShown = false;
+  let _needsClickToastShown = false;
 
   document.addEventListener(
     "click",
@@ -179,6 +227,10 @@ function initNormalMode() {
     try {
       if (!audioEnabled) {
         log("[Debug] Audio desabilitado, clique na tela");
+        if (!_needsClickToastShown) {
+          _needsClickToastShown = true;
+          showInsvToast('Ação necessária — clique na página para ativar o áudio', 'warning', 5000);
+        }
         return;
       }
 
@@ -254,6 +306,11 @@ function initNormalMode() {
       if (!isRightQueue(fila.name)) {
         log(`[Debug] Retornando, fila incorreta: ${fila.name}`);
         return;
+      }
+
+      if (!_initToastShown) {
+        _initToastShown = true;
+        showInsvToast('INSV ativo — monitorando ' + fila.name, 'info', 4000);
       }
 
       const userIsEditing = document.querySelector(".mainContentMark .split-left .slds-checkbox [type=checkbox]:checked");
@@ -441,10 +498,13 @@ function initNormalMode() {
       if (hasAcceptText && !btn.disabled && btn.offsetParent !== null) {
         btn.click();
         log("[Debug] Botão Aceitar clicado via atalho");
-        return;
+        showInsvToast('Chamado aceito', 'success', 2500);
+        return true;
       }
     }
     log("[Debug] Botão Aceitar não encontrado");
+    showInsvToast('Nenhum chamado selecionado', 'warning', 2500);
+    return false;
   }
 
   function matchesShortcut(e, sc) {
@@ -492,7 +552,14 @@ function initNormalMode() {
     chrome.storage.local.get("advanced", (data) => {
       const adv = data.advanced || {};
       adv.globalPaused = !adv.globalPaused;
-      chrome.storage.local.set({ advanced: adv });
+      const isPaused = adv.globalPaused;
+      chrome.storage.local.set({ advanced: adv }, () => {
+        showInsvToast(
+          isPaused ? 'Atualização de filas pausada' : 'Atualização de filas retomada',
+          isPaused ? 'warning' : 'success',
+          3000
+        );
+      });
     });
   }
 

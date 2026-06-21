@@ -331,8 +331,13 @@ input[type="number"].queue-interval:focus {
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-  opacity: 0.6;
-  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+input[type="number"].queue-interval {
+  -moz-appearance: textfield;
 }
 
 /* ── Sound button ───────────────────────────── */

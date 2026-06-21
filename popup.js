@@ -58,6 +58,7 @@ legacyToggle.addEventListener("click", () => {
 
 legacyInterval.addEventListener("input", saveLegacyConfig);
 legacyInterval.addEventListener("change", saveLegacyConfig);
+attachScrollToInterval(legacyInterval);
 
 
 function createQueueElement(queue) {
@@ -112,6 +113,9 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     input.addEventListener("input", saveOptionsDebounced);
     input.addEventListener("change", saveOptionsDebounced);
   });
+
+  const intervalInput = div.querySelector(".queue-interval");
+  if (intervalInput) attachScrollToInterval(intervalInput);
 
   const nameInput = div.querySelector(".queue-name");
   if (nameInput) {
@@ -261,6 +265,18 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+function attachScrollToInterval(input) {
+  input.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    const val = parseInt(input.value, 10) || 0;
+    const min = parseInt(input.min, 10) || 5;
+    const max = parseInt(input.max, 10) || 900;
+    input.value = Math.min(max, Math.max(min, val - Math.sign(e.deltaY) * step));
+    input.dispatchEvent(new Event('change'));
+  }, { passive: false });
 }
 
 // Filas excedentes ocultadas no plano free. Não são apagadas do

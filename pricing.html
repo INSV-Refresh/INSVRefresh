@@ -126,7 +126,6 @@
     }
 
     .plan-card.featured {
-      background: #f0f8ff;
       border: 2px solid #00A1E0;
       box-shadow: 0 0 32px rgba(0, 161, 224, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
     }
@@ -270,17 +269,16 @@
       color: #9CA3AF;
     }
 
-    .login-row button {
-      background: none;
-      border: none;
-      color: #9CA3AF;
-      font-size: 0.82rem;
-      font-family: inherit;
+    #login-btn {
+      color: #3b9eff;
       cursor: pointer;
-      padding: 0;
+      display: inline-block;
+      transition: transform 0.2s;
+      text-decoration: none;
+      margin-left: 0.3em;
     }
 
-    .login-row button:hover { color: #00A1E0; text-decoration: underline; }
+    #login-btn:hover { font-weight: 600; }
 
     /* ── Footer ────────────────────────────────── */
     .pricing-footer {
@@ -395,9 +393,7 @@
       border-color: rgba(0, 161, 224, 0.6);
     }
 
-    [data-theme="dark"] .login-row        { color: #6A7299; }
-    [data-theme="dark"] .login-row button { color: #6A7299; }
-    [data-theme="dark"] .login-row button:hover { color: #29BBF0; }
+    [data-theme="dark"] .login-row { color: #6A7299; }
 
     [data-theme="dark"] .pricing-footer {
       background: #080B14;
@@ -517,7 +513,8 @@
       </div>
 
       <div class="login-row">
-        <button type="button" id="login-btn" data-i18n="login_cta">Já tem conta? Entrar</button>
+        <span data-i18n="login_cta"></span>
+        <span id="login-btn" data-i18n="login_action"></span>
       </div>
     </div>
   </div>
@@ -529,6 +526,7 @@
       INSV REFRESH · Vitor Rodrigues &amp; Douglas Rocha
     </div>
     <nav class="pricing-footer-links">
+      <a href="docs/privacy-policy.html" data-i18n="privacy_policy">Política de Privacidade</a>
       <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="accent">Enviar feedback</a>
     </nav>
   </footer>

@@ -606,24 +606,6 @@ button.delete-audio-btn:hover {
 }
 
 /* ── Status notification ─────────────────────── */
-.status-hint {
-  font-size: 0.85rem;
-  color: #666;
-  margin: -4px 0 12px;
-  padding: 8px 12px;
-  background: rgba(0, 161, 224, 0.06);
-  border: 1px solid rgba(0, 161, 224, 0.15);
-  border-radius: var(--radius-md);
-}
-
-.status-hint code {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.82rem;
-  background: rgba(0, 161, 224, 0.08);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
 .queue-manager-list {
   display: flex;
   flex-direction: column;
@@ -1550,29 +1532,9 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .export-import-btn:hover {
-  background-color: var(--ink-600);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-[data-theme="dark"] .export-import-btn span { color: var(--ink-100); }
-
-[data-theme="dark"] .export-import-btn--primary {
   background-color: var(--ink-100);
   color: var(--ink-950);
   border-color: var(--ink-100);
-}
-
-[data-theme="dark"] .export-import-btn--primary:hover {
-  background-color: var(--ink-50);
-  border-color: var(--ink-50);
-}
-
-[data-theme="dark"] .export-import-btn--primary span { color: var(--ink-950); }
-
-[data-theme="dark"] .status-hint {
-  background: rgba(0, 161, 224, 0.08);
-  border-color: rgba(0, 161, 224, 0.2);
-  color: var(--ink-200);
 }
 
 /* ── Reduced motion ──────────────────────────── */

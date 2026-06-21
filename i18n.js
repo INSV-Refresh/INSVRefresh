@@ -99,8 +99,7 @@ const I18N_MESSAGES = {
 
     // Options — notificação de status
     status_title: "Notificações por status",
-    status_p: "Configure aqui as notificações sonoras por mudança de status para cada fila. As filas são gerenciadas no popup.",
-    status_hint: "Separe múltiplos status com <code>;</code> ex: <code>Em andamento;Resolvido</code>. Adicione ou remova filas direto no popup.",
+    status_p: "Configure aqui as notificações sonoras por mudança de status para cada fila. As filas são gerenciadas no popup. (separe vários status com ;)",
     add_queue: "+ Adicionar fila",
     add_queue_in_popup: "Adicione ou remova filas direto no popup da extensão.",
     qm_bell_title: "Ativar notificação de status para esta fila",
@@ -290,8 +289,7 @@ const I18N_MESSAGES = {
     howto_4: "Audios are stored locally in your browser",
 
     status_title: "Status notifications",
-    status_p: "Configure sound notifications for status changes on each queue. Queues are managed in the popup.",
-    status_hint: "Separate multiple statuses with <code>;</code> e.g.: <code>In progress;Resolved</code>. Add or remove queues from the popup.",
+    status_p: "Configure sound notifications for status changes on each queue. Queues are managed in the popup. (separate mutiple status with ;)",
     add_queue: "+ Add queue",
     add_queue_in_popup: "Add or remove queues directly from the extension popup.",
     qm_bell_title: "Enable status notification for this queue",
@@ -475,8 +473,7 @@ const I18N_MESSAGES = {
     howto_4: "Los audios se guardan localmente en tu navegador",
 
     status_title: "Notificaciones de estado",
-    status_p: "Configura las notificaciones sonoras por cambio de estado para cada cola. Las colas se gestionan en el popup.",
-    status_hint: "Separa varios estados con <code>;</code> ej: <code>En progreso;Resuelto</code>. Agrega o elimina colas desde el popup.",
+    status_p: "Configura las notificaciones sonoras por cambio de estado para cada cola. Las colas se gestionan en el popup. (separe múltiples estados con ;)",
     add_queue: "+ Agregar cola",
     add_queue_in_popup: "Agrega o elimina colas directamente desde el popup de la extensión.",
     qm_bell_title: "Activar notificación de estado para esta cola",

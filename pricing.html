@@ -282,8 +282,8 @@
 
     /* ── Footer ────────────────────────────────── */
     .pricing-footer {
-      background: #fff;
-      border-top: 1px solid #E5E7EB;
+      background: var(--surface, #fff);
+      border-top: 1px solid var(--border, #E5E7EF);
       padding: 20px 40px;
       display: flex;
       align-items: center;
@@ -295,9 +295,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 0.72rem;
-      color: #9CA3AF;
+      color: var(--text-muted, #9CA3AF);
     }
 
     .pricing-footer-links {
@@ -307,14 +307,14 @@
 
     .pricing-footer-links a {
       font-size: 0.75rem;
-      color: #9CA3AF;
+      color: var(--text-muted, #9CA3AF);
       text-decoration: none;
       transition: color 0.2s;
     }
 
-    .pricing-footer-links a:hover { color: #6B7280; }
-    .pricing-footer-links a.accent { color: #00A1E0; }
-    .pricing-footer-links a.accent:hover { color: #0091c7; }
+    .pricing-footer-links a:hover { color: var(--brand-500, #00A1E0); }
+    .pricing-footer-links a.accent { color: var(--brand-500, #00A1E0); }
+    .pricing-footer-links a.accent:hover { color: var(--brand-600, #0091c7); }
 
     /* ── SVG check ─────────────────────────────── */
     .check-icon {

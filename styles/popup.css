@@ -42,7 +42,7 @@ a {
 
 @font-face {
   font-family: 'YoureGone';
-  src: url(./assets/fonts/youre_gone/Youre_Gone.otf) format('opentype');
+  src: url(../assets/fonts/youre_gone/Youre_Gone.otf) format('opentype');
   font-display: swap;
 }
 

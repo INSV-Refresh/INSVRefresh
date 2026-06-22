@@ -1015,7 +1015,7 @@ document.querySelectorAll(".menu a").forEach(link => {
         this.classList.add("highlight-nav");
 
         if (targetId == "top"){
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          document.querySelector('.content').scrollTo({ top: 0, behavior: "smooth" });
           section = document.getElementById('intro');
         }
 

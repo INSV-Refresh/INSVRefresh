@@ -387,57 +387,147 @@ input[type="number"].queue-interval {
 .queue-sound.off .bell-icon-on { display: none; }
 .queue-sound.off .bell-icon-off { display: block; }
 
-/* ── Sound select ───────────────────────────── */
-select.queue-sound-select {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 7px;
-  color: var(--ink-50);
-  padding: 5px 26px 5px 9px;
-  font-size: 12px;
+/* ── Sound select (custom dropdown) ──────────── */
+/* Design: claude.ai/design — INSV Dropdown spec */
+.queue-sound-select {
+  position: relative;
+  width: 103px;
   font-family: inherit;
-  outline: none;
+}
+
+.qsd-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 28px;
+  background: #161d33;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--ink-50);
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
-  height: auto;
-  width: auto;
-  max-width: 90px;
-  margin: 0;
-  /* custom arrow — native one doesn't match popup */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2358c4ea' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
-select.queue-sound-select:hover {
-  border-color: rgba(255, 255, 255, 0.22);
+.qsd-trigger:hover {
+  background: var(--ink-800);
+  border-color: rgba(0, 161, 224, 0.35);
 }
 
-select.queue-sound-select:focus {
-  border-color: var(--brand-500);
+.queue-sound-select.open .qsd-trigger,
+.qsd-trigger:focus-visible {
+  background: var(--ink-800);
+  border-color: rgba(0, 161, 224, 0.45);
   box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.15);
 }
 
-select.queue-sound-select option {
-  background: var(--ink-800);
+.qsd-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.qsd-arrow {
+  flex-shrink: 0;
+  color: #6a7299;
+  transition: transform 0.2s ease, color 0.15s;
+}
+
+.qsd-trigger:hover .qsd-arrow {
+  color: #8e96ba;
+}
+
+.queue-sound-select.open .qsd-arrow {
+  transform: rotate(180deg);
+  color: var(--brand-500);
+}
+
+.qsd-list {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #161d33;
+  border: 1px solid rgba(0, 161, 224, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  transform-origin: top right;
+  animation: qsdDropIn 0.15s ease forwards;
+  /* sem scrollbar visível */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+@keyframes qsdDropIn {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.94); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+.qsd-list::-webkit-scrollbar {
+  display: none;
+}
+
+.qsd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--ink-50);
-  padding: 6px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.1s;
 }
 
-select.queue-sound-select option:checked {
-  background: var(--brand-600);
+.qsd-option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.qsd-option:hover {
+  background: rgba(0, 161, 224, 0.12);
+}
+
+.qsd-option.selected {
+  background: var(--brand-500);
   color: #fff;
+  font-weight: 600;
 }
 
-select.queue-sound-select option:disabled {
-  background: var(--ink-800);
-  color: rgba(255, 255, 255, 0.3);
+.qsd-check {
+  flex-shrink: 0;
+  display: none;
+}
+
+.qsd-option.selected .qsd-check {
+  display: block;
+}
+
+.qsd-sep {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ── Delete button ──────────────────────────── */
@@ -879,24 +969,13 @@ html.dark-popup {
   background: linear-gradient(135deg, var(--ink-950) 0%, #0e1326 100%);
 }
 
-html.dark-popup select.queue-sound-select option {
-  background: var(--ink-800);
-  color: var(--ink-50);
-}
-
-html.dark-popup select.queue-sound-select option:checked {
-  background: var(--brand-600);
-  color: #fff;
-}
-
 html.dark-popup .queue-item {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
 html.dark-popup input[type="text"].queue-name,
-html.dark-popup input[type="number"].queue-interval,
-html.dark-popup select.queue-sound-select {
+html.dark-popup input[type="number"].queue-interval {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
 }

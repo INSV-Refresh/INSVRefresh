@@ -96,8 +96,10 @@ function createQueueElement(queue) {
 <svg class="bell-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.9 17.9 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="m2 2 20 20"/></svg>
 </button>
 <div class="sound-container" style="display: ${queue.soundEnabled ? "inline-flex" : "none"};">
-<select class="queue-sound-select">
-</select>
+<div class="queue-sound-select">
+<button type="button" class="qsd-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="qsd-label"></span><svg class="qsd-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<ul class="qsd-list" role="listbox" hidden></ul>
+</div>
 </div>
 ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}" aria-label="${t("remove_queue")}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-dc-tpl="467" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" data-om-id="e0b415c9:493"></path></svg></button>`}
 </div>
@@ -206,6 +208,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
   const queueSoundSelect = div.querySelector(".queue-sound-select");
 
   if (queueSoundSelect) {
+    buildSoundDropdown(queueSoundSelect);
     queueSoundSelect.addEventListener("change", () => {
       if (queueSoundSelect.value) {
         playQueueTestSound(queueSoundSelect.value);
@@ -221,8 +224,167 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
   return div;
 }
 
+// Dropdown customizado: substitui o <select> nativo para seguir o
+// design do popup. Expõe `.value` (get/set) e dispara evento "change",
+// mantendo a mesma API que saveOptions/onChanged já consomem.
+// Limpa o posicionamento fixed inline de um menu.
+function resetSoundMenuPosition(list) {
+  list.style.position = "";
+  list.style.top = "";
+  list.style.left = "";
+  list.style.maxHeight = "";
+  list.style.transformOrigin = "";
+}
+
+// Posiciona o menu como fixed (escapa do overflow do #queue-list) e
+// inverte pra cima quando não há espaço abaixo. Alinhado à direita do
+// trigger pra abrir sempre na mesma posição.
+function positionSoundMenu(trigger, list) {
+  const GAP = 3;
+  const PAD = 8;
+  const MENU_W = 150;
+  const r = trigger.getBoundingClientRect();
+  const vh = window.innerHeight;
+
+  list.style.position = "fixed";
+  list.style.width = MENU_W + "px";
+  list.style.left = r.left + "px";
+  list.style.maxHeight = "240px";
+
+  const menuH = list.offsetHeight;
+  const below = vh - r.bottom - PAD;
+  const above = r.top - PAD;
+  const placeUp = below < Math.min(menuH, 240) && above > below;
+  const space = placeUp ? above : below;
+
+  list.style.maxHeight = Math.min(240, space) + "px";
+
+  if (placeUp) {
+    list.style.top = Math.max(PAD, r.top - list.offsetHeight - GAP) + "px";
+    list.style.transformOrigin = "bottom left";
+  } else {
+    list.style.top = r.bottom + GAP + "px";
+    list.style.transformOrigin = "top left";
+  }
+}
+
+// Fecha todos os dropdowns de som abertos (exceto o passado).
+function closeAllSoundDropdowns(except) {
+  document.querySelectorAll(".queue-sound-select.open").forEach((root) => {
+    if (root === except) return;
+    root.classList.remove("open");
+    const list = root.querySelector(".qsd-list");
+    const trigger = root.querySelector(".qsd-trigger");
+    if (list) {
+      list.hidden = true;
+      resetSoundMenuPosition(list);
+    }
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+// Scroll/resize fecham qualquer dropdown aberto (posição fixed
+// não acompanha o scroll do popup).
+let soundDropdownScrollBound = false;
+function bindSoundDropdownDismiss() {
+  if (soundDropdownScrollBound) return;
+  const onMove = () => closeAllSoundDropdowns();
+  ["#queue-list", "#normal-mode"].forEach((sel) => {
+    const el = document.querySelector(sel);
+    if (el) el.addEventListener("scroll", onMove, { passive: true });
+  });
+  window.addEventListener("resize", onMove);
+  soundDropdownScrollBound = true;
+}
+
+function buildSoundDropdown(root) {
+  if (root._qsdBuilt) return;
+
+  const trigger = root.querySelector(".qsd-trigger");
+  const list = root.querySelector(".qsd-list");
+
+  Object.defineProperty(root, "value", {
+    configurable: true,
+    get() {
+      return root.dataset.value || "";
+    },
+    set(v) {
+      root.dataset.value = v;
+      applySoundSelection(root);
+    },
+  });
+
+  const close = () => {
+    if (list.hidden) return;
+    list.hidden = true;
+    root.classList.remove("open");
+    trigger.setAttribute("aria-expanded", "false");
+    resetSoundMenuPosition(list);
+  };
+
+  const open = () => {
+    closeAllSoundDropdowns(root); // só um aberto por vez
+    bindSoundDropdownDismiss();
+    list.hidden = false;
+    root.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+    positionSoundMenu(trigger, list);
+    const sel = list.querySelector(".qsd-option.selected");
+    if (sel) sel.scrollIntoView({ block: "nearest" });
+  };
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    list.hidden ? open() : close();
+  });
+
+  list.addEventListener("click", (e) => {
+    const opt = e.target.closest(".qsd-option");
+    if (!opt) return;
+    const val = opt.dataset.value;
+    if (val === root.value) {
+      close();
+      return;
+    }
+    root.value = val;
+    close();
+    root.dispatchEvent(new CustomEvent("change", { bubbles: true }));
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!root.contains(e.target)) close();
+  });
+
+  root.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      close();
+      trigger.focus();
+    }
+  });
+
+  root._qsdBuilt = true;
+}
+
+// Marca a opção selecionada e atualiza o label do trigger.
+function applySoundSelection(root) {
+  const value = root.dataset.value || "";
+  const label = root.querySelector(".qsd-label");
+  let text = value;
+
+  root.querySelectorAll(".qsd-option").forEach((opt) => {
+    const selected = opt.dataset.value === value;
+    opt.classList.toggle("selected", selected);
+    opt.setAttribute("aria-selected", selected ? "true" : "false");
+    if (selected) text = opt.dataset.label || opt.textContent;
+  });
+
+  if (label) label.textContent = text;
+}
+
 function loadSoundOptionsForQueue(selectElement, selectedValue) {
-  selectElement.innerHTML = "";
+  const list = selectElement.querySelector(".qsd-list");
+  if (!list) return;
+  list.innerHTML = "";
 
   const defaultSounds = [
     { value: "notification.mp3", text: t("sound_default") },
@@ -233,32 +395,51 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
     { value: "bubble.mp3", text: "Bubbles" },
   ];
 
-  defaultSounds.forEach((sound) => {
-    const option = document.createElement("option");
-    option.value = sound.value;
-    option.textContent = sound.text;
-    selectElement.appendChild(option);
-  });
+  const addOption = (value, text, full) => {
+    const li = document.createElement("li");
+    li.className = "qsd-option";
+    li.setAttribute("role", "option");
+    li.dataset.value = value;
+    li.dataset.label = full || text;
+    if (full && full !== text) li.title = full;
+
+    const span = document.createElement("span");
+    span.textContent = text;
+    li.appendChild(span);
+
+    // check da opção selecionada (spec: solid #00A1E0 + check)
+    const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    check.setAttribute("class", "qsd-check");
+    check.setAttribute("width", "11");
+    check.setAttribute("height", "11");
+    check.setAttribute("viewBox", "0 0 24 24");
+    check.setAttribute("fill", "none");
+    check.setAttribute("stroke", "currentColor");
+    check.setAttribute("stroke-width", "2.5");
+    check.setAttribute("stroke-linecap", "round");
+    check.setAttribute("stroke-linejoin", "round");
+    check.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+    li.appendChild(check);
+
+    list.appendChild(li);
+  };
+
+  defaultSounds.forEach((s) => addOption(s.value, s.text));
 
   chrome.storage.local.get("audiosPersonalizados", (data) => {
     const customAudios = data.audiosPersonalizados || {};
     const customKeys = Object.keys(customAudios);
 
     if (customKeys.length > 0) {
-      const separator = document.createElement("option");
-      separator.disabled = true;
-      separator.textContent = "───────";
-      selectElement.appendChild(separator);
+      const sep = document.createElement("li");
+      sep.className = "qsd-sep";
+      sep.setAttribute("aria-hidden", "true");
+      list.appendChild(sep);
 
       customKeys.forEach((key) => {
-        const audioInfo = customAudios[key];
-        const option = document.createElement("option");
-        option.value = key;
-        // trunca nome longo — dropdown nativo estica o popup
-        const name = audioInfo.name || "";
-        option.textContent = name.length > 28 ? name.slice(0, 27) + "…" : name;
-        option.title = name;
-        selectElement.appendChild(option);
+        const name = (customAudios[key] && customAudios[key].name) || "";
+        const truncated = name.length > 28 ? name.slice(0, 27) + "…" : name;
+        addOption(key, truncated, name);
       });
     }
 

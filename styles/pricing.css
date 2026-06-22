@@ -1,0 +1,338 @@
+/* =============================================
+   INSV Refresh — Pricing / Plans page
+   Topbar + footer + wordmark come from app-chrome.css.
+   ============================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-ui);
+  background: var(--surface-2, #F5F6FB);
+  color: var(--text, var(--ink-800));
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── Content ───────────────────────────────── */
+.pricing-content {
+  flex: 1;
+  padding: 52px 40px 56px;
+}
+
+.pricing-layout {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Heading ───────────────────────────────── */
+.pricing-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.pricing-header h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--text, var(--ink-800));
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+  text-wrap: balance;
+}
+
+.pricing-header p {
+  font-size: 0.95rem;
+  color: var(--text-muted, #6B7390);
+}
+
+/* ── Grid ──────────────────────────────────── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+/* ── Cards ─────────────────────────────────── */
+.plan-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #E5E7EF);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.plan-card.featured {
+  border: 2px solid var(--brand-500);
+  box-shadow: 0 0 32px rgba(0, 161, 224, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Badge only renders once JS injects the localized label (no pt-BR flash) */
+.plan-card.featured[data-popular]:not([data-popular=""])::before {
+  content: attr(data-popular);
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  padding: 4px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Plan tier label ───────────────────────── */
+.plan-tier {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--brand-500);
+  margin-bottom: 10px;
+}
+
+.plan-tier.pro        { color: var(--brand-600); }
+.plan-tier.enterprise { color: var(--warning-600); }
+
+/* ── Price ─────────────────────────────────── */
+.plan-price {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text, var(--ink-800));
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.plan-price-cadence {
+  font-size: 0.75rem;
+  color: var(--text-muted, #9CA3AF);
+  margin-bottom: 24px;
+}
+
+/* ── Features list ─────────────────────────── */
+.plan-features {
+  list-style: none;
+  margin-bottom: 28px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.83rem;
+  color: var(--text, var(--ink-700));
+  line-height: 1.4;
+}
+
+.plan-features li .check {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--success-500);
+}
+
+/* ── CTA buttons ───────────────────────────── */
+.plan-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btn-plan {
+  width: 100%;
+  padding: 11px 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+  text-decoration: none;
+  text-align: center;
+  font-family: inherit;
+  display: block;
+}
+
+.btn-plan:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.btn-plan.primary {
+  background: var(--brand-500);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 161, 224, 0.3);
+}
+
+.btn-plan.primary:hover {
+  background: var(--brand-600);
+  transform: translateY(-1px);
+}
+
+.btn-plan.outlined {
+  background: transparent;
+  color: var(--text, var(--ink-800));
+  border: 1.5px solid var(--ink-200);
+}
+
+.btn-plan.outlined:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-300);
+}
+
+.btn-plan.trial {
+  background: transparent;
+  color: var(--brand-500);
+  border: 1.5px dashed rgba(0, 161, 224, 0.5);
+  font-size: 0.85rem;
+}
+
+.btn-plan.trial:hover { background: rgba(0, 161, 224, 0.06); }
+
+/* Free-plan status — a label, NOT a button */
+.plan-included {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-500);
+  border: 1px solid var(--border, #E5E7EF);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Login row ─────────────────────────────── */
+.login-row {
+  text-align: center;
+  margin-top: 28px;
+  font-size: 0.82rem;
+  color: var(--text-muted, #9CA3AF);
+}
+
+#login-btn {
+  appearance: none;
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--brand-500);
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+  margin-left: 0.3em;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+}
+
+#login-btn:hover { color: var(--brand-600); text-decoration: underline; }
+#login-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+
+/* ── SVG check ─────────────────────────────── */
+.check-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ── Toast ─────────────────────────────────── */
+.pricing-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1100;
+  max-width: 320px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  background: var(--surface, #fff);
+  color: var(--text, var(--ink-800));
+  border: 1px solid var(--border, #E5E7EF);
+  border-left: 3px solid var(--brand-500);
+  font-size: 13px;
+  font-family: inherit;
+  box-shadow: var(--box-shadow);
+}
+
+.pricing-toast--success { border-left-color: var(--success-500); }
+.pricing-toast--warning { border-left-color: var(--warning-500); }
+.pricing-toast--info    { border-left-color: var(--brand-500); }
+
+/* ── Dark mode ─────────────────────────────── */
+[data-theme="dark"] .pricing-header h1 { color: var(--ink-50); }
+[data-theme="dark"] .pricing-header p   { color: var(--ink-300); }
+
+[data-theme="dark"] .plan-card {
+  background: #11172A;
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .plan-card.featured {
+  background: #0E1829;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .plan-tier        { color: var(--brand-300); }
+[data-theme="dark"] .plan-tier.pro    { color: var(--brand-400); }
+[data-theme="dark"] .plan-tier.enterprise { color: var(--gold-500); }
+
+[data-theme="dark"] .plan-price         { color: var(--ink-50); }
+[data-theme="dark"] .plan-price-cadence { color: var(--ink-400); }
+
+[data-theme="dark"] .plan-features li { color: var(--ink-200); }
+
+[data-theme="dark"] .plan-included {
+  background: rgb(255 255 255 / 0.06);
+  color: var(--ink-300);
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+[data-theme="dark"] .btn-plan.outlined {
+  color: var(--ink-50);
+  border-color: rgb(255 255 255 / 0.25);
+}
+
+[data-theme="dark"] .btn-plan.outlined:hover {
+  background: rgb(255 255 255 / 0.06);
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+[data-theme="dark"] .btn-plan.trial {
+  color: var(--brand-400);
+  border-color: rgba(0, 161, 224, 0.6);
+}
+
+[data-theme="dark"] #login-btn { color: var(--brand-300); }
+[data-theme="dark"] #login-btn:hover { color: var(--brand-200); }
+[data-theme="dark"] .login-row { color: var(--ink-400); }
+
+[data-theme="dark"] .pricing-toast {
+  background: #11172A;
+  color: var(--ink-100);
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+/* ── Responsive ────────────────────────────── */
+@media (max-width: 768px) {
+  .pricing-content { padding: 36px 20px 44px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Reduced motion ────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}

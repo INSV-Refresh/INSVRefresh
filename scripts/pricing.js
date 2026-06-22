@@ -4,7 +4,7 @@ function showToast(message, type) {
   if (existing) existing.remove();
   const toast = document.createElement('div');
   toast.id = 'pricing-toast';
-  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#1e2030;color:#e0e6ff;padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.35);border-left:3px solid ' + (type === 'success' ? '#4caf50' : type === 'warning' ? '#ff9800' : '#4a9eff') + ';max-width:320px;font-family:inherit;';
+  toast.className = 'pricing-toast pricing-toast--' + type;
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);

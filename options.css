@@ -789,8 +789,7 @@ button {
   padding: 0;
 }
 
-.audio-play-btn:hover { background: var(--brand-600); transform: scale(1.05); }
-.audio-play-btn.playing { background: var(--success-500); }
+.audio-play-btn:hover {transform: scale(1.05); }
 .audio-play-btn .icon-pause { display: none; }
 .audio-play-btn.playing .icon-play { display: none; }
 .audio-play-btn.playing .icon-pause { display: block; }

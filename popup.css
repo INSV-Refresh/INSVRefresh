@@ -319,7 +319,7 @@ input[type="number"].queue-interval {
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  width: 54px;
+  width: 50px;
   text-align: right;
   direction: rtl;
   transition: border-color 0.2s;
@@ -393,7 +393,7 @@ select.queue-sound-select {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
   color: var(--ink-50);
-  padding: 5px 4px;
+  padding: 5px 26px 5px 9px;
   font-size: 12px;
   font-family: inherit;
   outline: none;
@@ -402,11 +402,42 @@ select.queue-sound-select {
   width: auto;
   max-width: 90px;
   margin: 0;
+  /* custom arrow — native one doesn't match popup */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2358c4ea' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select.queue-sound-select:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+select.queue-sound-select:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.15);
 }
 
 select.queue-sound-select option {
-  background: var(--ink-700);
+  background: var(--ink-800);
+  color: var(--ink-50);
+  padding: 6px 8px;
+}
+
+select.queue-sound-select option:checked {
+  background: var(--brand-600);
   color: #fff;
+}
+
+select.queue-sound-select option:disabled {
+  background: var(--ink-800);
+  color: rgba(255, 255, 255, 0.3);
 }
 
 /* ── Delete button ──────────────────────────── */
@@ -849,7 +880,12 @@ html.dark-popup {
 }
 
 html.dark-popup select.queue-sound-select option {
-  background: var(--ink-700);
+  background: var(--ink-800);
+  color: var(--ink-50);
+}
+
+html.dark-popup select.queue-sound-select option:checked {
+  background: var(--brand-600);
   color: #fff;
 }
 

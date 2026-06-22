@@ -9,415 +9,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/variaveis.css">
-  <style>
-    @font-face {
-      font-family: 'YoureGone';
-      src: url('./assets/fonts/youre_gone/Youre_Gone.otf') format('opentype');
-      font-display: swap;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ── Light mode (default) ──────────────────── */
-    body {
-      font-family: "Outfit", "Segoe UI", sans-serif;
-      background: #f5f6fb;
-      color: #1B2340;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    /* ── Brand header ──────────────────────────── */
-    .pricing-topbar {
-      background: #fff;
-      border-bottom: 1px solid #E5E7EB;
-      padding: 14px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .pricing-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
-    .pricing-logo span {
-      font-family: 'YoureGone', sans-serif;
-      color: #00A1E0;
-      font-size: 21px;
-      letter-spacing: 1px;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #6B7280;
-      text-decoration: none;
-      font-size: 0.88rem;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: 8px;
-      border: 1px solid #E5E7EB;
-      background: #fff;
-      transition: color 0.2s, border-color 0.2s, background 0.2s;
-    }
-
-    .back-link:hover {
-      color: #00A1E0;
-      border-color: #00A1E0;
-      background: #f0f8ff;
-    }
-
-    /* ── Content ───────────────────────────────── */
-    .pricing-content {
-      flex: 1;
-      padding: 52px 40px 56px;
-    }
-
-    .pricing-layout {
-      max-width: 860px;
-      margin: 0 auto;
-    }
-
-    /* ── Heading ───────────────────────────────── */
-    .pricing-header {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-
-    .pricing-header h1 {
-      font-size: 2.1rem;
-      font-weight: 700;
-      color: #1B2340;
-      margin-bottom: 10px;
-      letter-spacing: -0.5px;
-    }
-
-    .pricing-header p {
-      font-size: 0.95rem;
-      color: #6B7280;
-    }
-
-    /* ── Grid ──────────────────────────────────── */
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    /* ── Cards ─────────────────────────────────── */
-    .plan-card {
-      background: #fff;
-      border: 1px solid #E5E7EB;
-      border-radius: 16px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .plan-card.featured {
-      border: 2px solid #00A1E0;
-      box-shadow: 0 0 32px rgba(0, 161, 224, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
-    }
-
-    .plan-card.featured::before {
-      content: attr(data-popular);
-      position: absolute;
-      top: -13px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #00A1E0;
-      color: #fff;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      padding: 4px 16px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    /* ── Plan tier label ───────────────────────── */
-    .plan-tier {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #00A1E0;
-      margin-bottom: 10px;
-    }
-
-    .plan-tier.pro        { color: #0091c7; }
-    .plan-tier.enterprise { color: #B45309; }
-
-    /* ── Price ─────────────────────────────────── */
-    .plan-price {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: #1B2340;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-
-    .plan-price-cadence {
-      font-size: 0.75rem;
-      color: #9CA3AF;
-      margin-bottom: 24px;
-    }
-
-    /* ── Features list ─────────────────────────── */
-    .plan-features {
-      list-style: none;
-      margin-bottom: 28px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-
-    .plan-features li {
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      font-size: 0.83rem;
-      color: #444;
-      line-height: 1.4;
-    }
-
-    .plan-features li .check {
-      flex-shrink: 0;
-      margin-top: 1px;
-      color: #22C55E;
-    }
-
-    /* ── CTA buttons ───────────────────────────── */
-    .plan-cta {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: auto;
-    }
-
-    .btn-plan {
-      width: 100%;
-      padding: 11px 1rem;
-      border-radius: 9px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-      text-decoration: none;
-      text-align: center;
-      font-family: inherit;
-      display: block;
-    }
-
-    .btn-plan.primary {
-      background: #00A1E0;
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(0, 161, 224, 0.3);
-    }
-
-    .btn-plan.primary:hover {
-      background: #0091c7;
-      transform: translateY(-1px);
-    }
-
-    .btn-plan.secondary {
-      background: #f0f0f0;
-      color: #6B7280;
-      border: none;
-    }
-
-    .btn-plan.secondary:hover { background: #e4e4e4; }
-
-    .btn-plan.outlined {
-      background: transparent;
-      color: #1B2340;
-      border: 1.5px solid #D1D5DB;
-    }
-
-    .btn-plan.outlined:hover {
-      background: #f5f5f5;
-      border-color: #9CA3AF;
-    }
-
-    .btn-plan.trial {
-      background: transparent;
-      color: #00A1E0;
-      border: 1.5px dashed rgba(0, 161, 224, 0.5);
-      font-size: 0.85rem;
-    }
-
-    .btn-plan.trial:hover { background: rgba(0, 161, 224, 0.06); }
-
-    /* ── Login row ─────────────────────────────── */
-    .login-row {
-      text-align: center;
-      margin-top: 28px;
-      font-size: 0.82rem;
-      color: #9CA3AF;
-    }
-
-    #login-btn {
-      color: #3b9eff;
-      cursor: pointer;
-      display: inline-block;
-      transition: transform 0.2s;
-      text-decoration: none;
-      margin-left: 0.3em;
-    }
-
-    #login-btn:hover { font-weight: 600; }
-
-    /* ── Footer ────────────────────────────────── */
-    .pricing-footer {
-      background: var(--surface, #fff);
-      border-top: 1px solid var(--border, #E5E7EF);
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .pricing-footer-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-muted, #9CA3AF);
-    }
-
-    .pricing-footer-links {
-      display: flex;
-      gap: 20px;
-    }
-
-    .pricing-footer-links a {
-      font-size: 0.75rem;
-      color: var(--text-muted, #9CA3AF);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .pricing-footer-links a:hover { color: var(--brand-500, #00A1E0); }
-    .pricing-footer-links a.accent { color: var(--brand-500, #00A1E0); }
-    .pricing-footer-links a.accent:hover { color: var(--brand-600, #0091c7); }
-
-    /* ── SVG check ─────────────────────────────── */
-    .check-icon {
-      width: 15px;
-      height: 15px;
-      display: block;
-      flex-shrink: 0;
-    }
-
-    /* ── Dark mode overrides ───────────────────── */
-    [data-theme="dark"] body {
-      background: #0B0F1A;
-      color: #DDE2F1;
-    }
-
-    [data-theme="dark"] .pricing-topbar {
-      background: #080B14;
-      border-bottom-color: rgba(255, 255, 255, 0.07);
-    }
-
-    [data-theme="dark"] .back-link {
-      color: #8E96BA;
-      border-color: rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    [data-theme="dark"] .back-link:hover {
-      color: #DDE2F1;
-      border-color: rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.07);
-    }
-
-    [data-theme="dark"] .pricing-header h1 { color: #F0F3FB; }
-    [data-theme="dark"] .pricing-header p   { color: #8E96BA; }
-
-    [data-theme="dark"] .plan-card {
-      background: #11172A;
-      border-color: rgba(255, 255, 255, 0.1);
-      box-shadow: none;
-    }
-
-    [data-theme="dark"] .plan-card.featured {
-      background: #0E1829;
-      border-color: #00A1E0;
-      box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
-    }
-
-    [data-theme="dark"] .plan-tier        { color: #6FD2F5; }
-    [data-theme="dark"] .plan-tier.pro    { color: #29BBF0; }
-    [data-theme="dark"] .plan-tier.enterprise { color: #FFD166; }
-
-    [data-theme="dark"] .plan-price         { color: #F0F3FB; }
-    [data-theme="dark"] .plan-price-cadence { color: #6A7299; }
-
-    [data-theme="dark"] .plan-features li { color: #B8BFDB; }
-
-    [data-theme="dark"] .btn-plan.secondary {
-      background: rgba(255, 255, 255, 0.06);
-      color: #8E96BA;
-    }
-
-    [data-theme="dark"] .btn-plan.secondary:hover { background: rgba(255, 255, 255, 0.1); }
-
-    [data-theme="dark"] .btn-plan.outlined {
-      color: #F0F3FB;
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    [data-theme="dark"] .btn-plan.outlined:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.4);
-    }
-
-    [data-theme="dark"] .btn-plan.trial {
-      color: #29BBF0;
-      border-color: rgba(0, 161, 224, 0.6);
-    }
-
-    [data-theme="dark"] .login-row { color: #6A7299; }
-
-    [data-theme="dark"] .pricing-footer {
-      background: #080B14;
-      border-top-color: rgba(255, 255, 255, 0.06);
-    }
-
-    [data-theme="dark"] .pricing-footer-brand { color: #6A7299; }
-
-    [data-theme="dark"] .pricing-footer-links a        { color: #6A7299; }
-    [data-theme="dark"] .pricing-footer-links a:hover  { color: #DDE2F1; }
-    [data-theme="dark"] .pricing-footer-links a.accent       { color: #6FD2F5; }
-    [data-theme="dark"] .pricing-footer-links a.accent:hover { color: #9BE4FA; }
-  </style>
+  <link rel="stylesheet" href="styles/app-chrome.css">
+  <link rel="stylesheet" href="styles/pricing.css">
 </head>
 <body>
   <!-- Brand header -->
-  <header class="pricing-topbar">
-    <a href="options.html" class="pricing-logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
-      <span>INSV REFRESH</span>
+  <header class="app-topbar">
+    <a href="options.html" class="app-topbar-brand" title="Voltar às configurações" data-i18n-title="back_to_settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      <span class="app-wordmark">INSV Refresh</span>
     </a>
-    <a href="options.html" class="back-link" data-i18n="back_to_settings">
+    <a href="options.html" class="app-topbar-back">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-      Voltar às configurações
+      <span data-i18n="back_to_settings">Voltar às configurações</span>
     </a>
   </header>
 
@@ -433,8 +37,8 @@
         <!-- FREE -->
         <div class="plan-card">
           <div class="plan-tier" data-i18n="plan_free">Grátis</div>
-          <div class="plan-price">R$ 0</div>
-          <div class="plan-price-cadence">para sempre</div>
+          <div class="plan-price" data-i18n="price_free">R$ 0</div>
+          <div class="plan-price-cadence" data-i18n="price_forever">para sempre</div>
           <ul class="plan-features">
             <li>
               <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
@@ -454,12 +58,12 @@
             </li>
           </ul>
           <div class="plan-cta">
-            <span class="btn-plan secondary" data-i18n="included">Já incluso</span>
+            <span class="plan-included" data-i18n="included">Já incluso</span>
           </div>
         </div>
 
         <!-- PRO (featured) -->
-        <div class="plan-card featured" data-popular="MAIS POPULAR">
+        <div class="plan-card featured" data-popular="">
           <div class="plan-tier pro" data-i18n="plan_normal">Pro</div>
           <div class="plan-price" data-i18n="price_paid">Assinatura</div>
           <div class="plan-price-cadence" data-i18n="price_cadence">pagamento mensal</div>
@@ -491,7 +95,7 @@
         <div class="plan-card">
           <div class="plan-tier enterprise" data-i18n="plan_enterprise">Empresa</div>
           <div class="plan-price" data-i18n="price_quote">Sob consulta</div>
-          <div class="plan-price-cadence">preço negociado</div>
+          <div class="plan-price-cadence" data-i18n="price_negotiated">preço negociado</div>
           <ul class="plan-features">
             <li>
               <svg class="check-icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 6"/></svg>
@@ -514,20 +118,20 @@
 
       <div class="login-row">
         <span data-i18n="login_cta"></span>
-        <span id="login-btn" data-i18n="login_action"></span>
+        <button type="button" id="login-btn" data-i18n="login_action"></button>
       </div>
     </div>
   </div>
 
   <!-- Footer -->
-  <footer class="pricing-footer">
-    <div class="pricing-footer-brand">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
-      INSV REFRESH · Vitor Rodrigues &amp; Douglas Rocha
+  <footer class="app-footer">
+    <div class="app-footer-brand">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      INSV Refresh · Vitor Rodrigues &amp; Douglas Rocha
     </div>
-    <nav class="pricing-footer-links">
+    <nav class="app-footer-links">
       <a href="docs/privacy-policy.html" data-i18n="privacy_policy">Política de Privacidade</a>
-      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="accent">Enviar feedback</a>
+      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" rel="noopener noreferrer" class="accent" data-i18n="feedback">Enviar feedback</a>
     </nav>
   </footer>
 

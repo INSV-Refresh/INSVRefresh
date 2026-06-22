@@ -1,4 +1,12 @@
 /* INSV Refresh · brand tokens · v1.0 */
+
+/* Logo display face — single source for the whole extension */
+@font-face {
+  font-family: 'YoureGone';
+  src: url(../assets/fonts/youre_gone/Youre_Gone.otf) format('opentype');
+  font-display: swap;
+}
+
 :root {
   /* ── Brand ───────────────────────── */
   --brand-50:  #E5F6FD;
@@ -29,6 +37,10 @@
   --success-500: #22C55E;
   --danger-500:  #EF4444;
   --info-500:    var(--brand-500);
+  --warning-300: #FCD34D;
+  --warning-500: #F59E0B;
+  --warning-600: #D97706;
+  --warning-700: #92400E;
 
   /* ── Legacy aliases (kept for backward compat) */
   --background-color:   var(--ink-950);
@@ -56,17 +68,19 @@
 
 /* Dark popup & options share the same ink scale */
 [data-theme="dark"], html.dark-popup {
-  --surface:      var(--ink-950);
-  --surface-2:    var(--ink-800);
-  --border:       rgb(255 255 255 / 0.08);
-  --text:         var(--ink-50);
-  --text-muted:   var(--ink-300);
+  --surface:        var(--ink-950);
+  --surface-2:      var(--ink-800);
+  --surface-sunken: #080B14; /* chrome (topbar/footer) — one step under body */
+  --border:         rgb(255 255 255 / 0.08);
+  --text:           var(--ink-50);
+  --text-muted:     var(--ink-300);
 }
 
 [data-theme="light"] {
-  --surface:      #FFFFFF;
-  --surface-2:    #F5F6FB;
-  --border:       #E5E7EF;
-  --text:         var(--ink-800);
-  --text-muted:   #6B7390;
+  --surface:        #FFFFFF;
+  --surface-2:      #F5F6FB;
+  --surface-sunken: #FFFFFF; /* chrome matches surface in light mode */
+  --border:         #E5E7EF;
+  --text:           var(--ink-800);
+  --text-muted:     #6B7390;
 }

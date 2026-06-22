@@ -3,12 +3,6 @@
    Design: midnight ink sidebar, clean light content
    ============================================= */
 
-@font-face {
-  font-family: 'YoureGone';
-  src: url(../assets/fonts/youre_gone/Youre_Gone.otf) format('opentype');
-  font-display: swap;
-}
-
 /* ── Layout ──────────────────────────────────── */
 .layout {
   display: flex;

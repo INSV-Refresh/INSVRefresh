@@ -91,6 +91,13 @@
   font-weight: 600;
 }
 
+section h1.highlight,
+section h2.highlight,
+.advanced-bottom-card-header strong.highlight {
+  color: var(--gold-500);
+  transition: color 0.25s ease;
+}
+
 .menu-plans {
   color: var(--gold-500) !important;
   font-weight: 600 !important;
@@ -1753,8 +1760,6 @@ button.delete-audio-btn:hover {
   color: var(--brand-300);
 }
 
-[data-theme="dark"] .export-import-row label { color: var(--ink-50); }
-
 [data-theme="dark"] .advanced-shortcuts-card {
   background: var(--ink-800);
   border-color: rgba(255, 255, 255, 0.08);
@@ -1770,6 +1775,7 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .advanced-bottom-card-header strong { color: var(--ink-50); }
+[data-theme="dark"] .advanced-bottom-card-header strong.highlight { color: var(--gold-500); }
 [data-theme="dark"] .advanced-bottom-card p { color: var(--ink-300); }
 
 [data-theme="dark"] .export-import-btn {

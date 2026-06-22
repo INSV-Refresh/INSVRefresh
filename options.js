@@ -1020,7 +1020,7 @@ document.querySelectorAll(".menu a").forEach(link => {
         }
 
         if (section) {
-            const title = section.querySelector("h1, h2");
+            const title = section.querySelector("h1, h2, .advanced-bottom-card-header strong");
             if (title) title.classList.add("highlight");
 
             if (targetId !== "top"){

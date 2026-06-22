@@ -254,7 +254,10 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
         const audioInfo = customAudios[key];
         const option = document.createElement("option");
         option.value = key;
-        option.textContent = audioInfo.name;
+        // trunca nome longo — dropdown nativo estica o popup
+        const name = audioInfo.name || "";
+        option.textContent = name.length > 28 ? name.slice(0, 27) + "…" : name;
+        option.title = name;
         selectElement.appendChild(option);
       });
     }

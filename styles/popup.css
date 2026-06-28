@@ -852,44 +852,44 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 /* ── Tooltips ───────────────────────────────── */
-.has-tooltip {
-  position: relative;
-}
-
-.has-tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 130%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--ink-950);
-  color: var(--ink-50);
+/* One floating element (see initTooltips in popup.js). position:fixed escapes
+   the popup's overflow:hidden so tooltips are never clipped. */
+.insv-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-tooltip);
+  max-width: 220px;
   padding: 5px 9px;
   border-radius: var(--radius-sm);
-  font-size: 11.5px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-  z-index: 999;
+  background: var(--ink-950);
+  color: var(--ink-50);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.has-tooltip:hover::after {
-  opacity: 1;
-}
-
-.has-tooltip-settings::after {
-  left: 300%;
-}
-.has-tooltip-legacy-text::after {
-  width: 140px;
-  white-space: normal;
-  left: auto;
-  right: 0;
-  transform: none;
+  box-shadow: var(--box-shadow);
+  font-size: 11.5px;
+  line-height: 1.35;
+  font-weight: 500;
   text-align: center;
-  font-weight: 400;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.insv-tip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insv-tip {
+    transition: opacity 0.12s linear;
+    transform: none;
+  }
+  .insv-tip.show {
+    transform: none;
+  }
 }
 
 /* ── Misc ───────────────────────────────────── */

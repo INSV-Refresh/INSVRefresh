@@ -879,21 +879,49 @@ button.delete-audio-btn:hover {
 }
 
 /* Queue-manager row label (used by createQueueManagerRow) */
+/* Fixed-width, read-only field. The queue name can be longer than the column,
+   so it lives in a non-editable <input>: the full value stays reachable by
+   scrolling/selecting (and via the native title on hover) without the column
+   ever resizing. */
 .status-rule-queue-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--brand-500);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-family: var(--font-mono, monospace);
-  min-width: 130px;
-  max-width: 180px;
-  white-space: nowrap;
-  overflow: hidden;
+  gap: 6px;
+  width: 172px;
   flex-shrink: 0;
+  border: 1px solid var(--ink-100);
+  border-radius: 6px;
+  background: var(--surface-2, #f5f6fb);
+  padding: 4px 8px 4px 10px;
+}
+
+.qm-label-icon {
+  flex-shrink: 0;
+  stroke: var(--brand-500);
+  opacity: 0.8;
+}
+
+.queue-manager-row input.qm-queue-name {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 1px 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+  cursor: text;
+  text-overflow: ellipsis;
+}
+
+.queue-manager-row input.qm-queue-name:focus {
+  border: none;
+  box-shadow: none;
+  text-overflow: clip;
 }
 
 /* Queue-manager row (rendered by createQueueManagerRow) */
@@ -1495,6 +1523,18 @@ button.delete-audio-btn:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+[data-theme="dark"] .status-rule-queue-label {
+  background: var(--ink-950);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+/* Keep the read-only name field borderless/transparent in dark mode; the
+   generic dark input rule above would otherwise box it in. */
+[data-theme="dark"] .queue-manager-row input.qm-queue-name {
+  background: transparent;
+  border: none;
+  color: var(--brand-300);
+}
+
 [data-theme="dark"] .audio-name-row input[type="text"] {
   background: var(--ink-950);
   color: var(--ink-100);
@@ -1553,6 +1593,12 @@ button.delete-audio-btn:hover {
 [data-theme="dark"] button.delete-audio-btn {
   border-color: rgba(239, 68, 68, 0.4);
   color: var(--danger-500);
+}
+/* Without this, the dark base rule above (equal specificity, later in source)
+   overrides the generic :hover color, so the icon turns red on a red fill. */
+[data-theme="dark"] button.delete-audio-btn:hover {
+  background: var(--danger-500);
+  color: #fff;
 }
 
 [data-theme="dark"] .changelog-banner {

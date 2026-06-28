@@ -10,19 +10,26 @@ function showInsvToast(message, type, duration) {
   if (!document.getElementById('insv-toast-style')) {
     const s = document.createElement('style');
     s.id = 'insv-toast-style';
+    // Mirrors the options-page toast (.toast in styles/options.css): solid
+    // per-type fill, white text (dark on gold), 300px, weight 600, brand
+    // box-shadow. Tokens hardcoded — can't import variaveis.css into a
+    // content script.
     s.textContent = [
-      '#insv-toast-container{position:fixed;bottom:24px;right:24px;z-index:2147483647;',
-      'display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;',
-      'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
-      '.insv-toast{background:#1e2030;color:#e0e6ff;padding:10px 16px;border-radius:8px;',
-      'font-size:13px;line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.35);',
-      'opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;',
-      'border-left:3px solid #4a9eff;max-width:300px}',
+      '#insv-toast-container{position:fixed;bottom:30px;right:20px;z-index:2147483647;',
+      'display:flex;flex-direction:column;gap:10px;pointer-events:none;',
+      "font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}",
+      '.insv-toast{width:300px;padding:14px 18px;border-radius:8px;color:#fff;',
+      'font-size:0.9rem;font-weight:600;line-height:1.4;',
+      'box-shadow:0 8px 24px -8px rgba(0,0,0,.35),0 2px 6px -2px rgba(0,0,0,.25);',
+      'background:#00A1E0;opacity:0;transform:translateY(10px);',
+      'transition:opacity .3s ease,transform .3s ease}',
       '.insv-toast.show{opacity:1;transform:translateY(0)}',
-      '.insv-toast.success{border-left-color:#4caf50}',
-      '.insv-toast.warning{border-left-color:#ff9800}',
-      '.insv-toast.error{border-left-color:#f44336}',
-      '.insv-toast.info{border-left-color:#4a9eff}',
+      '.insv-toast.success{background:#22C55E}',
+      '.insv-toast.error{background:#EF4444}',
+      '.insv-toast.warning{background:#FFD166;color:#1B2340}',
+      '.insv-toast.info{background:#00A1E0}',
+      '@media (prefers-reduced-motion:reduce){.insv-toast{transition:opacity .2s linear;',
+      'transform:none}.insv-toast.show{transform:none}}',
     ].join('');
     document.head.appendChild(s);
   }
@@ -31,6 +38,8 @@ function showInsvToast(message, type, duration) {
   if (!container) {
     container = document.createElement('div');
     container.id = 'insv-toast-container';
+    container.setAttribute('role', 'status');
+    container.setAttribute('aria-live', 'polite');
     document.body.appendChild(container);
   }
 
@@ -549,17 +558,14 @@ function initNormalMode() {
   setupAcceptShortcut();
 
   function toggleGlobalPause() {
+    // Only flip the stored state. The toast is fired from the storage
+    // onChanged handler below, so it shows on every page that observes the
+    // change — no page refresh, and the same toast whether the toggle came
+    // from this shortcut, the popup, or another tab.
     chrome.storage.local.get("advanced", (data) => {
       const adv = data.advanced || {};
       adv.globalPaused = !adv.globalPaused;
-      const isPaused = adv.globalPaused;
-      chrome.storage.local.set({ advanced: adv }, () => {
-        showInsvToast(
-          isPaused ? 'Atualização de filas pausada' : 'Atualização de filas retomada',
-          isPaused ? 'warning' : 'success',
-          3000
-        );
-      });
+      chrome.storage.local.set({ advanced: adv });
     });
   }
 
@@ -614,6 +620,11 @@ function initNormalMode() {
       const isPaused = !!(changes.advanced.newValue && changes.advanced.newValue.globalPaused);
       if (wasPaused !== isPaused) {
         log(`[Debug] Pausa global ${isPaused ? "ativada" : "desativada"}`);
+        showInsvToast(
+          isPaused ? 'Atualização de filas pausada' : 'Atualização de filas retomada',
+          isPaused ? 'warning' : 'success',
+          3000
+        );
         carregarEIniciarTodos();
         reportExtensionActive();
       }

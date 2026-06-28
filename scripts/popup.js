@@ -75,12 +75,12 @@ function createQueueElement(queue) {
   div.className = "queue-item";
 
   div.innerHTML = `
-<div class="drag-handle" title="${t("drag_reorder")}" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg></div>
+<div class="drag-handle has-tooltip" data-tooltip="${t("drag_reorder")}" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg></div>
 <div class="adjustments-containers-1-and-2">
 <div class="container-1">
 <div class="queue-name-wrapper">
 <input type="text" placeholder="${t("queue_name_ph")}" value="${queue.name || ""}" class="queue-name">
-<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" title="${t("copy_queue_name")}" aria-label="${t("copy_queue_name")}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+<button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" aria-label="${t("copy_queue_name")}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 </div>
 <label class="active-toggle">
 <button class="${queue.active ? "queue-active" : "queue-inactive"}">${queue.active ? t("active") : t("inactive")}</button>
@@ -816,3 +816,77 @@ chrome.storage.onChanged.addListener((changes, area) => {
     document.documentElement.classList.toggle("dark-popup", !!changes.darkMode.newValue);
   }
 });
+
+// ── Tooltip controller ──────────────────────────────
+// Single floating tooltip driven by [data-tooltip]. Uses position:fixed so it
+// escapes the popup's overflow:hidden clipping (the old CSS ::after tooltips
+// were cut off, which is why a few elements had fallen back to native title=).
+// Event delegation covers dynamically-rendered queue rows; focus support makes
+// every tooltip keyboard-reachable.
+(function initTooltips() {
+  let tip = null;
+  let activeTarget = null;
+
+  function ensureTip() {
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.className = "insv-tip";
+      tip.setAttribute("role", "tooltip");
+      document.body.appendChild(tip);
+    }
+    return tip;
+  }
+
+  function position(target, el) {
+    const r = target.getBoundingClientRect();
+    const gap = 8;
+    const margin = 6;
+    let top = r.top - el.offsetHeight - gap;
+    let placement = "top";
+    if (top < margin) {
+      top = r.bottom + gap;
+      placement = "bottom";
+    }
+    let left = r.left + r.width / 2 - el.offsetWidth / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - el.offsetWidth - margin));
+    el.style.top = `${Math.round(top)}px`;
+    el.style.left = `${Math.round(left)}px`;
+    el.dataset.placement = placement;
+  }
+
+  function show(target) {
+    const text = target.getAttribute("data-tooltip");
+    if (!text) return;
+    const el = ensureTip();
+    el.textContent = text;
+    activeTarget = target;
+    position(target, el); // offsetWidth/Height valid while opacity:0
+    requestAnimationFrame(() => el.classList.add("show"));
+  }
+
+  function hide() {
+    activeTarget = null;
+    if (tip) tip.classList.remove("show");
+  }
+
+  function onEnter(e) {
+    const target = e.target.closest && e.target.closest("[data-tooltip]");
+    if (!target || target === activeTarget || !target.getAttribute("data-tooltip")) return;
+    show(target);
+  }
+
+  function onLeave(e) {
+    if (!activeTarget) return;
+    const to = e.relatedTarget;
+    if (to && activeTarget.contains(to)) return; // moved within the same target
+    hide();
+  }
+
+  document.addEventListener("pointerover", onEnter);
+  document.addEventListener("pointerout", onLeave);
+  document.addEventListener("focusin", onEnter);
+  document.addEventListener("focusout", onLeave);
+  // Stale positions otherwise: the popup scrolls and elements move.
+  window.addEventListener("scroll", hide, true);
+  window.addEventListener("resize", hide);
+})();

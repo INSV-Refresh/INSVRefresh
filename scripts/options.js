@@ -528,7 +528,7 @@ function createQueueManagerRow(queue) {
   div.innerHTML = `
     <span class="status-rule-queue-label">
       <svg class="qm-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      ${escapeHtml(queue.name || t("queue_name_ph"))}
+      <input type="text" class="qm-queue-name" value="${escapeHtml(queue.name || t("queue_name_ph"))}" title="${escapeHtml(queue.name || t("queue_name_ph"))}" aria-label="${t("queue_name_ph")}" readonly tabindex="0">
     </span>
     <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}" aria-label="${t("qm_statuses_ph")}">
     <div class="qm-sound-wrapper">

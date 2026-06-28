@@ -473,18 +473,10 @@ function resetDropArea() {
 function loadStatusNotificationSounds(selectEl, selectedValue, onPreview) {
   if (!selectEl) return;
   selectEl.innerHTML = "";
-  const defaultSounds = [
-    { value: "notification.mp3", text: t("sound_default") },
-    { value: "tech.mp3", text: "Tech" },
-    { value: "limba.mp3", text: "Limba" },
-    { value: "lis.mp3", text: "LIS" },
-    { value: "interface.mp3", text: "Interface" },
-    { value: "bubble.mp3", text: "Bubbles" },
-  ];
-  defaultSounds.forEach((s) => {
+  BUILTIN_SOUNDS.forEach((s) => {
     const opt = document.createElement("option");
     opt.value = s.value;
-    opt.textContent = s.text;
+    opt.textContent = s.text || t(s.labelKey);
     selectEl.appendChild(opt);
   });
   chrome.storage.local.get("audiosPersonalizados", (data) => {
@@ -514,22 +506,7 @@ function loadStatusNotificationSounds(selectEl, selectedValue, onPreview) {
 function previewSound(soundValue) {
   try {
     chrome.storage.local.get("general", (data) => {
-      const volume = (data.general && data.general.volume) || 0.5;
-      if (soundValue.startsWith("custom_")) {
-        chrome.storage.local.get("audiosPersonalizados", (d) => {
-          const custom = d.audiosPersonalizados || {};
-          const audio = custom[soundValue];
-          if (audio && audio.data) {
-            const a = new Audio(audio.data);
-            a.volume = volume;
-            a.play().catch(() => {});
-          }
-        });
-      } else {
-        const a = new Audio(chrome.runtime.getURL("assets/sounds/" + soundValue));
-        a.volume = volume;
-        a.play().catch(() => {});
-      }
+      playSound(soundValue, (data.general && data.general.volume) || 0.5);
     });
   } catch (e) {
     console.error("Preview error:", e);
@@ -555,7 +532,7 @@ function mergeLegacyStatusNotifications(queues, legacy) {
     if (!name) return;
     let q = queues.find((x) => (x.name || "").toLowerCase().trim() === name.toLowerCase());
     if (!q) {
-      q = { name, active: false, interval: 15, soundEnabled: false, customSound: "notification.mp3" };
+      q = defaultQueue({ name, active: false });
       queues.push(q);
     }
     q.statusNotify = {
@@ -609,7 +586,7 @@ function collectQueueManagerRows() {
   const rows = container.querySelectorAll(".queue-manager-row");
   const result = [];
   rows.forEach((row, i) => {
-    const base = qmQueues[i] || { active: true, interval: 15, soundEnabled: false, customSound: "notification.mp3" };
+    const base = qmQueues[i] || defaultQueue();
     const statuses = row.querySelector(".qm-statuses").value.split(";").map((s) => s.trim()).filter(Boolean);
     result.push(Object.assign({}, base, {
       statusNotify: {

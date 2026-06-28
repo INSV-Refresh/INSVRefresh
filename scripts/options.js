@@ -129,7 +129,7 @@ function validateAudioFile(input) {
   
   const nameInput = document.getElementById('custom-audio-name');
   if (!nameInput.value) {
-    const fileName = file.name.replace(/.[^/.]+$/, "");
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
     nameInput.value = fileName;
   }
   
@@ -213,14 +213,8 @@ function loadCustomAudios() {
   chrome.storage.local.get('audiosPersonalizados', (data) => {
     const customAudios = data.audiosPersonalizados || {};
     const container = document.getElementById('custom-audios-list');
-    
-    if (!container) {
-      const newContainer = document.createElement('div');
-      newContainer.id = 'custom-audios-list';
-      document.getElementById('upload-audio').appendChild(newContainer);
-      return loadCustomAudios();
-    }
-    
+    if (!container) return;
+
     container.innerHTML = '';
     
     const audioKeys = Object.keys(customAudios);
@@ -246,7 +240,7 @@ function loadCustomAudios() {
           <div class="audio-meta">${audioInfo.originalName}${sizeKB ? ' · ' + sizeKB + ' KB' : ''}</div>
         </div>
         <button class="delete-audio-btn" data-audio-key="${key}" aria-label="${t('delete')} ${audioInfo.name}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-dc-tpl="467" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" data-om-id="e0b415c9:493"></path></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"></path></svg>
         </button>
       `;
 
@@ -552,7 +546,7 @@ function mergeLegacyStatusNotifications(queues, legacy) {
   return queues;
 }
 
-function createQueueManagerRow(queue, index) {
+function createQueueManagerRow(queue) {
   const sn = queue.statusNotify || { enabled: false, statuses: [], sound: "notification.mp3" };
   const statusText = (sn.statuses || []).join(";");
   const div = document.createElement("div");
@@ -562,10 +556,10 @@ function createQueueManagerRow(queue, index) {
       <svg class="qm-label-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       ${escapeHtml(queue.name || t("queue_name_ph"))}
     </span>
-    <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}">
+    <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}" aria-label="${t("qm_statuses_ph")}">
     <div class="qm-sound-wrapper">
       <svg class="qm-bell-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <select class="qm-sound" title="${t("qm_sound_title")}"></select>
+      <select class="qm-sound" title="${t("qm_sound_title")}" aria-label="${t("qm_sound_title")}"></select>
     </div>
   `;
 
@@ -583,8 +577,8 @@ function renderQueueManager() {
   const container = document.getElementById("status-notifications-list");
   if (!container) return;
   container.innerHTML = "";
-  qmQueues.forEach((q, idx) => {
-    container.appendChild(createQueueManagerRow(q, idx));
+  qmQueues.forEach((q) => {
+    container.appendChild(createQueueManagerRow(q));
   });
 }
 
@@ -638,10 +632,6 @@ function loadQueueManager() {
     }
     renderQueueManager();
   });
-}
-
-function addQueueFromManager() {
-  showToast(t("add_queue_in_popup"), "warning");
 }
 
 // Sincronização: mudanças vindas do popup re-renderizam a lista
@@ -720,13 +710,6 @@ function applyPaidGateOptions(isPaid) {
       }
     });
 
-    // Gerenciar botão add-status-notification especificamente
-    const addBtn = document.getElementById("add-status-notification-btn");
-    if (addBtn) {
-      addBtn.disabled = !isPaid;
-      addBtn.style.opacity = isPaid ? "1" : "0.6";
-    }
-
   } catch (e) {
     console.error("Error applying paid gate:", e);
   }
@@ -757,7 +740,6 @@ i18nReady.then(function() {
   }
 
   loadQueueManager();
-  document.getElementById("add-status-notification-btn")?.addEventListener("click", addQueueFromManager);
 
   document.getElementById("export-settings-btn")?.addEventListener("click", exportSettings);
   document.getElementById("import-settings-input")?.addEventListener("change", importSettings);

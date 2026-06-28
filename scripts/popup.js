@@ -101,7 +101,7 @@ function createQueueElement(queue) {
 <ul class="qsd-list" role="listbox" hidden></ul>
 </div>
 </div>
-${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}" aria-label="${t("remove_queue")}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-dc-tpl="467" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" data-om-id="e0b415c9:493"></path></svg></button>`}
+${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" data-tooltip="${t("remove_queue")}" aria-label="${t("remove_queue")}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"></path></svg></button>`}
 </div>
 </div>
 `;
@@ -447,18 +447,6 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
   });
 }
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 function attachScrollToInterval(input) {
   input.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -660,13 +648,13 @@ function playQueueTestSound(soundValue) {
       if (customAudio) {
         const audio = new Audio(customAudio.data);
         audio.volume = volume;
-        audio.play().catch((e) => console.error("Erro ao tocar áudio personalizado:", e));
+        audio.play().catch(() => {});
       }
     });
   } else {
     const audio = new Audio(`./assets/sounds/${soundValue}`);
     audio.volume = volume;
-    audio.play().catch((e) => console.error("Erro ao tocar áudio padrão:", e));
+    audio.play().catch(() => {});
   }
 }
 

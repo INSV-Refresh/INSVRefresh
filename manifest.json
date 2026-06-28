@@ -26,7 +26,7 @@
     "default_popup": "popup.html",
     "default_title": "INSV Refresh"
   },
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "unlimitedStorage"],
   "icons": {
     "16": "assets/icons/INSVRefresh-16.png",
     "32": "assets/icons/INSVRefresh-32.png",

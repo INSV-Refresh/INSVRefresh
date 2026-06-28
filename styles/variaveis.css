@@ -35,6 +35,7 @@
 
   /* ── Semantic ────────────────────── */
   --success-500: #22C55E;
+  --success-700: #15803D; /* AA: white text passes on this step, not on 500 */
   --danger-500:  #EF4444;
   --info-500:    var(--brand-500);
   --warning-300: #FCD34D;

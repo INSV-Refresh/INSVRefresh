@@ -49,7 +49,10 @@ function updateLegacyToggle(active) {
 }
 
 function saveLegacyConfig() {
-  const interval = parseInt(legacyInterval.value, 10);
+  // Clamp here so a cleared field can't store NaN (which drives a tight
+  // refresh loop on the content-script side).
+  const parsed = parseInt(legacyInterval.value, 10);
+  const interval = Number.isFinite(parsed) ? Math.min(900, Math.max(5, parsed)) : 10;
   const active = legacyToggle.classList.contains("queue-active");
   
   chrome.storage.sync.set({
@@ -529,6 +532,13 @@ function applyPaidGate(isPaid) {
     link.textContent = t("subscribe_multi");
     normalMode.appendChild(link);
 
+    // Detach any previously-bound handler first. applyPaidGate re-runs for free
+    // users (load, lang change, legacy toggle); overwriting the reference
+    // without removing would stack capture listeners, and an even count cancels
+    // the banner toggle so it never shows.
+    if (addQueueBtn._premiumClickHandler) {
+      addQueueBtn.removeEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
+    }
     // Ao clicar no botão travado, mostrar banner em vez de ignorar
     addQueueBtn._premiumClickHandler = (e) => {
       e.stopPropagation();

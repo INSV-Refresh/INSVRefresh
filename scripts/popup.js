@@ -73,6 +73,10 @@ function createQueueElement(queue) {
   const isFirst = queueList.children.length === 0;
   const div = document.createElement("div");
   div.className = "queue-item";
+  // Keep the original queue object so saveOptions can preserve fields the popup
+  // doesn't render (notably statusNotify — the premium status-notification rules
+  // owned by the options page). Survives drag reorder since it rides the node.
+  div._insvQueue = queue || {};
 
   div.innerHTML = `
 <div class="drag-handle has-tooltip" data-tooltip="${t("drag_reorder")}" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1" fill="currentColor"/><circle cx="15" cy="6" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg></div>
@@ -478,13 +482,13 @@ function saveOptions() {
     const soundBtn = item.querySelector(".queue-sound");
 
     if (nameInput && intervalInput && soundBtn) {
-      queues.push({
+      queues.push(Object.assign({}, item._insvQueue || {}, {
         name: nameInput.value,
         active: activeBtn !== null,
         interval: parseInt(intervalInput.value, 10),
         soundEnabled: !soundBtn.classList.contains("off"),
         customSound: soundSelect ? soundSelect.value : "",
-      });
+      }));
     }
   });
 

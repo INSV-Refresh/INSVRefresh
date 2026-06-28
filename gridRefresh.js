@@ -57,7 +57,7 @@ function showInsvToast(message, type, duration) {
   }, duration);
 }
 
-window.onload = function () {
+function insvStart() {
   log("[Debug] GRID REFRESH ATIVADO");
 
   chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
@@ -635,4 +635,14 @@ function initNormalMode() {
       window.location.reload();
     }
   });
+}
+
+// run_at:document_idle can inject this script AFTER the window 'load' event has
+// already fired, and on the Salesforce Lightning SPA 'load' never fires again
+// on in-app (soft) navigations. Gating startup on window.onload left the script
+// inert in both cases. Start as soon as the document is parsed instead.
+if (document.readyState === "interactive" || document.readyState === "complete") {
+  insvStart();
+} else {
+  document.addEventListener("DOMContentLoaded", insvStart, { once: true });
 }

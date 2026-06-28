@@ -108,12 +108,9 @@ function importSettings(event) {
 }
 
 function applyDarkMode(enabled) {
+  // Theme is driven entirely by [data-theme] on <html> (see variaveis.css).
+  // body.dark-mode was a dead write — no CSS or JS reads it.
   document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
-  if (enabled) {
-    document.body.classList.add("dark-mode");
-  } else {
-    document.body.classList.remove("dark-mode");
-  }
 }
 
 function validateAudioFile(input) {

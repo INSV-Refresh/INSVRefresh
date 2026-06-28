@@ -208,6 +208,11 @@ function saveCustomAudio() {
       };
       
       chrome.storage.local.set({ audiosPersonalizados: customAudios }, () => {
+        if (chrome.runtime.lastError) {
+          // Quota exceeded (base64 audio is large) — don't claim success.
+          showToast(t("audio_save_error"), "error");
+          return;
+        }
         showToast(t("audio_saved"), "success");
         loadCustomAudios();
         clearAudioForm();

@@ -442,15 +442,6 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
   if (!list) return;
   list.innerHTML = "";
 
-  const defaultSounds = [
-    { value: "notification.mp3", text: t("sound_default") },
-    { value: "tech.mp3", text: "Tech" },
-    { value: "limba.mp3", text: "Limba" },
-    { value: "lis.mp3", text: "LIS" },
-    { value: "interface.mp3", text: "Interface" },
-    { value: "bubble.mp3", text: "Bubbles" },
-  ];
-
   const addOption = (value, text, full) => {
     const li = document.createElement("li");
     li.className = "qsd-option";
@@ -481,7 +472,7 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
     list.appendChild(li);
   };
 
-  defaultSounds.forEach((s) => addOption(s.value, s.text));
+  BUILTIN_SOUNDS.forEach((s) => addOption(s.value, s.text || t(s.labelKey)));
 
   chrome.storage.local.get("audiosPersonalizados", (data) => {
     const customAudios = data.audiosPersonalizados || {};
@@ -639,15 +630,7 @@ function restoreOptions() {
     let queues = data.queues || [];
 
     if (queues.length === 0) {
-      queues = [
-        {
-          name: "",
-          active: true,
-          interval: 15,
-          soundEnabled: false,
-          customSound: "notification.mp3",
-        },
-      ];
+      queues = [defaultQueue()];
       popupSelfWriteQueues = JSON.stringify(queues);
       chrome.storage.local.set({ queues });
     }
@@ -687,13 +670,7 @@ function addQueueHandler() {
     const isPaid = !!(access && access.isPaid);
     const count = queueList.querySelectorAll(".queue-item").length;
     if (!isPaid && count >= 1) return;
-    const newQueue = {
-      name: "",
-      active: true,
-      interval: 15,
-      soundEnabled: false,
-      customSound: "notification.mp3",
-    };
+    const newQueue = defaultQueue();
     const el = createQueueElement(newQueue);
     queueList.appendChild(el);
     saveOptions();
@@ -702,24 +679,7 @@ function addQueueHandler() {
 }
 
 function playQueueTestSound(soundValue) {
-  const volume = parseInt(volumeSlider.value, 10) / 100;
-
-  if (soundValue.startsWith("custom_")) {
-    chrome.storage.local.get("audiosPersonalizados", (data) => {
-      const customAudios = data.audiosPersonalizados || {};
-      const customAudio = customAudios[soundValue];
-
-      if (customAudio) {
-        const audio = new Audio(customAudio.data);
-        audio.volume = volume;
-        audio.play().catch(() => {});
-      }
-    });
-  } else {
-    const audio = new Audio(`./assets/sounds/${soundValue}`);
-    audio.volume = volume;
-    audio.play().catch(() => {});
-  }
+  playSound(soundValue, parseInt(volumeSlider.value, 10) / 100);
 }
 
 if (addQueueBtn) {

@@ -86,9 +86,10 @@ small {
   font-weight: 600;
   color: var(--ink-400);
   font-size: 11px;
-  & a {
-    color: var(--ink-400);
-  }
+}
+
+small a {
+  color: var(--ink-400);
 }
 
 hr {

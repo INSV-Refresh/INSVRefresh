@@ -9,632 +9,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/variaveis.css">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ── Base ───────────────────────────────────────── */
-    html {
-      scroll-behavior: smooth;
-      scroll-padding-top: 88px;
-    }
-
-    body {
-      font-family: var(--font-ui);
-      background: var(--surface-2, #F5F6FB);
-      color: var(--text, var(--ink-800));
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-      transition: background 0.2s, color 0.2s;
-      line-height: 1.7;
-    }
-
-    /* ── Topbar ─────────────────────────────────────── */
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--surface, #fff);
-      border-bottom: 1px solid var(--border, #E5E7EF);
-      padding: 14px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .topbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      flex-shrink: 0;
-    }
-
-    .topbar-brand-name {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text, var(--ink-800));
-      letter-spacing: 0.02em;
-      opacity: 0.7;
-    }
-
-    .topbar-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text, var(--ink-800));
-      opacity: 0.5;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted, #6B7390);
-      text-decoration: none;
-      font-size: 0.83rem;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border, #E5E7EF);
-      background: var(--surface, #fff);
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
-      white-space: nowrap;
-    }
-
-    .back-link:hover {
-      color: var(--brand-500);
-      border-color: var(--brand-500);
-    }
-
-    /* ── Layout shell ───────────────────────────────── */
-    .page-shell {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 0;
-      max-width: 1080px;
-      margin: 0 auto;
-      width: 100%;
-      padding: 48px 24px 80px;
-      align-items: start;
-    }
-
-    /* ── TOC sidebar ────────────────────────────────── */
-    .toc {
-      position: sticky;
-      top: 88px;
-      padding-right: 32px;
-    }
-
-    .toc-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted, #6B7390);
-      margin-bottom: 14px;
-      display: block;
-    }
-
-    .toc-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .toc-list a {
-      display: block;
-      font-size: 0.78rem;
-      color: var(--text-muted, #6B7390);
-      text-decoration: none;
-      padding: 5px 10px;
-      border-radius: var(--radius-sm);
-      transition: color 0.15s, background 0.15s;
-      line-height: 1.4;
-    }
-
-    .toc-list a:hover,
-    .toc-list a.active {
-      color: var(--brand-500);
-      background: color-mix(in srgb, var(--brand-500) 8%, transparent);
-    }
-
-    /* ── Content ────────────────────────────────────── */
-    .content {
-      min-width: 0;
-    }
-
-    /* ── Doc header ─────────────────────────────────── */
-    .doc-header {
-      margin-bottom: 40px;
-      padding-bottom: 32px;
-      border-bottom: 1px solid var(--border, #E5E7EF);
-    }
-
-    .doc-header h1 {
-      font-size: 1.85rem;
-      font-weight: 700;
-      color: var(--text, var(--ink-800));
-      letter-spacing: -0.03em;
-      line-height: 1.2;
-      text-wrap: balance;
-      margin-bottom: 12px;
-    }
-
-    .doc-meta {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .doc-meta-item {
-      font-size: 0.78rem;
-      color: var(--text-muted, #6B7390);
-      font-family: var(--font-mono);
-    }
-
-    .doc-meta-item strong {
-      color: var(--text, var(--ink-800));
-      font-weight: 500;
-    }
-
-    .compliance-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 20px;
-    }
-
-    .badge {
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-      color: var(--brand-600, #0085BB);
-      border: 1px solid color-mix(in srgb, var(--brand-500) 20%, transparent);
-    }
-
-    /* ── Summary callout ────────────────────────────── */
-    .callout {
-      background: color-mix(in srgb, var(--brand-500) 7%, transparent);
-      border: 1px solid color-mix(in srgb, var(--brand-500) 20%, transparent);
-      border-radius: var(--radius-lg);
-      padding: 20px 22px;
-      margin-bottom: 40px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .callout-icon {
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      margin-top: 1px;
-      color: var(--brand-500);
-    }
-
-    .callout p {
-      font-size: 0.88rem;
-      color: var(--text, var(--ink-800));
-      line-height: 1.6;
-    }
-
-    .callout p strong {
-      color: var(--brand-600, #0085BB);
-    }
-
-    .callout-warning {
-      background: color-mix(in srgb, #F59E0B 7%, transparent);
-      border-color: color-mix(in srgb, #F59E0B 25%, transparent);
-    }
-
-    .callout-warning .callout-icon { color: #D97706; }
-    .callout-warning p strong { color: #92400E; }
-
-    /* ── Sections ───────────────────────────────────── */
-    .doc-section {
-      margin-bottom: 44px;
-    }
-
-    .doc-section h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text, var(--ink-800));
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      scroll-margin-top: 96px;
-    }
-
-    .doc-section h2 .section-num {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--brand-500);
-      background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-      padding: 2px 8px;
-      border-radius: var(--radius-sm);
-      flex-shrink: 0;
-    }
-
-    .doc-section h3 {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--text, var(--ink-800));
-      margin-top: 24px;
-      margin-bottom: 10px;
-    }
-
-    .doc-section p {
-      font-size: 0.88rem;
-      color: var(--text-muted, #6B7390);
-      margin-bottom: 12px;
-      max-width: 65ch;
-      line-height: 1.75;
-    }
-
-    .doc-section p strong {
-      color: var(--text, var(--ink-800));
-      font-weight: 600;
-    }
-
-    .doc-section ul {
-      list-style: none;
-      margin-bottom: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .doc-section ul li {
-      font-size: 0.87rem;
-      color: var(--text-muted, #6B7390);
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      line-height: 1.6;
-      max-width: 60ch;
-    }
-
-    .doc-section ul li::before {
-      content: '';
-      display: block;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--brand-500);
-      flex-shrink: 0;
-      margin-top: 7px;
-    }
-
-    .doc-section ul li strong {
-      color: var(--text, var(--ink-800));
-      font-weight: 600;
-    }
-
-    a.ext-link {
-      color: var(--brand-500);
-      text-decoration: none;
-      font-weight: 600;
-      border-bottom: 1px solid color-mix(in srgb, var(--brand-500) 30%, transparent);
-      transition: border-color 0.15s;
-    }
-
-    a.ext-link:hover {
-      border-bottom-color: var(--brand-500);
-    }
-
-    /* ── Definition block ───────────────────────────── */
-    .definition {
-      background: var(--surface, #fff);
-      border: 1px solid var(--border, #E5E7EF);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      margin: 16px 0;
-      font-size: 0.84rem;
-      color: var(--text-muted, #6B7390);
-      font-style: italic;
-      line-height: 1.7;
-    }
-
-    /* ── Rights grid ────────────────────────────────── */
-    .rights-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .right-card {
-      background: var(--surface, #fff);
-      border: 1px solid var(--border, #E5E7EF);
-      border-radius: var(--radius-md);
-      padding: 16px;
-    }
-
-    .right-card-title {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text, var(--ink-800));
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .right-card-title svg {
-      color: var(--brand-500);
-      flex-shrink: 0;
-    }
-
-    .right-card p {
-      font-size: 0.78rem;
-      color: var(--text-muted, #6B7390);
-      margin-bottom: 0;
-      max-width: none;
-    }
-
-    /* ── Contact section ────────────────────────────── */
-    .contact-card {
-      background: var(--surface, #fff);
-      border: 1px solid var(--border, #E5E7EF);
-      border-radius: var(--radius-lg);
-      padding: 24px 28px;
-      margin-top: 8px;
-    }
-
-    .contact-card h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text, var(--ink-800));
-      margin-bottom: 8px;
-    }
-
-    .contact-card p {
-      font-size: 0.87rem;
-      color: var(--text-muted, #6B7390);
-      margin-bottom: 16px;
-    }
-
-    .contact-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .contact-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.84rem;
-    }
-
-    .contact-row-label {
-      font-weight: 600;
-      color: var(--text, var(--ink-800));
-      min-width: 120px;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-    }
-
-    .contact-row a {
-      color: var(--brand-500);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .contact-row a:hover { text-decoration: underline; }
-
-    .response-note {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border, #E5E7EF);
-      font-size: 0.78rem;
-      color: var(--text-muted, #6B7390);
-    }
-
-    /* ── Footer ─────────────────────────────────────── */
-    footer {
-      background: var(--surface, #fff);
-      border-top: 1px solid var(--border, #E5E7EF);
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .footer-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-muted, #6B7390);
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 20px;
-    }
-
-    .footer-links a {
-      font-size: 0.75rem;
-      color: var(--text-muted, #6B7390);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .footer-links a:hover { color: var(--brand-500); }
-
-    /* ── Dark mode ──────────────────────────────────── */
-    [data-theme="dark"] body {
-      background: #0B0F1A;
-      color: #DDE2F1;
-    }
-
-    [data-theme="dark"] .topbar {
-      background: #080B14;
-      border-bottom-color: rgba(255,255,255,0.07);
-    }
-
-    [data-theme="dark"] .back-link {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.1);
-      color: #8E96BA;
-    }
-
-    [data-theme="dark"] .back-link:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.2);
-      color: #DDE2F1;
-    }
-
-    [data-theme="dark"] .topbar-brand-name,
-    [data-theme="dark"] .topbar-title { color: #DDE2F1; }
-
-    [data-theme="dark"] .doc-header { border-bottom-color: rgba(255,255,255,0.07); }
-    [data-theme="dark"] .doc-header h1 { color: #DDE2F1; }
-    [data-theme="dark"] .doc-meta-item { color: #8E96BA; }
-    [data-theme="dark"] .doc-meta-item strong { color: #DDE2F1; }
-
-    [data-theme="dark"] .badge {
-      background: rgba(0,161,224,0.12);
-      border-color: rgba(0,161,224,0.25);
-      color: #29BBF0;
-    }
-
-    [data-theme="dark"] .callout {
-      background: rgba(0,161,224,0.08);
-      border-color: rgba(0,161,224,0.2);
-    }
-
-    [data-theme="dark"] .callout p { color: #DDE2F1; }
-    [data-theme="dark"] .callout p strong { color: #29BBF0; }
-
-    [data-theme="dark"] .callout-warning {
-      background: rgba(245,158,11,0.08);
-      border-color: rgba(245,158,11,0.2);
-    }
-
-    [data-theme="dark"] .callout-warning p { color: #DDE2F1; }
-    [data-theme="dark"] .callout-warning p strong { color: #FCD34D; }
-    [data-theme="dark"] .callout-warning .callout-icon { color: #F59E0B; }
-
-    [data-theme="dark"] .toc-label { color: #6A7299; }
-    [data-theme="dark"] .toc-list a { color: #8E96BA; }
-
-    [data-theme="dark"] .doc-section h2 { color: #DDE2F1; }
-    [data-theme="dark"] .doc-section h3 { color: #DDE2F1; }
-    [data-theme="dark"] .doc-section p { color: #8E96BA; }
-    [data-theme="dark"] .doc-section p strong { color: #DDE2F1; }
-    [data-theme="dark"] .doc-section ul li { color: #8E96BA; }
-    [data-theme="dark"] .doc-section ul li strong { color: #DDE2F1; }
-
-    [data-theme="dark"] .definition {
-      background: #080B14;
-      border-color: rgba(255,255,255,0.07);
-      color: #8E96BA;
-    }
-
-    [data-theme="dark"] .right-card {
-      background: #0B0F1A;
-      border-color: rgba(255,255,255,0.07);
-    }
-
-    [data-theme="dark"] .right-card-title { color: #DDE2F1; }
-    [data-theme="dark"] .right-card p { color: #8E96BA; }
-
-    [data-theme="dark"] .contact-card {
-      background: #0B0F1A;
-      border-color: rgba(255,255,255,0.07);
-    }
-
-    [data-theme="dark"] .contact-card h2 { color: #DDE2F1; }
-    [data-theme="dark"] .contact-card p { color: #8E96BA; }
-    [data-theme="dark"] .contact-row-label { color: #DDE2F1; }
-    [data-theme="dark"] .response-note { color: #6A7299; border-top-color: rgba(255,255,255,0.07); }
-
-    [data-theme="dark"] footer {
-      background: #080B14;
-      border-top-color: rgba(255,255,255,0.07);
-    }
-
-    [data-theme="dark"] .footer-brand,
-    [data-theme="dark"] .footer-links a { color: #6A7299; }
-
-    /* ── Responsive ─────────────────────────────────── */
-    @media (max-width: 768px) {
-      .topbar { padding: 12px 20px; }
-
-      .page-shell {
-        grid-template-columns: 1fr;
-        padding: 32px 20px 64px;
-        gap: 32px;
-      }
-
-      .toc {
-        position: static;
-        padding-right: 0;
-        padding-bottom: 0;
-        border-bottom: 1px solid var(--border, #E5E7EF);
-        padding-bottom: 24px;
-      }
-
-      [data-theme="dark"] .toc { border-bottom-color: rgba(255,255,255,0.07); }
-
-      .toc-list {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 4px;
-      }
-
-      .toc-list a { padding: 4px 10px; font-size: 0.76rem; }
-
-      .doc-header h1 { font-size: 1.4rem; }
-
-      footer { padding: 16px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
-    }
-
-    @media (max-width: 480px) {
-      .compliance-badges { gap: 6px; }
-      .rights-grid { grid-template-columns: 1fr; }
-      .doc-meta { flex-direction: column; gap: 6px; }
-    }
-
-    /* ── Reduced motion ─────────────────────────────── */
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { transition-duration: 0.01ms !important; }
-    }
-  </style>
+  <link rel="stylesheet" href="../styles/app-chrome.css">
+  <link rel="stylesheet" href="privacy-policy.css">
 </head>
 <body>
 
   <!-- Topbar -->
-  <header class="topbar">
-    <a href="../options.html" class="topbar-brand" title="Voltar às configurações">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true">
+  <header class="app-topbar">
+    <a href="../options.html" class="app-topbar-brand" title="Voltar às configurações" data-i18n-title="back_to_settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true">
         <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/>
       </svg>
-      <span class="topbar-brand-name">INSV Refresh</span>
+      <span class="app-wordmark">INSV Refresh</span>
     </a>
-    <span class="topbar-title">Política de Privacidade</span>
-    <a href="../options.html" class="back-link">
+    <a href="../options.html" class="app-topbar-back">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="m15 18-6-6 6-6"/>
       </svg>
-      Configurações
+      <span data-i18n="back_to_settings">Voltar às configurações</span>
     </a>
   </header>
 
@@ -642,22 +34,22 @@
 
     <!-- TOC sidebar -->
     <nav class="toc" aria-label="Índice">
-      <span class="toc-label">Nesta página</span>
+      <span class="toc-label" data-i18n="pp_toc_label">Nesta página</span>
       <ul class="toc-list">
-        <li><a href="#introducao">1. Introdução</a></li>
-        <li><a href="#nao-coletamos">2. O que não coletamos</a></li>
-        <li><a href="#dados-locais">3. Dados locais</a></li>
-        <li><a href="#consentimento">4. Consentimento</a></li>
-        <li><a href="#permissoes">5. Permissões</a></li>
-        <li><a href="#terceiros">6. Código de terceiros</a></li>
-        <li><a href="#transferencia">7. Transferência de dados</a></li>
-        <li><a href="#compartilhamento">8. Compartilhamento</a></li>
-        <li><a href="#seguranca">9. Segurança</a></li>
-        <li><a href="#direitos">10. Seus direitos</a></li>
-        <li><a href="#criancas">11. Privacidade de crianças</a></li>
-        <li><a href="#alteracoes">12. Alterações</a></li>
-        <li><a href="#conformidade">13. Conformidade legal</a></li>
-        <li><a href="#contato">14. Contato</a></li>
+        <li><a href="#introducao" data-i18n="pp_toc_1">1. Introdução</a></li>
+        <li><a href="#nao-coletamos" data-i18n="pp_toc_2">2. O que não coletamos</a></li>
+        <li><a href="#dados-locais" data-i18n="pp_toc_3">3. Dados locais</a></li>
+        <li><a href="#consentimento" data-i18n="pp_toc_4">4. Consentimento</a></li>
+        <li><a href="#permissoes" data-i18n="pp_toc_5">5. Permissões</a></li>
+        <li><a href="#terceiros" data-i18n="pp_toc_6">6. Código de terceiros</a></li>
+        <li><a href="#transferencia" data-i18n="pp_toc_7">7. Transferência de dados</a></li>
+        <li><a href="#compartilhamento" data-i18n="pp_toc_8">8. Compartilhamento</a></li>
+        <li><a href="#seguranca" data-i18n="pp_toc_9">9. Segurança</a></li>
+        <li><a href="#direitos" data-i18n="pp_toc_10">10. Seus direitos</a></li>
+        <li><a href="#criancas" data-i18n="pp_toc_11">11. Privacidade de crianças</a></li>
+        <li><a href="#alteracoes" data-i18n="pp_toc_12">12. Alterações</a></li>
+        <li><a href="#conformidade" data-i18n="pp_toc_13">13. Conformidade legal</a></li>
+        <li><a href="#contato" data-i18n="pp_toc_14">14. Contato</a></li>
       </ul>
     </nav>
 
@@ -666,10 +58,10 @@
 
       <!-- Document header -->
       <div class="doc-header">
-        <h1>Política de Privacidade</h1>
+        <h1 data-i18n="pp_title">Política de Privacidade</h1>
         <div class="doc-meta">
-          <span class="doc-meta-item"><strong>Vigência:</strong> 15 de março de 2026</span>
-          <span class="doc-meta-item"><strong>Atualização:</strong> 15 de março de 2026</span>
+          <span class="doc-meta-item" data-i18n-html="pp_meta_effective"><strong>Vigência:</strong> 15 de março de 2026</span>
+          <span class="doc-meta-item" data-i18n-html="pp_meta_updated"><strong>Atualização:</strong> 15 de março de 2026</span>
         </div>
         <div class="compliance-badges">
           <span class="badge">LGPD · Lei nº 13.709/2018</span>
@@ -684,251 +76,251 @@
         <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
         </svg>
-        <p><strong>Em resumo:</strong> O INSV Refresh não coleta, armazena, vende ou compartilha nenhum dado pessoal dos usuários. Todas as configurações são armazenadas localmente no seu navegador e nunca saem do seu dispositivo.</p>
+        <p data-i18n-html="pp_summary"><strong>Em resumo:</strong> O INSV Refresh não coleta, armazena, vende ou compartilha nenhum dado pessoal dos usuários. Todas as configurações são armazenadas localmente no seu navegador e nunca saem do seu dispositivo.</p>
       </div>
 
       <!-- 1. Introdução -->
       <section class="doc-section" id="introducao">
-        <h2><span class="section-num">01</span> Introdução</h2>
-        <p>Esta Política de Privacidade descreve como a extensão INSV Refresh ("nós", "nossa" ou "extensão") trata informações relacionadas ao uso da extensão do navegador Chrome.</p>
-        <p>O INSV Refresh é uma ferramenta de produtividade projetada para monitorar filas do Salesforce Lightning e notificar usuários sobre novos chamados, sem coletar ou transmitir qualquer informação pessoal.</p>
+        <h2><span class="section-num">01</span> <span data-i18n="pp_s1_h">Introdução</span></h2>
+        <p data-i18n="pp_s1_p1">Esta Política de Privacidade descreve como a extensão INSV Refresh ("nós", "nossa" ou "extensão") trata informações relacionadas ao uso da extensão do navegador Chrome.</p>
+        <p data-i18n="pp_s1_p2">O INSV Refresh é uma ferramenta de produtividade projetada para monitorar filas do Salesforce Lightning e notificar usuários sobre novos chamados, sem coletar ou transmitir qualquer informação pessoal.</p>
 
-        <h3>1.1 Definição de Dados Pessoais</h3>
-        <div class="definition">
+        <h3 data-i18n="pp_s1_h31">1.1 Definição de Dados Pessoais</h3>
+        <div class="definition" data-i18n="pp_s1_def">
           Para os fins desta política, "dados pessoais" são quaisquer informações relacionadas a uma pessoa natural identificada ou identificável, conforme definido pela LGPD e pelo GDPR. Isso inclui, mas não se limita a: nome, endereço de e-mail, endereço IP, identificadores de dispositivo, dados de localização, cookies identificadores e quaisquer outras informações que possam ser usadas para identificar direta ou indiretamente um indivíduo.
         </div>
       </section>
 
       <!-- 2. O que não coletamos -->
       <section class="doc-section" id="nao-coletamos">
-        <h2><span class="section-num">02</span> Informações que NÃO Coletamos</h2>
-        <p>A extensão INSV Refresh <strong>não coleta, armazena, processa ou transmite</strong> nenhum dos seguintes tipos de dados pessoais:</p>
+        <h2><span class="section-num">02</span> <span data-i18n="pp_s2_h">Informações que NÃO Coletamos</span></h2>
+        <p data-i18n-html="pp_s2_p">A extensão INSV Refresh <strong>não coleta, armazena, processa ou transmite</strong> nenhum dos seguintes tipos de dados pessoais:</p>
         <ul>
-          <li>Informações de identificação pessoal (nome, e-mail, telefone, endereço)</li>
-          <li>Dados de autenticação (senhas, tokens, credenciais)</li>
-          <li>Histórico de navegação</li>
-          <li>Conteúdo de páginas web visitadas</li>
-          <li><strong>Dados do Salesforce</strong> (registros, casos, informações de clientes)</li>
-          <li>Localização geográfica</li>
-          <li>Informações financeiras ou de pagamento</li>
-          <li>Endereços IP ou identificadores de dispositivo</li>
-          <li>Cookies de rastreamento ou identificação</li>
+          <li data-i18n="pp_s2_li1">Informações de identificação pessoal (nome, e-mail, telefone, endereço)</li>
+          <li data-i18n="pp_s2_li2">Dados de autenticação (senhas, tokens, credenciais)</li>
+          <li data-i18n="pp_s2_li3">Histórico de navegação</li>
+          <li data-i18n="pp_s2_li4">Conteúdo de páginas web visitadas</li>
+          <li data-i18n-html="pp_s2_li5"><strong>Dados do Salesforce</strong> (registros, casos, informações de clientes)</li>
+          <li data-i18n="pp_s2_li6">Localização geográfica</li>
+          <li data-i18n="pp_s2_li7">Informações financeiras ou de pagamento</li>
+          <li data-i18n="pp_s2_li8">Endereços IP ou identificadores de dispositivo</li>
+          <li data-i18n="pp_s2_li9">Cookies de rastreamento ou identificação</li>
         </ul>
       </section>
 
       <!-- 3. Dados armazenados localmente -->
       <section class="doc-section" id="dados-locais">
-        <h2><span class="section-num">03</span> Dados Armazenados Localmente</h2>
-        <p>A extensão armazena as seguintes configurações <strong>exclusivamente no seu navegador</strong> usando a API chrome.storage. Estes dados nunca saem do seu dispositivo:</p>
+        <h2><span class="section-num">03</span> <span data-i18n="pp_s3_h">Dados Armazenados Localmente</span></h2>
+        <p data-i18n-html="pp_s3_p">A extensão armazena as seguintes configurações <strong>exclusivamente no seu navegador</strong> usando a API chrome.storage. Estes dados nunca saem do seu dispositivo:</p>
 
-        <h3>3.1 Configurações de Monitoramento</h3>
+        <h3 data-i18n="pp_s3_h31">3.1 Configurações de Monitoramento</h3>
         <ul>
-          <li><strong>Nomes de filas:</strong> os nomes das filas do Salesforce que você escolheu monitorar</li>
-          <li><strong>Intervalos de atualização:</strong> a frequência (em segundos) com que cada fila deve ser atualizada</li>
-          <li><strong>Status de ativação:</strong> quais filas estão ativas ou inativas</li>
+          <li data-i18n-html="pp_s3a_li1"><strong>Nomes de filas:</strong> os nomes das filas do Salesforce que você escolheu monitorar</li>
+          <li data-i18n-html="pp_s3a_li2"><strong>Intervalos de atualização:</strong> a frequência (em segundos) com que cada fila deve ser atualizada</li>
+          <li data-i18n-html="pp_s3a_li3"><strong>Status de ativação:</strong> quais filas estão ativas ou inativas</li>
         </ul>
 
-        <h3>3.2 Preferências de Notificação</h3>
+        <h3 data-i18n="pp_s3_h32">3.2 Preferências de Notificação</h3>
         <ul>
-          <li><strong>Sons de notificação:</strong> qual som usar para alertas (padrão ou personalizado)</li>
-          <li><strong>Volume:</strong> nível de volume das notificações sonoras</li>
-          <li><strong>Áudios personalizados:</strong> arquivos de áudio que você fez upload (armazenados como base64 no navegador)</li>
-          <li><strong>Notificação de status:</strong> alertas para mudanças de status de chamados</li>
+          <li data-i18n-html="pp_s3b_li1"><strong>Sons de notificação:</strong> qual som usar para alertas (padrão ou personalizado)</li>
+          <li data-i18n-html="pp_s3b_li2"><strong>Volume:</strong> nível de volume das notificações sonoras</li>
+          <li data-i18n-html="pp_s3b_li3"><strong>Áudios personalizados:</strong> arquivos de áudio que você fez upload (armazenados como base64 no navegador)</li>
+          <li data-i18n-html="pp_s3b_li4"><strong>Notificação de status:</strong> alertas para mudanças de status de chamados</li>
         </ul>
 
-        <h3>3.3 Configurações de Interface</h3>
+        <h3 data-i18n="pp_s3_h33">3.3 Configurações de Interface</h3>
         <ul>
-          <li><strong>Modo escuro:</strong> preferência de tema claro/escuro</li>
-          <li><strong>Modo Legacy:</strong> se o modo simplificado está ativado</li>
-          <li><strong>Atalhos de teclado:</strong> teclas configuradas para ações rápidas</li>
+          <li data-i18n-html="pp_s3c_li1"><strong>Modo escuro:</strong> preferência de tema claro/escuro</li>
+          <li data-i18n-html="pp_s3c_li2"><strong>Modo Legacy:</strong> se o modo simplificado está ativado</li>
+          <li data-i18n-html="pp_s3c_li3"><strong>Atalhos de teclado:</strong> teclas configuradas para ações rápidas</li>
         </ul>
 
-        <h3>3.4 Retenção de Dados Locais</h3>
-        <p>Os dados armazenados localmente permanecem no seu navegador enquanto a extensão estiver instalada. Quando você desinstala a extensão, <strong>todos os dados são automaticamente removidos</strong> pelo Chrome.</p>
+        <h3 data-i18n="pp_s3_h34">3.4 Retenção de Dados Locais</h3>
+        <p data-i18n-html="pp_s3_p2">Os dados armazenados localmente permanecem no seu navegador enquanto a extensão estiver instalada. Quando você desinstala a extensão, <strong>todos os dados são automaticamente removidos</strong> pelo Chrome.</p>
 
         <div class="callout callout-warning">
           <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
           </svg>
-          <p><strong>Sobre chrome.storage.sync:</strong> Quando você usa chrome.storage.sync (para sincronizar configurações entre dispositivos), os dados são sincronizados através dos servidores do Google. A extensão não envia esses dados diretamente — a sincronização é gerenciada inteiramente pelo Google Chrome e regida pela <a href="https://policies.google.com/privacy" target="_blank" class="ext-link">Política de Privacidade do Google</a>.</p>
+          <p data-i18n-html="pp_s3_warn"><strong>Sobre chrome.storage.sync:</strong> Quando você usa chrome.storage.sync (para sincronizar configurações entre dispositivos), os dados são sincronizados através dos servidores do Google. A extensão não envia esses dados diretamente — a sincronização é gerenciada inteiramente pelo Google Chrome e regida pela <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" class="ext-link">Política de Privacidade do Google</a>.</p>
         </div>
       </section>
 
       <!-- 4. Consentimento -->
       <section class="doc-section" id="consentimento">
-        <h2><span class="section-num">04</span> Consentimento</h2>
-        <p>Ao instalar e utilizar a extensão INSV Refresh, você consente com:</p>
+        <h2><span class="section-num">04</span> <span data-i18n="pp_s4_h">Consentimento</span></h2>
+        <p data-i18n="pp_s4_p1">Ao instalar e utilizar a extensão INSV Refresh, você consente com:</p>
         <ul>
-          <li>O armazenamento local das suas configurações no navegador</li>
-          <li>A sincronização dessas configurações via chrome.storage.sync (gerenciada pelo Google)</li>
-          <li>A injeção de scripts nas páginas do Salesforce Lightning para permitir o funcionamento da extensão</li>
+          <li data-i18n="pp_s4_li1">O armazenamento local das suas configurações no navegador</li>
+          <li data-i18n="pp_s4_li2">A sincronização dessas configurações via chrome.storage.sync (gerenciada pelo Google)</li>
+          <li data-i18n="pp_s4_li3">A injeção de scripts nas páginas do Salesforce Lightning para permitir o funcionamento da extensão</li>
         </ul>
-        <p>Você pode revogar esse consentimento a qualquer momento desinstalando a extensão. Todos os dados armazenados localmente serão automaticamente removidos.</p>
+        <p data-i18n="pp_s4_p2">Você pode revogar esse consentimento a qualquer momento desinstalando a extensão. Todos os dados armazenados localmente serão automaticamente removidos.</p>
       </section>
 
       <!-- 5. Permissões -->
       <section class="doc-section" id="permissoes">
-        <h2><span class="section-num">05</span> Permissões da Extensão</h2>
+        <h2><span class="section-num">05</span> <span data-i18n="pp_s5_h">Permissões da Extensão</span></h2>
 
-        <h3>5.1 storage</h3>
-        <p>Salva suas configurações localmente no navegador. Nenhum dado sai do seu dispositivo, exceto via chrome.storage.sync (conforme seção 3.4).</p>
+        <h3 data-i18n="pp_s5_h31">5.1 storage</h3>
+        <p data-i18n="pp_s5_p1">Salva suas configurações localmente no navegador. Nenhum dado sai do seu dispositivo, exceto via chrome.storage.sync (conforme seção 3.4).</p>
 
-        <h3>5.2 scripting</h3>
-        <p>Injeta código nas páginas do Salesforce Lightning (*.lightning.force.com) para:</p>
+        <h3 data-i18n="pp_s5_h32">5.2 scripting</h3>
+        <p data-i18n="pp_s5_p2">Injeta código nas páginas do Salesforce Lightning (*.lightning.force.com) para:</p>
         <ul>
-          <li>Detectar o nome da fila atual</li>
-          <li>Monitorar o contador de chamados</li>
-          <li>Executar atualizações da lista usando a API nativa do Salesforce</li>
+          <li data-i18n="pp_s5_li1">Detectar o nome da fila atual</li>
+          <li data-i18n="pp_s5_li2">Monitorar o contador de chamados</li>
+          <li data-i18n="pp_s5_li3">Executar atualizações da lista usando a API nativa do Salesforce</li>
         </ul>
-        <p>Este código funciona <strong>apenas em páginas do Salesforce</strong> e não afeta outros sites.</p>
+        <p data-i18n-html="pp_s5_p3">Este código funciona <strong>apenas em páginas do Salesforce</strong> e não afeta outros sites.</p>
 
-        <h3>5.3 Host permission (*.lightning.force.com)</h3>
-        <p>Permite que a extensão funcione apenas em páginas do Salesforce Lightning. A extensão permanece completamente inativa em todos os outros sites.</p>
+        <h3 data-i18n="pp_s5_h33">5.3 Host permission (*.lightning.force.com)</h3>
+        <p data-i18n="pp_s5_p4">Permite que a extensão funcione apenas em páginas do Salesforce Lightning. A extensão permanece completamente inativa em todos os outros sites.</p>
       </section>
 
       <!-- 6. Código de terceiros -->
       <section class="doc-section" id="terceiros">
-        <h2><span class="section-num">06</span> Código de Terceiros</h2>
+        <h2><span class="section-num">06</span> <span data-i18n="pp_s6_h">Código de Terceiros</span></h2>
 
-        <h3>6.1 Google Fonts</h3>
-        <p>Utilizamos fontes tipográficas do <a href="https://fonts.google.com/" target="_blank" class="ext-link">Google Fonts</a> para melhorar a aparência visual da interface. Apenas arquivos CSS e de fonte (.woff2) são carregados, <strong>sem execução de JavaScript externo</strong>. A <a href="https://policies.google.com/privacy" target="_blank" class="ext-link">Política de Privacidade do Google</a> se aplica ao uso do Google Fonts.</p>
+        <h3 data-i18n="pp_s6_h31">6.1 Google Fonts</h3>
+        <p data-i18n-html="pp_s6_p1">Utilizamos fontes tipográficas do <a href="https://fonts.google.com/" target="_blank" rel="noopener noreferrer" class="ext-link">Google Fonts</a> para melhorar a aparência visual da interface. Apenas arquivos CSS e de fonte (.woff2) são carregados, <strong>sem execução de JavaScript externo</strong>. A <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" class="ext-link">Política de Privacidade do Google</a> se aplica ao uso do Google Fonts.</p>
 
-        <h3>6.2 ExtensionPay e Stripe</h3>
-        <p>Para usuários que optam pela assinatura premium, utilizamos:</p>
+        <h3 data-i18n="pp_s6_h32">6.2 ExtensionPay e Stripe</h3>
+        <p data-i18n="pp_s6_p2">Para usuários que optam pela assinatura premium, utilizamos:</p>
         <ul>
-          <li><strong>ExtensionPay:</strong> plataforma de gerenciamento de assinaturas para extensões. Não coleta dados de navegação e mantém os usuários anônimos até o pagamento, armazenando apenas e-mail e status da assinatura.</li>
-          <li><strong>Stripe:</strong> processador de pagamentos que lida com todas as transações financeiras e armazenamento seguro de informações de cartão de crédito.</li>
+          <li data-i18n-html="pp_s6_li1"><strong>ExtensionPay:</strong> plataforma de gerenciamento de assinaturas para extensões. Não coleta dados de navegação e mantém os usuários anônimos até o pagamento, armazenando apenas e-mail e status da assinatura.</li>
+          <li data-i18n-html="pp_s6_li2"><strong>Stripe:</strong> processador de pagamentos que lida com todas as transações financeiras e armazenamento seguro de informações de cartão de crédito.</li>
         </ul>
-        <p>Os dados de pagamento são processados <strong>diretamente pelo Stripe</strong>. A extensão recebe apenas um indicador de status de assinatura (ativo/inativo) — nenhum dado financeiro ou pessoal é acessado ou armazenado pela extensão.</p>
+        <p data-i18n-html="pp_s6_p3">Os dados de pagamento são processados <strong>diretamente pelo Stripe</strong>. A extensão recebe apenas um indicador de status de assinatura (ativo/inativo) — nenhum dado financeiro ou pessoal é acessado ou armazenado pela extensão.</p>
         <ul>
-          <li>Informações sobre privacidade do ExtensionPay: seção FAQ (User Privacy) na <a href="https://extensionpay.com/" target="_blank" class="ext-link">página oficial</a></li>
-          <li><a href="https://stripe.com/privacy" target="_blank" class="ext-link">Stripe Privacy Policy</a></li>
+          <li data-i18n-html="pp_s6_li3">Informações sobre privacidade do ExtensionPay: seção FAQ (User Privacy) na <a href="https://extensionpay.com/" target="_blank" rel="noopener noreferrer" class="ext-link">página oficial</a></li>
+          <li data-i18n-html="pp_s6_li4"><a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" class="ext-link">Stripe Privacy Policy</a></li>
         </ul>
       </section>
 
       <!-- 7. Transferência internacional -->
       <section class="doc-section" id="transferencia">
-        <h2><span class="section-num">07</span> Transferência Internacional de Dados</h2>
-        <p>Como a extensão não coleta dados pessoais diretamente, não há transferência internacional de dados pela extensão. No entanto:</p>
+        <h2><span class="section-num">07</span> <span data-i18n="pp_s7_h">Transferência Internacional de Dados</span></h2>
+        <p data-i18n="pp_s7_p">Como a extensão não coleta dados pessoais diretamente, não há transferência internacional de dados pela extensão. No entanto:</p>
         <ul>
-          <li>Ao usar <strong>chrome.storage.sync</strong>, os dados podem ser sincronizados através dos servidores do Google em diferentes jurisdições — regido pela Política de Privacidade do Google.</li>
-          <li>Ao usar <strong>Google Fonts</strong>, solicitações são feitas aos servidores do Google para carregar arquivos de fonte.</li>
-          <li>Ao processar <strong>pagamentos via ExtensionPay/Stripe</strong>, os dados são tratados de acordo com as políticas desses serviços.</li>
+          <li data-i18n-html="pp_s7_li1">Ao usar <strong>chrome.storage.sync</strong>, os dados podem ser sincronizados através dos servidores do Google em diferentes jurisdições — regido pela Política de Privacidade do Google.</li>
+          <li data-i18n-html="pp_s7_li2">Ao usar <strong>Google Fonts</strong>, solicitações são feitas aos servidores do Google para carregar arquivos de fonte.</li>
+          <li data-i18n-html="pp_s7_li3">Ao processar <strong>pagamentos via ExtensionPay/Stripe</strong>, os dados são tratados de acordo com as políticas desses serviços.</li>
         </ul>
       </section>
 
       <!-- 8. Compartilhamento -->
       <section class="doc-section" id="compartilhamento">
-        <h2><span class="section-num">08</span> Compartilhamento de Dados</h2>
-        <p><strong>Nós não compartilhamos, vendemos ou transferimos seus dados a terceiros</strong>, pois não coletamos dados pessoais em primeiro lugar.</p>
-        <p>Os únicos dados que transitam entre sistemas são:</p>
+        <h2><span class="section-num">08</span> <span data-i18n="pp_s8_h">Compartilhamento de Dados</span></h2>
+        <p data-i18n-html="pp_s8_p1"><strong>Nós não compartilhamos, vendemos ou transferimos seus dados a terceiros</strong>, pois não coletamos dados pessoais em primeiro lugar.</p>
+        <p data-i18n="pp_s8_p2">Os únicos dados que transitam entre sistemas são:</p>
         <ul>
-          <li>Configurações sincronizadas via chrome.storage.sync (gerenciadas pelo Google)</li>
-          <li>Status de assinatura via ExtensionPay (apenas indicador ativo/inativo)</li>
+          <li data-i18n="pp_s8_li1">Configurações sincronizadas via chrome.storage.sync (gerenciadas pelo Google)</li>
+          <li data-i18n="pp_s8_li2">Status de assinatura via ExtensionPay (apenas indicador ativo/inativo)</li>
         </ul>
       </section>
 
       <!-- 9. Segurança -->
       <section class="doc-section" id="seguranca">
-        <h2><span class="section-num">09</span> Segurança</h2>
-        <p>Como não coletamos dados pessoais, não há risco de vazamento de informações sensíveis dos nossos sistemas. Todas as configurações são armazenadas localmente no seu navegador usando APIs seguras do Chrome.</p>
-        <p>Recomendamos que você:</p>
+        <h2><span class="section-num">09</span> <span data-i18n="pp_s9_h">Segurança</span></h2>
+        <p data-i18n="pp_s9_p1">Como não coletamos dados pessoais, não há risco de vazamento de informações sensíveis dos nossos sistemas. Todas as configurações são armazenadas localmente no seu navegador usando APIs seguras do Chrome.</p>
+        <p data-i18n="pp_s9_p2">Recomendamos que você:</p>
         <ul>
-          <li>Mantenha seu navegador Chrome atualizado</li>
-          <li>Use senhas fortes para sua conta Google (se usar chrome.storage.sync)</li>
-          <li>Revise regularmente as extensões instaladas</li>
+          <li data-i18n="pp_s9_li1">Mantenha seu navegador Chrome atualizado</li>
+          <li data-i18n="pp_s9_li2">Use senhas fortes para sua conta Google (se usar chrome.storage.sync)</li>
+          <li data-i18n="pp_s9_li3">Revise regularmente as extensões instaladas</li>
         </ul>
       </section>
 
       <!-- 10. Seus direitos -->
       <section class="doc-section" id="direitos">
-        <h2><span class="section-num">10</span> Seus Direitos</h2>
-        <p>Como todos os dados são armazenados localmente no seu navegador, você tem controle total:</p>
+        <h2><span class="section-num">10</span> <span data-i18n="pp_s10_h">Seus Direitos</span></h2>
+        <p data-i18n="pp_s10_p">Como todos os dados são armazenados localmente no seu navegador, você tem controle total:</p>
         <div class="rights-grid">
           <div class="right-card">
             <div class="right-card-title">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              Acesso
+              <span data-i18n="pp_r1_t">Acesso</span>
             </div>
-            <p>Todos os dados disponíveis nas configurações da extensão.</p>
+            <p data-i18n="pp_r1_p">Todos os dados disponíveis nas configurações da extensão.</p>
           </div>
           <div class="right-card">
             <div class="right-card-title">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-              Modificação
+              <span data-i18n="pp_r2_t">Modificação</span>
             </div>
-            <p>Altere qualquer configuração a qualquer momento.</p>
+            <p data-i18n="pp_r2_p">Altere qualquer configuração a qualquer momento.</p>
           </div>
           <div class="right-card">
             <div class="right-card-title">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-              Exclusão
+              <span data-i18n="pp_r3_t">Exclusão</span>
             </div>
-            <p>Desinstalar a extensão remove todos os dados automaticamente.</p>
+            <p data-i18n="pp_r3_p">Desinstalar a extensão remove todos os dados automaticamente.</p>
           </div>
           <div class="right-card">
             <div class="right-card-title">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-              Exportação
+              <span data-i18n="pp_r4_t">Exportação</span>
             </div>
-            <p>Use "Exportar Configurações" para backup em formato JSON.</p>
+            <p data-i18n-html="pp_r4_p">Use "Exportar Configurações" para backup em formato JSON.</p>
           </div>
           <div class="right-card">
             <div class="right-card-title">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-              Portabilidade
+              <span data-i18n="pp_r5_t">Portabilidade</span>
             </div>
-            <p>Dados exportados podem ser reimportados via "Importar Configurações".</p>
+            <p data-i18n-html="pp_r5_p">Dados exportados podem ser reimportados via "Importar Configurações".</p>
           </div>
         </div>
       </section>
 
       <!-- 11. Crianças -->
       <section class="doc-section" id="criancas">
-        <h2><span class="section-num">11</span> Privacidade de Crianças</h2>
-        <p>A extensão não é direcionada a menores de 13 anos e não coleta intencionalmente informações de crianças. Se você é pai ou responsável e acredita que uma criança forneceu informações para a extensão, entre em contato conosco.</p>
+        <h2><span class="section-num">11</span> <span data-i18n="pp_s11_h">Privacidade de Crianças</span></h2>
+        <p data-i18n="pp_s11_p">A extensão não é direcionada a menores de 13 anos e não coleta intencionalmente informações de crianças. Se você é pai ou responsável e acredita que uma criança forneceu informações para a extensão, entre em contato conosco.</p>
       </section>
 
       <!-- 12. Alterações -->
       <section class="doc-section" id="alteracoes">
-        <h2><span class="section-num">12</span> Alterações nesta Política</h2>
-        <p>Podemos atualizar esta Política de Privacidade ocasionalmente. Mudanças significativas serão comunicadas através de:</p>
+        <h2><span class="section-num">12</span> <span data-i18n="pp_s12_h">Alterações nesta Política</span></h2>
+        <p data-i18n="pp_s12_p1">Podemos atualizar esta Política de Privacidade ocasionalmente. Mudanças significativas serão comunicadas através de:</p>
         <ul>
-          <li>Atualização da data "Última atualização" no topo desta página</li>
-          <li>Notificação na página de configurações da extensão</li>
-          <li>Changelog da versão na Chrome Web Store</li>
+          <li data-i18n="pp_s12_li1">Atualização da data "Última atualização" no topo desta página</li>
+          <li data-i18n="pp_s12_li2">Notificação na página de configurações da extensão</li>
+          <li data-i18n="pp_s12_li3">Changelog da versão na Chrome Web Store</li>
         </ul>
-        <p>Recomendamos que você revise esta política periodicamente para se manter informado.</p>
+        <p data-i18n="pp_s12_p2">Recomendamos que você revise esta política periodicamente para se manter informado.</p>
       </section>
 
       <!-- 13. Conformidade -->
       <section class="doc-section" id="conformidade">
-        <h2><span class="section-num">13</span> Conformidade Legal</h2>
-        <p>Esta extensão está em conformidade com:</p>
+        <h2><span class="section-num">13</span> <span data-i18n="pp_s13_h">Conformidade Legal</span></h2>
+        <p data-i18n="pp_s13_p">Esta extensão está em conformidade com:</p>
         <ul>
-          <li><strong>Políticas do Programa de Desenvolvedores da Chrome Web Store</strong></li>
-          <li><strong>Lei Geral de Proteção de Dados (LGPD — Brasil, Lei nº 13.709/2018)</strong></li>
-          <li><strong>General Data Protection Regulation (GDPR — União Europeia, Regulamento UE 2016/679)</strong></li>
-          <li><strong>California Consumer Privacy Act (CCPA)</strong> — aplicável quando relevante</li>
+          <li data-i18n-html="pp_s13_li1"><strong>Políticas do Programa de Desenvolvedores da Chrome Web Store</strong></li>
+          <li data-i18n-html="pp_s13_li2"><strong>Lei Geral de Proteção de Dados (LGPD — Brasil, Lei nº 13.709/2018)</strong></li>
+          <li data-i18n-html="pp_s13_li3"><strong>General Data Protection Regulation (GDPR — União Europeia, Regulamento UE 2016/679)</strong></li>
+          <li data-i18n-html="pp_s13_li4"><strong>California Consumer Privacy Act (CCPA)</strong> — aplicável quando relevante</li>
         </ul>
       </section>
 
       <!-- 14. Contato -->
       <section class="doc-section" id="contato">
+        <h2><span class="section-num">14</span> <span data-i18n="pp_s14_h">Contato</span></h2>
         <div class="contact-card">
-          <h2>14. Contato</h2>
-          <p>Dúvidas, preocupações ou solicitações relacionadas a esta Política de Privacidade:</p>
+          <p data-i18n="pp_s14_p">Dúvidas, preocupações ou solicitações relacionadas a esta Política de Privacidade:</p>
           <div class="contact-rows">
             <div class="contact-row">
-              <span class="contact-row-label">E-mail</span>
+              <span class="contact-row-label" data-i18n="pp_contact_email_label">E-mail</span>
               <a href="mailto:programming@gmail.com.br">programming@gmail.com.br</a>
             </div>
             <div class="contact-row">
               <span class="contact-row-label">Chrome Web Store</span>
-              <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead" target="_blank">INSV Refresh</a>
+              <a href="https://chromewebstore.google.com/detail/grid-refresher/ohghgkmopfddmojeljidffidohcfpead" target="_blank" rel="noopener noreferrer">INSV Refresh</a>
             </div>
           </div>
-          <p class="response-note">Responderemos às solicitações dentro de 30 dias, conforme exigido pelas regulamentações de proteção de dados aplicáveis.</p>
+          <p class="response-note" data-i18n="pp_s14_note">Responderemos às solicitações dentro de 30 dias, conforme exigido pelas regulamentações de proteção de dados aplicáveis.</p>
         </div>
       </section>
 
@@ -936,57 +328,20 @@
   </div>
 
   <!-- Footer -->
-  <footer>
-    <div class="footer-brand">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true">
+  <footer class="app-footer">
+    <div class="app-footer-brand">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true">
         <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/>
       </svg>
-      INSV REFRESH · Vitor Rodrigues &amp; Douglas Rocha
+      INSV Refresh · Vitor Rodrigues &amp; Douglas Rocha
     </div>
-    <nav class="footer-links">
-      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank">Enviar feedback</a>
-      <span style="color: var(--border, #E5E7EF);">·</span>
-      <span style="font-size: 0.75rem; color: var(--text-muted, #6B7390);">© 2026 INSV Refresh</span>
+    <nav class="app-footer-links">
+      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" rel="noopener noreferrer" class="accent" data-i18n="feedback">Enviar feedback</a>
     </nav>
   </footer>
 
-  <script>
-    // Dark mode — reads from chrome.storage.local (same key as options.js)
-    function applyDarkMode(enabled) {
-      document.documentElement.setAttribute('data-theme', enabled ? 'dark' : 'light');
-    }
-
-    if (typeof chrome !== 'undefined' && chrome.storage) {
-      chrome.storage.local.get('darkMode', (data) => {
-        applyDarkMode(!!data.darkMode);
-      });
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'local' && changes.darkMode) {
-          applyDarkMode(!!changes.darkMode.newValue);
-        }
-      });
-    } else {
-      // Fallback for direct file open outside extension context
-      applyDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-
-    // TOC active section highlight
-    const tocLinks = document.querySelectorAll('.toc-list a');
-    const sections = document.querySelectorAll('.doc-section[id], .contact-card');
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const id = entry.target.closest('[id]')?.id || entry.target.id;
-          tocLinks.forEach(a => {
-            a.classList.toggle('active', a.getAttribute('href') === '#' + id);
-          });
-        }
-      });
-    }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
-
-    document.querySelectorAll('.doc-section[id]').forEach(s => observer.observe(s));
-  </script>
+  <script src="../scripts/i18n.js"></script>
+  <script src="privacy-policy.js"></script>
 
 </body>
 </html>

@@ -267,7 +267,7 @@ input[type="number"]::placeholder {
 .feature-card p {
   margin: 0;
   font-size: 0.82rem;
-  color: #888;
+  color: var(--ink-400);
   line-height: 1.5;
 }
 
@@ -317,9 +317,8 @@ input[type="number"]::placeholder {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(0 161 224 / 0.12);
+  background: var(--brand-500);
   border: 2px solid var(--brand-400);
-  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,7 +327,7 @@ input[type="number"]::placeholder {
 }
 
 .vp-big-play:hover {
-  background: rgba(0 161 224 / 0.26);
+  background: var(--brand-600);
   border-color: var(--brand-300);
   transform: scale(1.09);
 }
@@ -336,10 +335,9 @@ input[type="number"]::placeholder {
 .vp-big-play svg {
   width: 30px;
   height: 30px;
-  fill: var(--brand-400);
+  fill: #fff;
   stroke: none;
   margin-left: 4px;
-  filter: drop-shadow(0 0 8px rgba(0 161 224 / 0.6));
 }
 
 /* ── Pulse rings (idle only) ─────────────────── */
@@ -619,7 +617,7 @@ input[type="number"]::placeholder {
 
 .drop-text p {
   margin: 0;
-  color: #666;
+  color: var(--ink-400);
   font-size: 0.95rem;
 }
 
@@ -685,9 +683,26 @@ input[type="number"]::placeholder {
 /* ── Save audio button ───────────────────────── */
 button {
   border: none;
-  outline: none;
   cursor: pointer;
   font-family: inherit;
+}
+
+/* Keyboard focus ring for every interactive control (WCAG 2.4.7) */
+button:focus-visible,
+a:focus-visible,
+.lang-select:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.toggle-switch input:focus-visible + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(0, 161, 224, 0.45);
+}
+
+[data-theme="dark"] button:focus-visible,
+[data-theme="dark"] a:focus-visible,
+[data-theme="dark"] .lang-select:focus-visible {
+  outline-color: var(--brand-400);
 }
 
 .save-audio-btn {
@@ -741,12 +756,12 @@ button {
 
 .how-to-audio ul {
   margin: 0;
-  color: #555;
+  color: var(--ink-500);
 }
 
 /* ── Audio list ──────────────────────────────── */
 #custom-audios-list p {
-  color: #888;
+  color: var(--ink-400);
   font-style: italic;
   font-size: 0.9rem;
 }
@@ -863,26 +878,7 @@ button.delete-audio-btn:hover {
   margin-bottom: 0.4rem;
 }
 
-/* Status rule card (new simplified configurator) */
-.status-rule-item {
-  border: 1px solid #e8ecf5;
-  background: var(--white-color);
-  border-radius: var(--radius-lg);
-  padding: 0.9rem 1rem;
-  transition: box-shadow 0.2s;
-}
-
-.status-rule-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.status-rule-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.7rem;
-}
-
+/* Queue-manager row label (used by createQueueManagerRow) */
 .status-rule-queue-label {
   display: inline-flex;
   align-items: center;
@@ -900,54 +896,7 @@ button.delete-audio-btn:hover {
   flex-shrink: 0;
 }
 
-.status-rule-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem 0.8rem;
-}
-
-.status-rule-fields label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #555;
-  cursor: default;
-}
-
-.status-rule-fields label.full-width {
-  grid-column: 1 / -1;
-}
-
-.status-rule-fields label.enable-row {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  grid-column: 1 / -1;
-}
-
-.status-rule-fields input[type="text"],
-.status-rule-fields select {
-  padding: 7px 10px;
-  border: 1.5px solid var(--ink-100);
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background: white;
-  color: var(--ink-800);
-  font-family: inherit;
-}
-
-.status-rule-fields input[type="text"]:focus,
-.status-rule-fields select:focus {
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(0, 161, 224, 0.1);
-}
-
-/* Legacy queue-manager-row (backward compat) */
+/* Queue-manager row (rendered by createQueueManagerRow) */
 .queue-manager-row {
   display: flex;
   align-items: center;
@@ -1018,117 +967,6 @@ button.delete-audio-btn:hover {
   flex-shrink: 0;
   opacity: 0.6;
 }
-
-.qm-remove, .remove-status-notification-btn {
-  background: transparent;
-  color: var(--danger-500);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 4px 9px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.2s, color 0.2s;
-}
-
-.qm-remove:hover, .remove-status-notification-btn:hover {
-  background: var(--danger-500);
-  color: white;
-}
-
-.qm-remove-placeholder { width: 29px; flex-shrink: 0; }
-
-.add-status-notification-btn {
-  background-color: var(--brand-500);
-  color: white;
-  border: none;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 600;
-  margin-top: 0.4rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s, transform 0.15s;
-  font-family: inherit;
-}
-
-.add-status-notification-btn:hover {
-  background-color: var(--brand-600);
-  transform: translateY(-1px);
-}
-
-.add-status-notification-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-  opacity: 0.7;
-  transform: none;
-}
-
-/* Legacy status notification item styles */
-.status-notification-item {
-  border: 1px solid #e8ecf5;
-  border-radius: 10px;
-  padding: 1.2rem 1.4rem;
-  margin-bottom: 0.9rem;
-  background: var(--white-color);
-  transition: box-shadow 0.2s;
-}
-
-.status-notification-item:hover {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
-}
-
-.status-notification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.9rem;
-}
-
-.status-notification-header strong {
-  font-size: 0.90rem;
-  color: #333;
-}
-
-.status-notification-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  max-width: 420px;
-}
-
-.status-notification-fields label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #555;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.status-notification-fields input[type="text"],
-.status-notification-fields select {
-  padding: 7px 12px;
-  border: 1px solid var(--ink-100);
-  border-radius: 6px;
-  font-size: 14px;
-  flex: 1;
-  min-width: 0;
-  outline: none;
-  transition: border-color 0.2s;
-  font-family: inherit;
-}
-
-.status-notification-fields input[type="text"]:focus,
-.status-notification-fields select:focus {
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(0, 161, 224, 0.1);
-}
-
-.status-notification-fields small { font-size: 0.8rem; color: #888; }
 
 /* ── Avançado section ────────────────────────── */
 .advanced-shortcuts-card {
@@ -1356,7 +1194,7 @@ button.delete-audio-btn:hover {
 .toggle-switch--sm input:checked + .toggle-slider::before { transform: translateX(16px); }
 
 /* toggle in light content area needs visible track */
-.content .toggle-slider { background-color: #c5ccd8; }
+.content .toggle-slider { background-color: var(--ink-200); }
 
 /* ── Language select ─────────────────────────── */
 .lang-select {
@@ -1545,7 +1383,6 @@ button.delete-audio-btn:hover {
 }
 
 .paid-gate-banner a:hover { color: var(--brand-700); text-decoration: underline; }
-.paid-gate-msg { display: none; }
 
 /* ── Toast ───────────────────────────────────── */
 #toast-container {
@@ -1634,19 +1471,8 @@ button.delete-audio-btn:hover {
 [data-theme="dark"] .feature-card strong { color: var(--ink-50); }
 [data-theme="dark"] .feature-card p { color: var(--ink-300); }
 
-[data-theme="dark"] .status-rule-item,
-[data-theme="dark"] .status-notification-item {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-[data-theme="dark"] .status-notification-header strong { color: var(--ink-50); }
-
 [data-theme="dark"] input,
 [data-theme="dark"] select,
-[data-theme="dark"] .status-notification-fields input[type="text"],
-[data-theme="dark"] .status-notification-fields select,
-[data-theme="dark"] .status-rule-fields input[type="text"],
-[data-theme="dark"] .status-rule-fields select,
 [data-theme="dark"] .queue-manager-row input[type="text"],
 [data-theme="dark"] .queue-manager-row select {
   background: var(--ink-950);
@@ -1665,7 +1491,7 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .queue-manager-row {
-  background: var(--ink-900);
+  background: var(--ink-800);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -1783,47 +1609,9 @@ button.delete-audio-btn:hover {
   border-color: var(--ink-100);
 }
 
-/* ── Options footer ─────────────────────────── */
-.options-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 2rem;
-  margin-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-muted, #9CA3AF);
-}
-
-.options-footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.options-footer-links {
-  display: flex;
-  gap: 16px;
-}
-
-.options-footer-links a {
-  font-size: 0.72rem;
-  color: var(--text-muted, #9CA3AF);
-  text-decoration: none;
-  font-family: var(--font-ui);
-  transition: color 0.2s;
-}
-
-.options-footer-links a:hover { color: var(--brand-500, #00A1E0); }
-
-[data-theme="dark"] .options-footer {
-  border-top-color: rgba(255, 255, 255, 0.06);
-  color: #6A7299;
-}
-
-[data-theme="dark"] .options-footer-links a { color: #6A7299; }
-[data-theme="dark"] .options-footer-links a:hover { color: var(--brand-400, #29BBF0); }
+/* Footer is provided by the shared app-chrome.css (.app-footer). The
+   options footer sits inside .content, so add a little top margin. */
+.app-footer { margin-top: 1rem; }
 
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/reset.css">
     <link rel="stylesheet" href="styles/variaveis.css">
+    <link rel="stylesheet" href="styles/app-chrome.css">
     <link rel="stylesheet" href="styles/options.css">
 </head>
 
@@ -44,7 +45,7 @@
                 </a>
                 <a href="#avancado">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
-                    <span data-i18n="menu_advanced">Atalhos</span>
+                    <span data-i18n="menu_advanced">Atalho de teclado</span>
                 </a>
                 <a href="#export-import">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M7 3v6h9V3"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg>
@@ -91,13 +92,13 @@
                 <p data-i18n="intro_p">Aqui você encontra as configurações e recursos disponíveis na extensão INSV Refresh.</p>
                     <div class="demo">
                         <div class="vp" id="demo-player" data-state="idle">
-                            <video id="demo-video" src="" poster="assets/video/mockup.svg" preload="none">
+                            <video id="demo-video" src="" poster="assets/video/mockup.svg" preload="none" data-i18n="video_unsupported">
                                 Seu navegador não suporta a visualização de vídeos.
                             </video>
 
                             <!-- Center play overlay -->
                             <div class="vp-overlay" id="vp-overlay">
-                                <button class="vp-big-play" id="vp-big-play" aria-label="Reproduzir demo">
+                                <button class="vp-big-play" id="vp-big-play" aria-label="Reproduzir demo" data-i18n-aria="vp_play_demo">
                                     <span class="vp-ring vp-ring-a"></span>
                                     <span class="vp-ring vp-ring-b"></span>
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
@@ -115,17 +116,17 @@
                                     <div class="vp-dots" id="vp-dots"></div>
                                 </div>
                                 <div class="vp-controls-row">
-                                    <button class="vp-btn" id="vp-play-pause" aria-label="Play/Pause">
+                                    <button class="vp-btn" id="vp-play-pause" aria-label="Play/Pause" data-i18n-aria="vp_playpause">
                                         <svg class="icon-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
                                         <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                     </button>
                                     <span class="vp-time" id="vp-time">0:00 / 0:00</span>
                                     <div class="vp-spacer"></div>
-                                    <button class="vp-btn" id="vp-mute" aria-label="Mudo">
+                                    <button class="vp-btn" id="vp-mute" aria-label="Mudo" data-i18n-aria="vp_mute">
                                         <svg class="icon-sound" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                                         <svg class="icon-mute" viewBox="0 0 24 24" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
                                     </button>
-                                    <button class="vp-btn" id="vp-fullscreen" aria-label="Tela cheia">
+                                    <button class="vp-btn" id="vp-fullscreen" aria-label="Tela cheia" data-i18n-aria="vp_fullscreen">
                                         <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                                     </button>
                                 </div>
@@ -233,7 +234,7 @@
             </section>
 
             <section id="avancado">
-                <h2 data-i18n="advanced_title">Avançado</h2>
+                <h2 data-i18n="advanced_title">Atalhos de teclado</h2>
 
                 <div class="advanced-shortcuts-card">
                     <div class="shortcut-item">
@@ -302,14 +303,14 @@
                 </div>
             </section>
 
-            <footer class="options-footer">
-                <div class="options-footer-brand">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#F98764" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
-                    INSV REFRESH · Vitor Rodrigues &amp; Douglas Rocha
+            <footer class="app-footer">
+                <div class="app-footer-brand">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+                    INSV Refresh · Vitor Rodrigues &amp; Douglas Rocha
                 </div>
-                <nav class="options-footer-links">
+                <nav class="app-footer-links">
                     <a href="docs/privacy-policy.html" data-i18n="privacy_policy">Política de Privacidade</a>
-                    <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" data-i18n="feedback">Enviar feedback</a>
+                    <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" rel="noopener noreferrer" class="accent" data-i18n="feedback">Enviar feedback</a>
                 </nav>
             </footer>
         </main>

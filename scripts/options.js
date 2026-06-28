@@ -1,28 +1,4 @@
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-function trackEvent(eventName, data) {
-  try {
-    chrome.storage.local.get("analytics", (result) => {
-      const analytics = result.analytics || { events: [], lastCleanup: Date.now() };
-      analytics.events.push({ name: eventName, data, timestamp: Date.now() });
-      if (analytics.events.length > 1000) {
-        analytics.events = analytics.events.slice(-500);
-        analytics.lastCleanup = Date.now();
-      }
-      chrome.storage.local.set({ analytics });
-    });
-  } catch (e) {}
-}
+// debounce() lives in scripts/util.js (loaded before this file).
 
 function exportSettings() {
   try {
@@ -45,7 +21,6 @@ function exportSettings() {
       a.click();
       URL.revokeObjectURL(url);
       showToast(t("exported"), "success");
-      trackEvent("settings_exported");
     });
   } catch (e) {
     showToast(t("export_error") + e.message, "error");
@@ -76,7 +51,6 @@ function importSettings(event) {
       if (importData.darkMode !== undefined) toImport.darkMode = !!importData.darkMode;
       chrome.storage.local.set(toImport, () => {
         showToast(t("imported"), "success");
-        trackEvent("settings_imported");
         setTimeout(() => window.location.reload(), 1500);
       });
     } catch (err) {
@@ -605,7 +579,6 @@ function persistQueueManager() {
   qmSelfWrite = JSON.stringify(qmQueues);
   chrome.storage.local.set({ queues: qmQueues }, () => {
     showToast(t("queues_saved"), "success");
-    trackEvent("queue_manager_saved", { count: qmQueues.length });
   });
 }
 
@@ -753,7 +726,6 @@ i18nReady.then(function() {
     darkModeToggle.addEventListener("change", () => {
       chrome.storage.local.set({ darkMode: darkModeToggle.checked });
       applyDarkMode(darkModeToggle.checked);
-      trackEvent("dark_mode_toggled", { enabled: darkModeToggle.checked });
     });
   }
 

@@ -3,8 +3,6 @@
    Design: midnight ink, brand blue, spark coral
    ============================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
-
 *,
 *::before,
 *::after {
@@ -254,7 +252,7 @@ input[type="text"].queue-name::placeholder {
 .queue-active,
 .queue-inactive {
   padding: 6px 10px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -277,8 +275,8 @@ input[type="text"].queue-name::placeholder {
 }
 
 .queue-inactive {
-  background: #1E2540;
-  color: #8E96BA;
+  background: var(--ink-800);
+  color: var(--ink-200);
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
@@ -433,12 +431,12 @@ input[type="number"].queue-interval {
 
 .qsd-arrow {
   flex-shrink: 0;
-  color: #6a7299;
+  color: var(--ink-400);
   transition: transform 0.2s ease, color 0.15s;
 }
 
 .qsd-trigger:hover .qsd-arrow {
-  color: #8e96ba;
+  color: var(--ink-300);
 }
 
 .queue-sound-select.open .qsd-arrow {
@@ -549,7 +547,7 @@ input[type="number"].queue-interval {
   opacity: 1;
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
-  color: #EF4444;
+  color: var(--danger-500);
 }
 
 .delete-queue svg {
@@ -815,30 +813,16 @@ input[type="range"]::-webkit-slider-runnable-track {
   opacity: 1;
 }
 
-.plans-link {
-  color: var(--gold-500);
-  text-decoration: none;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: color 0.2s;
-  letter-spacing: 0.3px;
-}
-
-.plans-link:hover {
-  color: #ffe599;
-}
-
 #legacy-text {
   text-decoration: none;
-  color: #6FD2F5;
+  color: var(--brand-300);
   font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
 }
 
 #legacy-text:hover {
-  color: #9BE4FA;
+  color: var(--brand-200);
 }
 
 /* ── Status + feedback ─────────────────────── */
@@ -856,7 +840,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 
 .feedback-link {
   font-size: 11.5px;
-  color: #6FD2F5;
+  color: var(--brand-300);
   text-decoration: none;
   transition: color 0.2s;
   white-space: nowrap;
@@ -864,7 +848,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 
 .feedback-link:hover {
-  color: #9BE4FA;
+  color: var(--brand-200);
 }
 
 /* ── Tooltips ───────────────────────────────── */
@@ -898,13 +882,6 @@ input[type="range"]::-webkit-slider-runnable-track {
 .has-tooltip-settings::after {
   left: 300%;
 }
-.has-tooltip-add-queue-btn::after {
-  left: 50%;
-}
-.has-tooltip-default::after {
-  left: 50%;
-}
-
 .has-tooltip-legacy-text::after {
   width: 140px;
   white-space: normal;
@@ -925,21 +902,23 @@ label {
 
 button {
   border: none;
-  outline: none;
   cursor: pointer;
   font-family: inherit;
 }
 
-.button-alignment {
-  display: flex;
-  justify-content: center;
+/* Keyboard focus ring for all interactive controls (WCAG 2.4.7) */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
 }
 
-input[type="checkbox"] {
-  width: 14px;
-  height: 14px;
-  accent-color: var(--brand-500);
-  cursor: pointer;
+/* Reveal + ring the volume slider when reached via keyboard */
+.volume-control input[type="range"]:focus-visible {
+  max-width: 90px;
+  opacity: 1;
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
 }
 
 ::-webkit-scrollbar {

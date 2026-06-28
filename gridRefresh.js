@@ -257,21 +257,21 @@ function initNormalMode() {
               URL.revokeObjectURL(blobUrl);
             });
             audio.addEventListener("error", (e) => {
-              console.error("Erro ao tocar áudio personalizado:", e);
+              log("Erro ao tocar áudio personalizado:", e);
               URL.revokeObjectURL(blobUrl);
               tocarSomPadrao("notification.mp3", volume);
             });
             audio.play().catch((e) => {
-              console.error("Erro ao tocar áudio personalizado:", e);
+              log("Erro ao tocar áudio personalizado:", e);
               URL.revokeObjectURL(blobUrl);
               tocarSomPadrao("notification.mp3", volume);
             });
           } catch (error) {
-            console.error("Erro ao processar áudio personalizado:", error);
+            log("Erro ao processar áudio personalizado:", error);
             tocarSomPadrao("notification.mp3", volume);
           }
         } else {
-          console.warn(`[INSV] Áudio personalizado não encontrado: ${soundName}`);
+          log(`[INSV] Áudio personalizado não encontrado: ${soundName}`);
           tocarSomPadrao("notification.mp3", volume);
         }
       });
@@ -279,11 +279,11 @@ function initNormalMode() {
         tocarSomPadrao(soundName, volume);
       }
     } catch (e) {
-      console.error("[Debug] Erro ao tocar som:", e);
+      log("[Debug] Erro ao tocar som:", e);
       try {
         tocarSomPadrao("notification.mp3", volume);
       } catch (e2) {
-        console.error("[Debug] Erro ao tocar som padrão:", e2);
+        log("[Debug] Erro ao tocar som padrão:", e2);
       }
     }
   }
@@ -293,7 +293,7 @@ function initNormalMode() {
     const audioSrc = chrome.runtime.getURL("assets/sounds/" + soundName);
     const audio = new Audio(audioSrc);
     audio.volume = volume;
-    audio.play().catch((e) => console.error("Erro ao tocar o som padrão:", e));
+    audio.play().catch(() => {});
   }
 
   const filaMonitores = new Map();

@@ -156,13 +156,8 @@ function migrateStorage() {
     }
     if (data.statusNotifications !== undefined) removals.push("statusNotifications");
 
-    // Poda de analytics acumulados
-    if (data.analytics && Array.isArray(data.analytics.events) && data.analytics.events.length > 200) {
-      updates.analytics = {
-        events: data.analytics.events.slice(-200),
-        lastCleanup: Date.now(),
-      };
-    }
+    // Analytics removed — purge any leftover blob from older versions
+    if (data.analytics !== undefined) removals.push("analytics");
 
     chrome.storage.local.set(updates, () => {
       if (removals.length) chrome.storage.local.remove(removals);

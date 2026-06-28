@@ -106,7 +106,15 @@ function doRefresh() {
   return false;
 }
 
+let legacyModeStarted = false;
 function initLegacyMode(intervalSeconds) {
+  // Guard against stacked timers/listeners: initLegacyModeListener calls this
+  // again on every legacyActive toggle, and this function registers its own
+  // storage.onChanged listener + interval. Initialise the controller once per
+  // page; subsequent activate/deactivate is handled by its own listener below.
+  if (legacyModeStarted) return;
+  legacyModeStarted = true;
+
   log(`[Debug] Iniciando Legacy Mode com intervalo de ${intervalSeconds} segundos`);
 
   let legacyTimer = null;
@@ -120,8 +128,12 @@ function initLegacyMode(intervalSeconds) {
     if (legacyTimer) {
       clearInterval(legacyTimer);
     }
-    legacyTimer = setInterval(legacyRefresh, interval * 1000);
-    log(`[Debug] Timer do Legacy Mode configurado para ${interval} segundos`);
+    // Guard NaN (cleared interval field) / out-of-range: NaN*1000 clamps to the
+    // browser minimum and spins a tight refresh loop.
+    const sec = Number(interval);
+    const safe = isFinite(sec) && sec >= 5 ? sec : 10;
+    legacyTimer = setInterval(legacyRefresh, safe * 1000);
+    log(`[Debug] Timer do Legacy Mode configurado para ${safe} segundos`);
   }
 
   function stopLegacyTimer() {
@@ -310,6 +322,10 @@ function initNormalMode() {
 
   function iniciarMonitoramentoFila(fila, globalSound, globalVolume, isPaid) {
     let seenCaseIds = new Set();
+    // Monitors are recreated on any settings change (volume nudge included).
+    // Without this, the first cycle treats every case already on screen as new
+    // and rings. The first cycle seeds the baseline silently.
+    let primed = false;
 
     const loop = () => {
       if (!isRightQueue(fila.name)) {
@@ -334,7 +350,7 @@ function initNormalMode() {
       function afterRefreshReady() {
         const novos = getNewCaseIds(seenCaseIds);
 
-        if (novos.length > 0 && fila.soundEnabled) {
+        if (primed && novos.length > 0 && fila.soundEnabled) {
           log(`[Debug] Novos casos na fila "${fila.name}": "${novos}"`);
           const soundToUse = fila.customSound || globalSound;
           log(`[Debug] Som para fila "${fila.name}": ${soundToUse}`);
@@ -344,6 +360,7 @@ function initNormalMode() {
         }
 
         novos.forEach((id) => seenCaseIds.add(id));
+        primed = true;
 
         // Notificação de mudança de status — config por fila
         // (queues[].statusNotify), recurso premium

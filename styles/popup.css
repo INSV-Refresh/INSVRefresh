@@ -498,7 +498,8 @@ input[type="number"].queue-interval {
   min-width: 0;
 }
 
-.qsd-option:hover {
+.qsd-option:hover,
+.qsd-option.active {
   background: rgba(0, 161, 224, 0.12);
 }
 

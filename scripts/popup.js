@@ -305,11 +305,14 @@ function bindSoundDropdownDismiss() {
   soundDropdownScrollBound = true;
 }
 
+let qsdSeq = 0;
 function buildSoundDropdown(root) {
   if (root._qsdBuilt) return;
 
   const trigger = root.querySelector(".qsd-trigger");
   const list = root.querySelector(".qsd-list");
+  if (!list.id) list.id = "qsd-list-" + (++qsdSeq);
+  trigger.setAttribute("aria-controls", list.id);
 
   Object.defineProperty(root, "value", {
     configurable: true,
@@ -322,11 +325,31 @@ function buildSoundDropdown(root) {
     },
   });
 
+  const getOptions = () => Array.from(list.querySelectorAll(".qsd-option"));
+
+  const setActive = (opt) => {
+    if (!opt) return;
+    getOptions().forEach((o) => o.classList.remove("active"));
+    opt.classList.add("active");
+    trigger.setAttribute("aria-activedescendant", opt.id);
+    opt.scrollIntoView({ block: "nearest" });
+  };
+
+  const moveActive = (dir) => {
+    const opts = getOptions();
+    if (!opts.length) return;
+    let idx = opts.indexOf(list.querySelector(".qsd-option.active"));
+    if (idx < 0) idx = opts.indexOf(list.querySelector(".qsd-option.selected"));
+    idx = Math.max(0, Math.min(opts.length - 1, (idx < 0 ? 0 : idx) + dir));
+    setActive(opts[idx]);
+  };
+
   const close = () => {
     if (list.hidden) return;
     list.hidden = true;
     root.classList.remove("open");
     trigger.setAttribute("aria-expanded", "false");
+    trigger.removeAttribute("aria-activedescendant");
     resetSoundMenuPosition(list);
   };
 
@@ -337,8 +360,18 @@ function buildSoundDropdown(root) {
     root.classList.add("open");
     trigger.setAttribute("aria-expanded", "true");
     positionSoundMenu(trigger, list);
-    const sel = list.querySelector(".qsd-option.selected");
-    if (sel) sel.scrollIntoView({ block: "nearest" });
+    setActive(list.querySelector(".qsd-option.selected") || list.querySelector(".qsd-option"));
+  };
+
+  const commitOption = (opt) => {
+    if (!opt) return;
+    const val = opt.dataset.value;
+    if (val !== root.value) {
+      root.value = val;
+      root.dispatchEvent(new CustomEvent("change", { bubbles: true }));
+    }
+    close();
+    trigger.focus();
   };
 
   trigger.addEventListener("click", (e) => {
@@ -348,25 +381,40 @@ function buildSoundDropdown(root) {
 
   list.addEventListener("click", (e) => {
     const opt = e.target.closest(".qsd-option");
-    if (!opt) return;
-    const val = opt.dataset.value;
-    if (val === root.value) {
-      close();
-      return;
-    }
-    root.value = val;
-    close();
-    root.dispatchEvent(new CustomEvent("change", { bubbles: true }));
+    if (opt) commitOption(opt);
   });
 
   document.addEventListener("click", (e) => {
     if (!root.contains(e.target)) close();
   });
 
+  // Full ARIA listbox keyboard contract (was Escape-only).
   root.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      close();
-      trigger.focus();
+    const isOpen = !list.hidden;
+    switch (e.key) {
+      case "Escape":
+        if (isOpen) { e.preventDefault(); close(); trigger.focus(); }
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        isOpen ? moveActive(1) : open();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        isOpen ? moveActive(-1) : open();
+        break;
+      case "Home":
+        if (isOpen) { e.preventDefault(); setActive(getOptions()[0]); }
+        break;
+      case "End":
+        if (isOpen) { e.preventDefault(); const o = getOptions(); setActive(o[o.length - 1]); }
+        break;
+      case "Enter":
+      case " ":
+        // When closed, let the native <button> click open it (avoids a
+        // double-toggle). When open, commit the active option.
+        if (isOpen) { e.preventDefault(); commitOption(list.querySelector(".qsd-option.active")); }
+        break;
     }
   });
 
@@ -406,6 +454,7 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
   const addOption = (value, text, full) => {
     const li = document.createElement("li");
     li.className = "qsd-option";
+    li.id = "qsd-opt-" + (++qsdSeq);
     li.setAttribute("role", "option");
     li.dataset.value = value;
     li.dataset.label = full || text;

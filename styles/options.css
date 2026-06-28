@@ -913,7 +913,7 @@ button.delete-audio-btn:hover {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--brand-600);
+  color: var(--brand-700); /* brand-600 was 3.84:1 on the surface-2 row — below AA */
   cursor: text;
   text-overflow: ellipsis;
 }

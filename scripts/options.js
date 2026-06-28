@@ -27,6 +27,50 @@ function exportSettings() {
   }
 }
 
+// Imported backups are user-supplied/social-engineered files. Coerce every
+// field to its expected type/shape before persisting, so a crafted JSON can't
+// inject unexpected data (defense-in-depth with the output-side escapeHtml).
+function clampStr(v, max = 300) {
+  return typeof v === "string" ? v.slice(0, max) : "";
+}
+function sanitizeImportedQueue(q) {
+  if (!q || typeof q !== "object") return null;
+  const out = {
+    name: clampStr(q.name, 200),
+    active: !!q.active,
+    interval: Math.min(900, Math.max(5, parseInt(q.interval, 10) || 15)),
+    soundEnabled: !!q.soundEnabled,
+    customSound: clampStr(q.customSound, 120),
+  };
+  if (q.statusNotify && typeof q.statusNotify === "object") {
+    const sn = q.statusNotify;
+    out.statusNotify = {
+      enabled: !!sn.enabled,
+      statuses: Array.isArray(sn.statuses)
+        ? sn.statuses.filter((s) => typeof s === "string").map((s) => s.slice(0, 120)).slice(0, 100)
+        : [],
+      sound: clampStr(sn.sound, 120) || "notification.mp3",
+    };
+  }
+  return out;
+}
+function sanitizeImportedAudios(obj) {
+  if (!obj || typeof obj !== "object") return {};
+  const out = {};
+  Object.keys(obj).slice(0, 50).forEach((k) => {
+    const a = obj[k];
+    if (!a || typeof a !== "object") return;
+    // Must be an audio data URL; rejects arbitrary data:/javascript: payloads.
+    if (typeof a.data !== "string" || !/^data:audio\//i.test(a.data)) return;
+    out[clampStr(k, 80)] = {
+      name: clampStr(a.name, 120),
+      originalName: clampStr(a.originalName, 200),
+      data: a.data,
+    };
+  });
+  return out;
+}
+
 function importSettings(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -38,15 +82,17 @@ function importSettings(event) {
         throw new Error(t("invalid_file"));
       }
       // Backups antigos: mescla statusNotifications[] dentro de queues[]
-      let queues = importData.queues || [];
+      let queues = Array.isArray(importData.queues) ? importData.queues : [];
       if (importData.statusNotifications && importData.statusNotifications.length) {
         queues = mergeLegacyStatusNotifications(queues, importData.statusNotifications);
       }
+      queues = queues.map(sanitizeImportedQueue).filter(Boolean);
+      const vol = Number(importData.general && importData.general.volume);
       const toImport = {
         queues,
-        general: importData.general || {},
-        advanced: importData.advanced || {},
-        audiosPersonalizados: importData.audiosPersonalizados || {},
+        general: { volume: isFinite(vol) ? Math.min(1, Math.max(0, vol)) : 0.5 },
+        advanced: importData.advanced && typeof importData.advanced === "object" ? importData.advanced : {},
+        audiosPersonalizados: sanitizeImportedAudios(importData.audiosPersonalizados),
       };
       if (importData.darkMode !== undefined) toImport.darkMode = !!importData.darkMode;
       chrome.storage.local.set(toImport, () => {
@@ -204,16 +250,19 @@ function loadCustomAudios() {
       const audioItem = document.createElement('div');
       const sizeKB = audioInfo.data ? Math.round(audioInfo.data.length * 0.75 / 1024) : 0;
 
+      const safeName = escapeHtml(audioInfo.name);
+      const safeOriginal = escapeHtml(audioInfo.originalName);
+      const safeKey = escapeHtml(key);
       audioItem.innerHTML = `
-        <button class="audio-play-btn" aria-label="${t('play') || 'Reproduzir'} ${audioInfo.name}">
+        <button class="audio-play-btn" aria-label="${t('play') || 'Reproduzir'} ${safeName}">
           <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
           <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
         </button>
         <div class="audio-info">
-          <strong>${audioInfo.name}</strong>
-          <div class="audio-meta">${audioInfo.originalName}${sizeKB ? ' · ' + sizeKB + ' KB' : ''}</div>
+          <strong>${safeName}</strong>
+          <div class="audio-meta">${safeOriginal}${sizeKB ? ' · ' + sizeKB + ' KB' : ''}</div>
         </div>
-        <button class="delete-audio-btn" data-audio-key="${key}" aria-label="${t('delete')} ${audioInfo.name}">
+        <button class="delete-audio-btn" data-audio-key="${safeKey}" aria-label="${t('delete')} ${safeName}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"></path></svg>
         </button>
       `;
@@ -491,14 +540,7 @@ function previewSound(soundValue) {
 
 let qmQueues = [];
 let qmSelfWrite = null;
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+// escapeHtml lives in scripts/util.js (loaded before this file).
 
 // Mescla o storage legado statusNotifications[] dentro de queues[].
 // Configs sem fila correspondente viram filas inativas para não perder dados.

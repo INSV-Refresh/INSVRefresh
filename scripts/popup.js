@@ -83,7 +83,7 @@ function createQueueElement(queue) {
 <div class="adjustments-containers-1-and-2">
 <div class="container-1">
 <div class="queue-name-wrapper">
-<input type="text" placeholder="${t("queue_name_ph")}" value="${queue.name || ""}" class="queue-name">
+<input type="text" placeholder="${t("queue_name_ph")}" value="${escapeHtml(queue.name || "")}" class="queue-name">
 <button type="button" class="copy-queue-name-btn has-tooltip has-tooltip-default" data-tooltip="${t("copy_queue_name")}" aria-label="${t("copy_queue_name")}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 </div>
 <label class="active-toggle">

@@ -269,7 +269,7 @@ input[type="text"].queue-name::placeholder {
 }
 
 .queue-active {
-  background: var(--success-500);
+  background: var(--success-700); /* white on success-500 was 2.28:1 (fails AA) */
   color: #fff;
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }

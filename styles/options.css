@@ -640,7 +640,7 @@ input[type="number"]::placeholder {
 
 .drop-formats {
   font-size: 0.85rem;
-  color: var(--ink-200);
+  color: var(--ink-400); /* ink-200 on white was 1.82:1 */
   margin-top: 8px;
   font-family: var(--font-mono, monospace);
 }
@@ -820,7 +820,7 @@ a:focus-visible,
 .audio-meta {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
-  color: var(--ink-200);
+  color: var(--ink-400); /* ink-200 on white was 1.82:1 */
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -1140,12 +1140,14 @@ button.delete-audio-btn:hover {
   white-space: nowrap;
 }
 
-.kbd-plus { color: #999; font-weight: 600; margin: 0 2px; }
+.kbd-plus { color: var(--ink-400); font-weight: 600; margin: 0 2px; } /* #999 was 2.64:1 */
 
+/* Light defaults (the card is white in light mode — the old colors were
+   dark-surface-only and unreadable here). Dark treatment is themed below. */
 .shortcut-clear {
   background: transparent;
-  color: #8E96BA;
-  border: 1px solid rgba(142, 150, 186, 0.4);
+  color: var(--ink-600);
+  border: 1px solid var(--ink-100);
   border-radius: 6px;
   padding: 8px 14px;
   font-size: 0.85rem;
@@ -1156,8 +1158,18 @@ button.delete-audio-btn:hover {
 }
 
 .shortcut-clear:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink-800);
+}
+
+[data-theme="dark"] .shortcut-clear {
+  color: var(--ink-200);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .shortcut-clear:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: #DDE2F1;
+  color: var(--ink-50);
 }
 
 /* ── Toggle switch ───────────────────────────── */
@@ -1363,7 +1375,7 @@ button.delete-audio-btn:hover {
   gap: 3px;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #b8860b;
+  color: var(--warning-700); /* #b8860b was 2.64:1 on the gold gradient */
   background: linear-gradient(135deg, #fff3cd, #ffe69c);
   border: 1px solid #ffc107;
   border-radius: 20px;
@@ -1589,7 +1601,7 @@ button.delete-audio-btn:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 [data-theme="dark"] .audio-info strong { color: var(--ink-50); }
-[data-theme="dark"] .audio-meta { color: var(--ink-300); }
+[data-theme="dark"] .audio-meta { color: var(--ink-200); } /* ink-300 on ink-700 was 4.25:1 */
 [data-theme="dark"] button.delete-audio-btn {
   border-color: rgba(239, 68, 68, 0.4);
   color: var(--danger-500);

@@ -40,12 +40,8 @@
     {
       "resources": [
         "assets/icons/add.png",
-        "assets/icons/banner.svg",
         "assets/icons/INSVRefresh.png",
-        "assets/icons/notification.png",
-        "assets/icons/settings.svg",
         "assets/icons/light-dark-mode.svg",
-        "assets/icons/trash-bin.png",
         "assets/icons/INSVRefresh-grey.png",
         "assets/sounds/bubble.mp3",
         "assets/sounds/interface.mp3",
@@ -53,7 +49,8 @@
         "assets/sounds/lis.mp3",
         "assets/sounds/notification.mp3",
         "assets/sounds/tech.mp3",
-        "assets/video/mockup.svg"
+        "assets/video/mockup.svg",
+        "assets/video/tutorial.mp4"
       ],
       "matches": ["*://*.lightning.force.com/*"]
     }

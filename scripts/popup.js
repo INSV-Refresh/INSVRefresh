@@ -244,6 +244,19 @@ function resetSoundMenuPosition(list) {
   list.style.transformOrigin = "";
 }
 
+// Hide after the exit transition so the menu animates out instead of snapping.
+// Timeout-guarded: the menu always ends up hidden even if a transitionend never
+// arrives (reduced motion, tab switch), so it can never get stuck visible.
+const QSD_EXIT_MS = 170; // --dur-fast (150ms) + buffer
+function scheduleSoundMenuHide(list) {
+  if (!list) return;
+  clearTimeout(list._hideT);
+  list._hideT = setTimeout(() => {
+    list.hidden = true;
+    resetSoundMenuPosition(list);
+  }, QSD_EXIT_MS);
+}
+
 // Posiciona o menu como fixed (escapa do overflow do #queue-list) e
 // inverte pra cima quando não há espaço abaixo. Alinhado à direita do
 // trigger pra abrir sempre na mesma posição.
@@ -283,11 +296,8 @@ function closeAllSoundDropdowns(except) {
     root.classList.remove("open");
     const list = root.querySelector(".qsd-list");
     const trigger = root.querySelector(".qsd-trigger");
-    if (list) {
-      list.hidden = true;
-      resetSoundMenuPosition(list);
-    }
     if (trigger) trigger.setAttribute("aria-expanded", "false");
+    scheduleSoundMenuHide(list); // animate out, then hide
   });
 }
 
@@ -356,22 +366,27 @@ function buildSoundDropdown(root) {
   };
 
   const close = () => {
-    if (list.hidden) return;
-    list.hidden = true;
+    if (!root.classList.contains("open")) return;
     root.classList.remove("open");
     trigger.setAttribute("aria-expanded", "false");
     trigger.removeAttribute("aria-activedescendant");
-    resetSoundMenuPosition(list);
+    scheduleSoundMenuHide(list); // animate out, then hide
   };
 
   const open = () => {
     closeAllSoundDropdowns(root); // só um aberto por vez
     bindSoundDropdownDismiss();
     bindSoundDropdownOutside();
+    clearTimeout(list._hideT); // cancel a pending hide from a quick re-open
     list.hidden = false;
-    root.classList.add("open");
     trigger.setAttribute("aria-expanded", "true");
-    positionSoundMenu(trigger, list);
+    positionSoundMenu(trigger, list); // forces layout at the closed state…
+    // …then flip .open on the next frame so opacity/transform transition in
+    requestAnimationFrame(() => {
+      if (!list.hidden && trigger.getAttribute("aria-expanded") === "true") {
+        root.classList.add("open");
+      }
+    });
     setActive(list.querySelector(".qsd-option.selected") || list.querySelector(".qsd-option"));
   };
 
@@ -388,7 +403,7 @@ function buildSoundDropdown(root) {
 
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
-    list.hidden ? open() : close();
+    root.classList.contains("open") ? close() : open();
   });
 
   list.addEventListener("click", (e) => {
@@ -402,7 +417,7 @@ function buildSoundDropdown(root) {
 
   // Full ARIA listbox keyboard contract (was Escape-only).
   root.addEventListener("keydown", (e) => {
-    const isOpen = !list.hidden;
+    const isOpen = root.classList.contains("open");
     switch (e.key) {
       case "Escape":
         if (isOpen) { e.preventDefault(); close(); trigger.focus(); }

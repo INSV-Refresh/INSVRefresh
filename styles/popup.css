@@ -460,16 +460,25 @@ input[type="number"].queue-interval {
   border-radius: 8px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   z-index: 100;
-  transform-origin: top left; /* anchored at trigger's left edge (list is left:0) */
-  animation: qsdDropIn var(--dur-fast) var(--ease-out) forwards;
+  /* Closed visual state. JS toggles .open (and overrides transform-origin
+     when the menu flips upward). Transition (not keyframe) so a rapid
+     open→close retargets from the current position instead of restarting. */
+  transform-origin: top left;
+  opacity: 0;
+  transform: translateY(-6px) scaleY(0.94);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
   /* sem scrollbar visível */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-@keyframes qsdDropIn {
-  from { opacity: 0; transform: translateY(-6px) scaleY(0.94); }
-  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+.queue-sound-select.open .qsd-list {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+  pointer-events: auto;
 }
 
 .qsd-list::-webkit-scrollbar {

@@ -151,7 +151,7 @@ section h2.highlight,
 .content {
   margin-left: 260px;
   flex: 1;
-  background-color: #f5f6fb;
+  background-color: var(--surface-2, #F5F6FB);
   padding: 2rem 2.5rem 0;
   box-sizing: border-box;
   height: 100vh;
@@ -163,18 +163,32 @@ section {
   margin-bottom: 1.5rem;
 }
 
+/* D2: every section reads as carded. Prose/config sections are a single card;
+   #funcionalidades and #avancado are already grids of cards (one elevation,
+   no card-in-card nesting). */
+#intro,
+#upload-audio,
+#status-notification,
+#saved-audios {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #E5E7EF);
+  border-radius: var(--radius-lg);
+}
+
 /* ── Typography ──────────────────────────────── */
+/* Kit type scale: heading/xl 28/600/-0.5px, heading/lg 20/600 */
 h1 {
-  font-size: 1.8rem;
+  font-size: 1.75rem;
   margin-bottom: 0.6rem;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.5px;
   color: var(--ink-800);
 }
 
 h2 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   padding-top: 0;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink-800);
   padding-bottom: 0.6rem;
 }
@@ -559,16 +573,17 @@ input[type="number"]::placeholder {
 
 .drop-area:hover {
   border-color: var(--brand-500);
-  background-color: #f0f4ff;
+  background-color: rgba(0, 161, 224, 0.05);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 161, 224, 0.1);
 }
 
 .drop-area.dragover {
   border-color: var(--brand-500);
-  background-color: #e8f4fd;
+  background-color: rgba(0, 161, 224, 0.1);
   border-style: solid;
-  transform: scale(1.02);
+  /* No scale() here — it reflowed while pulse repainted, causing jitter.
+     Solid border + glow + bg tint are enough of a dragover cue. */
   box-shadow: 0 0 20px rgba(0, 161, 224, 0.3);
   animation: pulse 1.5s infinite;
 }
@@ -657,7 +672,7 @@ input[type="number"]::placeholder {
 .audio-name-row label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #444;
+  color: var(--ink-700);
   white-space: nowrap;
   cursor: default;
 }
@@ -706,7 +721,7 @@ a:focus-visible,
 }
 
 .save-audio-btn {
-  background-color: var(--brand-500);
+  background-color: var(--brand-600); /* white on brand-500 was 2.93:1 — below AA */
   color: white;
   border: none;
   padding: 9px 18px;
@@ -723,21 +738,21 @@ a:focus-visible,
 }
 
 .save-audio-btn:hover:not(:disabled) {
-  background-color: var(--brand-600);
+  background-color: var(--brand-700);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 161, 224, 0.25);
 }
 
 .save-audio-btn:disabled {
-  background-color: #ccc;
+  background-color: var(--ink-200);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 /* ── How-to audio box ────────────────────────── */
 .how-to-audio {
-  background-color: #eef6fb;
-  border: 1px solid #cde7f4;
+  background-color: rgba(0, 161, 224, 0.06);
+  border: 1px solid rgba(0, 161, 224, 0.18);
   padding: 15px;
   margin-top: 20px;
   border-radius: var(--radius-lg);
@@ -767,7 +782,7 @@ a:focus-visible,
 }
 
 #custom-audios-list > div {
-  border: 1px solid #e4e8f4;
+  border: 1px solid var(--ink-100);
   border-radius: var(--radius-lg);
   padding: 0.75rem 1rem;
   margin-bottom: 0.6rem;
@@ -851,7 +866,7 @@ button.delete-audio-btn:hover {
 #audio-preview {
   margin: 1rem 0;
   padding: 1rem 1.2rem;
-  background: #f0f4ff;
+  background: var(--brand-50);
   border-radius: var(--radius-lg);
   border: 1px solid var(--ink-100);
 }
@@ -929,7 +944,7 @@ button.delete-audio-btn:hover {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  border: 1px solid #e8ecf5;
+  border: 1px solid var(--ink-100);
   background: var(--white-color);
   border-radius: 8px;
   padding: 0.55rem 0.8rem;
@@ -944,7 +959,7 @@ button.delete-audio-btn:hover {
   font-size: 0.85rem;
   outline: none;
   background: white;
-  color: #333;
+  color: var(--ink-800);
   font-family: inherit;
   transition: border-color 0.2s;
 }
@@ -982,7 +997,7 @@ button.delete-audio-btn:hover {
   background: transparent;
   outline: none;
   font-size: 0.85rem;
-  color: #333;
+  color: var(--ink-800);
   font-family: inherit;
   cursor: pointer;
   padding: 0;
@@ -1062,7 +1077,7 @@ button.delete-audio-btn:hover {
 .field-label {
   font-weight: 600;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--ink-800);
   cursor: default;
   display: block;
 }
@@ -1093,7 +1108,7 @@ button.delete-audio-btn:hover {
   border: 1.5px dashed var(--ink-100);
   border-radius: 7px;
   background: var(--surface-2);
-  color: #333;
+  color: var(--ink-800);
   font-family: inherit;
   font-size: 0.9rem;
   cursor: pointer;
@@ -1136,7 +1151,7 @@ button.delete-audio-btn:hover {
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
   font-weight: 700;
-  color: #333;
+  color: var(--ink-800);
   white-space: nowrap;
 }
 
@@ -1179,7 +1194,7 @@ button.delete-audio-btn:hover {
   gap: 0.75rem;
   font-weight: 600;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--ink-800);
   cursor: pointer;
   user-select: none;
   margin-top: 0.3rem;
@@ -1299,17 +1314,17 @@ button.delete-audio-btn:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #fff8e1, #fff3cd);
-  border: 1.5px solid #ffc107;
+  background: rgba(255, 209, 102, 0.16);
+  border: 1.5px solid rgba(255, 209, 102, 0.55);
   border-radius: 8px;
   padding: 0.8rem 1.2rem;
   font-size: 0.9rem;
-  color: #6d4c00;
+  color: var(--warning-700);
   margin-bottom: 1.5rem;
 }
 
 .trial-banner a {
-  color: var(--brand-500);
+  color: var(--brand-700);
   font-weight: 700;
   text-decoration: none;
   margin-left: auto;
@@ -1319,7 +1334,7 @@ button.delete-audio-btn:hover {
 .trial-banner a:hover { text-decoration: underline; }
 
 .changelog-banner {
-  background: linear-gradient(135deg, #e8f4fd 0%, #dbeeff 100%);
+  background: rgba(0, 161, 224, 0.07);
   border: 1.5px solid rgba(0, 161, 224, 0.4);
   border-radius: 10px;
   padding: 1.2rem 1.5rem;
@@ -1343,7 +1358,7 @@ button.delete-audio-btn:hover {
 .changelog-banner ul li {
   padding: 2px 0;
   font-size: 0.88rem;
-  color: #444;
+  color: var(--ink-700);
 }
 
 .changelog-banner ul li::before {
@@ -1354,7 +1369,7 @@ button.delete-audio-btn:hover {
 
 .changelog-banner #changelog-dismiss {
   margin-top: 0.8rem;
-  background: var(--brand-500);
+  background: var(--brand-600); /* white on brand-500 was 2.93:1 — below AA */
   color: white;
   border: none;
   padding: 0.45rem 1.1rem;
@@ -1366,7 +1381,7 @@ button.delete-audio-btn:hover {
   font-family: inherit;
 }
 
-.changelog-banner #changelog-dismiss:hover { background: var(--brand-600); }
+.changelog-banner #changelog-dismiss:hover { background: var(--brand-700); }
 
 /* ── Premium / gate banners ──────────────────── */
 .premium-badge {
@@ -1376,8 +1391,8 @@ button.delete-audio-btn:hover {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--warning-700); /* #b8860b was 2.64:1 on the gold gradient */
-  background: linear-gradient(135deg, #fff3cd, #ffe69c);
-  border: 1px solid #ffc107;
+  background: rgba(255, 209, 102, 0.22);
+  border: 1px solid rgba(255, 209, 102, 0.6);
   border-radius: 20px;
   padding: 2px 9px;
   margin-left: 0.7rem;
@@ -1401,13 +1416,13 @@ button.delete-audio-btn:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #fff8e1, #fff3cd);
-  border: 1.5px solid #ffc107;
+  background: rgba(255, 209, 102, 0.16);
+  border: 1.5px solid rgba(255, 209, 102, 0.55);
   border-radius: 8px;
   padding: 0.7rem 1rem;
   font-size: 0.88rem;
   font-weight: 500;
-  color: #6d4c00;
+  color: var(--warning-700);
   margin-bottom: 1rem;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -1415,7 +1430,7 @@ button.delete-audio-btn:hover {
 }
 
 .paid-gate-banner a {
-  color: var(--brand-500);
+  color: var(--brand-700);
   font-weight: 700;
   text-decoration: none;
   margin-left: 4px;
@@ -1450,7 +1465,7 @@ button.delete-audio-btn:hover {
   gap: 8px;
 }
 
-.toast-success { background-color: var(--success-500); }
+.toast-success { background-color: var(--success-700); } /* white on success-500 was 2.28:1 — fails AA */
 .toast-error   { background-color: var(--danger-500); }
 .toast-warning { background-color: var(--gold-500); color: var(--ink-800); }
 
@@ -1497,8 +1512,19 @@ button.delete-audio-btn:hover {
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Carded sections sit one step above the ink-950 content bg in dark mode. */
+[data-theme="dark"] #intro,
+[data-theme="dark"] #upload-audio,
+[data-theme="dark"] #status-notification,
+[data-theme="dark"] #saved-audios {
+  background: var(--ink-800);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
 [data-theme="dark"] h2 { color: var(--ink-100); border-color: rgba(255, 255, 255, 0.1); }
-[data-theme="dark"] h1 { color: var(--brand-400); }
+/* Neutral title in dark to match the light-mode ink heading (was brand-400,
+   which read as a link and clashed with the neutral h2 section titles). */
+[data-theme="dark"] h1 { color: var(--ink-50); }
 [data-theme="dark"] p { color: var(--ink-200); }
 [data-theme="dark"] label { color: var(--ink-200); }
 [data-theme="dark"] strong { color: var(--ink-50); }
@@ -1614,23 +1640,29 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .changelog-banner {
-  background: linear-gradient(135deg, var(--ink-800) 0%, #1a2535 100%);
+  background: rgba(0, 161, 224, 0.1);
   border-color: rgba(0, 161, 224, 0.3);
 }
 [data-theme="dark"] .changelog-banner strong { color: var(--brand-300); }
 [data-theme="dark"] .changelog-banner ul li { color: var(--ink-200); }
 
 [data-theme="dark"] .trial-banner {
-  background: linear-gradient(135deg, #2a2200, #332800);
-  border-color: #cc8800;
-  color: #e0b050;
+  background: rgba(255, 209, 102, 0.1);
+  border-color: rgba(255, 209, 102, 0.35);
+  color: var(--gold-500);
 }
 
 [data-theme="dark"] .paid-gate-banner {
-  background: linear-gradient(135deg, #2a2200, #332800);
-  border-color: #cc8800;
-  color: #e0b050;
+  background: rgba(255, 209, 102, 0.1);
+  border-color: rgba(255, 209, 102, 0.35);
+  color: var(--gold-500);
 }
+
+/* base link color is brand-700 for AA on light; lift it on dark surfaces */
+[data-theme="dark"] .trial-banner a,
+[data-theme="dark"] .paid-gate-banner a { color: var(--brand-300); }
+[data-theme="dark"] .trial-banner a:hover,
+[data-theme="dark"] .paid-gate-banner a:hover { color: var(--brand-200); }
 
 [data-theme="dark"] .menu a.highlight-nav {
   background: rgba(0, 161, 224, 0.2);

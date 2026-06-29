@@ -21,13 +21,14 @@ function showInsvToast(message, type, duration) {
       '.insv-toast{width:300px;padding:14px 18px;border-radius:8px;color:#fff;',
       'font-size:0.9rem;font-weight:600;line-height:1.4;',
       'box-shadow:0 8px 24px -8px rgba(0,0,0,.35),0 2px 6px -2px rgba(0,0,0,.25);',
-      'background:#00A1E0;opacity:0;transform:translateY(10px);',
+      // AA: white text needs brand-600/success-700, not brand-500/success-500
+      'background:#0085BB;opacity:0;transform:translateY(10px);',
       'transition:opacity .3s ease,transform .3s ease}',
       '.insv-toast.show{opacity:1;transform:translateY(0)}',
-      '.insv-toast.success{background:#22C55E}',
+      '.insv-toast.success{background:#15803D}',
       '.insv-toast.error{background:#EF4444}',
       '.insv-toast.warning{background:#FFD166;color:#1B2340}',
-      '.insv-toast.info{background:#00A1E0}',
+      '.insv-toast.info{background:#0085BB}',
       '@media (prefers-reduced-motion:reduce){.insv-toast{transition:opacity .2s linear;',
       'transform:none}.insv-toast.show{transform:none}}',
     ].join('');
@@ -263,28 +264,15 @@ function initNormalMode() {
         if (customAudio && customAudio.data) {
           log(`[Debug] Tocando áudio personalizado: ${customAudio.name}`);
           try {
-            const base64Data = customAudio.data.split(",")[1];
-            const mimeType = customAudio.data.split(",")[0].split(":")[1].split(";")[0];
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const blob = new Blob([bytes], { type: mimeType });
-            const blobUrl = URL.createObjectURL(blob);
-            const audio = new Audio(blobUrl);
+            // Data URLs play directly — no manual base64 → Blob → object URL.
+            const audio = new Audio(customAudio.data);
             audio.volume = volume;
-            audio.addEventListener("ended", () => {
-              URL.revokeObjectURL(blobUrl);
-            });
             audio.addEventListener("error", (e) => {
               log("Erro ao tocar áudio personalizado:", e);
-              URL.revokeObjectURL(blobUrl);
               tocarSomPadrao("notification.mp3", volume);
             });
             audio.play().catch((e) => {
               log("Erro ao tocar áudio personalizado:", e);
-              URL.revokeObjectURL(blobUrl);
               tocarSomPadrao("notification.mp3", volume);
             });
           } catch (error) {
@@ -368,18 +356,26 @@ function initNormalMode() {
         if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && isRightQueue(fila.name)) {
           const currentMap = getCaseStatusMap();
           const targetStatuses = new Set(sn.statuses.map((s) => s.trim().toLowerCase()));
+          // Per-queue sub-map keyed by caseId. Nested (not "name_caseId") so
+          // eviction can't be fooled by queue names sharing a prefix.
+          const filaPrev =
+            statusNotificationPrevious[fila.name] ||
+            (statusNotificationPrevious[fila.name] = {});
           let played = false;
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
-            const key = `${fila.name}_${caseId}`;
-            const prev = statusNotificationPrevious[key];
+            const prev = filaPrev[caseId];
             if (targetStatuses.has(statusLower) && prev !== status) {
               if (!played) {
                 tocarSom(sn.sound || "notification.mp3", globalVolume);
                 played = true;
               }
             }
-            statusNotificationPrevious[key] = status;
+            filaPrev[caseId] = status;
+          }
+          // Evict cases that have left the queue so the map stays bounded.
+          for (const id of Object.keys(filaPrev)) {
+            if (!(id in currentMap)) delete filaPrev[id];
           }
         }
       }

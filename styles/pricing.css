@@ -78,7 +78,7 @@ body {
   top: -13px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--brand-500);
+  background: var(--brand-700); /* white on brand-500 was 2.93:1 — small badge text needs 4.5:1 */
   color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -94,17 +94,17 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  color: var(--brand-500);
+  color: var(--brand-700); /* brand-500 was 2.93:1 on white — small bold label needs 4.5:1 */
   margin-bottom: 10px;
 }
 
-.plan-tier.pro        { color: var(--brand-600); }
-.plan-tier.enterprise { color: var(--warning-600); }
+.plan-tier.pro        { color: var(--brand-700); }
+.plan-tier.enterprise { color: var(--warning-700); } /* warning-600 was 3.19:1 on white */
 
 /* ── Price ─────────────────────────────────── */
 .plan-price {
   font-size: 2.2rem;
-  font-weight: 800;
+  font-weight: 700; /* kit type scale tops at 700; 800 was the only use, now dropped from the font load */
   color: var(--text, var(--ink-800));
   line-height: 1;
   margin-bottom: 4px;
@@ -170,13 +170,13 @@ body {
 }
 
 .btn-plan.primary {
-  background: var(--brand-500);
+  background: var(--brand-600); /* white on brand-500 was 2.93:1 — below AA 3:1 for the primary CTA */
   color: #fff;
   box-shadow: 0 4px 16px rgba(0, 161, 224, 0.3);
 }
 
 .btn-plan.primary:hover {
-  background: var(--brand-600);
+  background: var(--brand-700);
   transform: translateY(-1px);
 }
 
@@ -249,26 +249,34 @@ body {
 }
 
 /* ── Toast ─────────────────────────────────── */
+/* Same visual language as the options + in-page toasts: solid semantic fill,
+   white text, slide-in. Semantic colors read fine in light AND dark, so no
+   dark override is needed. */
 .pricing-toast {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 1100;
   max-width: 320px;
-  padding: 12px 18px;
+  padding: 14px 18px;
   border-radius: var(--radius-md);
-  background: var(--surface, #fff);
-  color: var(--text, var(--ink-800));
-  border: 1px solid var(--border, #E5E7EF);
-  border-left: 3px solid var(--brand-500);
+  background: var(--brand-600);
+  color: #fff;
   font-size: 13px;
+  font-weight: 600;
   font-family: inherit;
   box-shadow: var(--box-shadow);
+  animation: pricingToastIn 0.3s ease;
 }
 
-.pricing-toast--success { border-left-color: var(--success-500); }
-.pricing-toast--warning { border-left-color: var(--warning-500); }
-.pricing-toast--info    { border-left-color: var(--brand-500); }
+@keyframes pricingToastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pricing-toast--success { background: var(--success-700); }
+.pricing-toast--warning { background: var(--gold-500); color: var(--ink-800); }
+.pricing-toast--info    { background: var(--brand-600); }
 
 /* ── Dark mode ─────────────────────────────── */
 [data-theme="dark"] .pricing-header h1 { color: var(--ink-50); }
@@ -320,12 +328,6 @@ body {
 [data-theme="dark"] #login-btn:hover { color: var(--brand-200); }
 [data-theme="dark"] .login-row { color: var(--ink-400); }
 
-[data-theme="dark"] .pricing-toast {
-  background: #11172A;
-  color: var(--ink-100);
-  border-color: rgb(255 255 255 / 0.1);
-}
-
 /* ── Responsive ────────────────────────────── */
 @media (max-width: 768px) {
   .pricing-content { padding: 36px 20px 44px; }
@@ -335,4 +337,5 @@ body {
 /* ── Reduced motion ────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }
+  .pricing-toast { animation: none; }
 }

@@ -72,6 +72,17 @@
   --z-modal:    300;
   --z-toast:    400;
   --z-tooltip:  500;
+
+  /* ── Motion ──────────────────────── */
+  /* Custom curves — built-in easings are too weak. Enter/exit use ease-out
+     (instant feedback); on-screen morphs use ease-in-out. Not in the brand
+     kit (identity only) — owned here. */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms; /* button press feedback */
+  --dur-fast:  150ms; /* dropdowns, small popovers */
+  --dur-base:  200ms; /* default UI transition */
+  --dur-slow:  250ms; /* larger surfaces */
 }
 
 /* Dark popup & options share the same ink scale */

@@ -200,6 +200,10 @@ body {
 
 .btn-plan.trial:hover { background: rgba(0, 161, 224, 0.06); }
 
+/* Press feedback (Emil) — dip on :active; primary keeps its hover lift */
+.btn-plan:active { transform: scale(0.97); }
+.btn-plan.primary:active { transform: translateY(-1px) scale(0.97); }
+
 /* Free-plan status — a label, NOT a button */
 .plan-included {
   display: inline-block;

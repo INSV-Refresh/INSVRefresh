@@ -152,7 +152,7 @@ section h2.highlight,
   margin-left: 260px;
   flex: 1;
   background-color: var(--surface-2, #F5F6FB);
-  padding: 2rem 2.5rem 0;
+  padding-top: 1rem;
   box-sizing: border-box;
   height: 100vh;
   overflow-y: auto;
@@ -160,16 +160,7 @@ section h2.highlight,
 
 section {
   padding: 1.6rem 2rem;
-  margin-bottom: 1.5rem;
-}
-
-/* D2: every section reads as carded. Prose/config sections are a single card;
-   #funcionalidades and #avancado are already grids of cards (one elevation,
-   no card-in-card nesting). */
-#intro,
-#upload-audio,
-#status-notification,
-#saved-audios {
+  margin: 1.5rem 2.5rem ; 
   background: var(--surface, #fff);
   border: 1px solid var(--border, #E5E7EF);
   border-radius: var(--radius-lg);
@@ -516,7 +507,7 @@ input[type="number"]::placeholder {
   cursor: pointer;
   color: var(--ink-200);
   border-radius: 5px;
-  transition: color 0.14s, background 0.14s;
+  transition: color 0.14s, background 0.14s, transform var(--dur-press) var(--ease-out);
   flex-shrink: 0;
 }
 
@@ -887,11 +878,18 @@ button.delete-audio-btn:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 400px;
+  max-height: 310px;
   overflow-y: auto;
   padding-right: 4px;
   margin-bottom: 0.4rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.queue-manager-list::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* Queue-manager row label (used by createQueueManagerRow) */
 /* Fixed-width, read-only field. The queue name can be longer than the column,
@@ -1513,10 +1511,7 @@ button.delete-audio-btn:hover {
 }
 
 /* Carded sections sit one step above the ink-950 content bg in dark mode. */
-[data-theme="dark"] #intro,
-[data-theme="dark"] #upload-audio,
-[data-theme="dark"] #status-notification,
-[data-theme="dark"] #saved-audios {
+[data-theme="dark"] section {
   background: var(--ink-800);
   border-color: rgba(255, 255, 255, 0.06);
 }
@@ -1702,6 +1697,19 @@ button.delete-audio-btn:hover {
 /* Footer is provided by the shared app-chrome.css (.app-footer). The
    options footer sits inside .content, so add a little top margin. */
 .app-footer { margin-top: 1rem; }
+
+/* ── Press feedback (Emil) ───────────────────── */
+/* Pressable controls dip on :active. Buttons with a hover lift keep it and
+   add the dip; the rest scale subtly. */
+.vp-btn:active,
+.audio-play-btn:active,
+.export-import-btn:active {
+  transform: scale(0.97);
+}
+
+.save-audio-btn:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.97);
+}
 
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

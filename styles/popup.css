@@ -239,7 +239,7 @@ input[type="text"].queue-name::placeholder {
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, transform var(--dur-press) var(--ease-out);
   margin: 0;
 }
 
@@ -266,6 +266,7 @@ input[type="text"].queue-name::placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform var(--dur-press) var(--ease-out);
 }
 
 .queue-active {
@@ -353,7 +354,7 @@ input[type="number"].queue-interval {
   align-items: center;
   justify-content: center;
   margin: 0;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform var(--dur-press) var(--ease-out);
   color: var(--brand-300);
   width: auto;
 }
@@ -405,7 +406,7 @@ input[type="number"].queue-interval {
   cursor: pointer;
   outline: none;
   user-select: none;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform var(--dur-press) var(--ease-out);
 }
 
 .qsd-trigger:hover {
@@ -539,7 +540,8 @@ input[type="number"].queue-interval {
   transition:
     opacity 0.2s,
     background 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    transform var(--dur-press) var(--ease-out);
   color: var(--ink-100);
   width: auto;
 }
@@ -573,7 +575,8 @@ input[type="number"].queue-interval {
   color: var(--brand-500);
   transition:
     background 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    transform var(--dur-press) var(--ease-out);
 }
 
 .add-queue-btn:hover {
@@ -730,7 +733,7 @@ input[type="number"].queue-interval {
   justify-content: center;
   color: var(--ink-200);
   opacity: 0.7;
-  transition: opacity 0.2s, color 0.2s;
+  transition: opacity 0.2s, color 0.2s, transform var(--dur-press) var(--ease-out);
   border-radius: var(--radius-sm);
   padding: 3px;
 }
@@ -912,6 +915,21 @@ button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--brand-400);
   outline-offset: 2px;
+}
+
+/* Press feedback — every pressable control dips on :active (Emil: buttons
+   must feel responsive to press). Subtle scale, instant via --dur-press. */
+.queue-active:active,
+.queue-inactive:active,
+.add-queue-btn:active,
+.delete-queue:active,
+.queue-sound:active,
+.copy-queue-name-btn:active,
+.qsd-trigger:active,
+.icon-btn:active,
+.global-paused-banner button:active,
+#resume-all-btn:active {
+  transform: scale(0.97);
 }
 
 /* Reveal + ring the volume slider when reached via keyboard */

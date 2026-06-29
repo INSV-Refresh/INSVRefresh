@@ -49,12 +49,16 @@
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform var(--dur-press) var(--ease-out);
 }
 
 .app-topbar-back:hover {
   color: var(--brand-500);
   border-color: var(--brand-500);
+}
+
+.app-topbar-back:active {
+  transform: scale(0.97);
 }
 
 /* ── Footer (options, pricing, privacy) ─────────── */

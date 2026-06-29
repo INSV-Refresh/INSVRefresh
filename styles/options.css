@@ -553,7 +553,7 @@ input[type="number"]::placeholder {
   text-align: center;
   margin: 20px 0;
   background-color: var(--white-color);
-  transition: all 0.3s ease;
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s var(--ease-out), box-shadow 0.2s;
   cursor: pointer;
   position: relative;
   min-height: 120px;
@@ -596,7 +596,7 @@ input[type="number"]::placeholder {
   justify-content: center;
   margin-bottom: 16px;
   opacity: 0.5;
-  transition: all 0.3s ease;
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
   color: var(--brand-500);
 }
 
@@ -1104,7 +1104,7 @@ button.delete-audio-btn:hover {
   gap: 4px;
   padding: 8px 14px;
   border: 1.5px dashed var(--ink-100);
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   background: var(--surface-2);
   color: var(--ink-800);
   font-family: inherit;

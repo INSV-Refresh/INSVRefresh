@@ -27,6 +27,7 @@
   --ink-600: #3C4675;
   --ink-700: #29325A;
   --ink-800: #1B2340;
+  --ink-850: #161D33; /* sunken control surface (one step under 800) */
   --ink-950: #0B0F1A; /* darkest surface */
 
   /* ── Accents ─────────────────────── */

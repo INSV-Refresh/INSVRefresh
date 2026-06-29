@@ -442,17 +442,19 @@ input[type="number"]::placeholder {
   position: absolute;
   top: 50%;
   left: 0%;
-  transform: translate(-50%, -50%) scale(0);
+  transform: translate(-50%, -50%) scale(0.4);
+  opacity: 0;
   width: 13px;
   height: 13px;
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 6px rgba(0 0 0 / 0.55);
-  transition: transform 0.12s;
+  transition: transform 0.12s var(--ease-out), opacity 0.12s var(--ease-out);
 }
 
 .vp-scrub:hover .vp-scrub-thumb {
   transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 /* ── Step dots ───────────────────────────────── */

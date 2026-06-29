@@ -477,39 +477,6 @@ function resetDropArea() {
   }
 }
 
-function loadStatusNotificationSounds(selectEl, selectedValue, onPreview) {
-  if (!selectEl) return;
-  selectEl.innerHTML = "";
-  BUILTIN_SOUNDS.forEach((s) => {
-    const opt = document.createElement("option");
-    opt.value = s.value;
-    opt.textContent = s.text || t(s.labelKey);
-    selectEl.appendChild(opt);
-  });
-  chrome.storage.local.get("audiosPersonalizados", (data) => {
-    const custom = data.audiosPersonalizados || {};
-    const keys = Object.keys(custom);
-    if (keys.length > 0) {
-      const sep = document.createElement("option");
-      sep.disabled = true;
-      sep.textContent = "───────";
-      selectEl.appendChild(sep);
-      keys.forEach((key) => {
-        const o = document.createElement("option");
-        o.value = key;
-        o.textContent = custom[key].name;
-        selectEl.appendChild(o);
-      });
-    }
-    if (selectedValue) selectEl.value = selectedValue;
-    if (onPreview) {
-      selectEl.addEventListener("change", () => {
-        if (selectEl.value) previewSound(selectEl.value);
-      });
-    }
-  });
-}
-
 function previewSound(soundValue) {
   try {
     chrome.storage.local.get("general", (data) => {
@@ -564,13 +531,19 @@ function createQueueManagerRow(queue) {
     <input type="text" class="qm-statuses" value="${escapeHtml(statusText)}" placeholder="${t("qm_statuses_ph")}" title="${t("qm_statuses_title")}" aria-label="${t("qm_statuses_ph")}">
     <div class="qm-sound-wrapper">
       <svg class="qm-bell-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <select class="qm-sound" title="${t("qm_sound_title")}" aria-label="${t("qm_sound_title")}"></select>
+      ${soundDropdownMarkup("qm-sound")}
     </div>
   `;
 
-  loadStatusNotificationSounds(div.querySelector(".qm-sound"), sn.sound || "notification.mp3", true);
+  // Custom dropdown (shared with the popup) replaces the native <select>, so
+  // dark mode is styleable. Reads via the .value getter; previews on select.
+  const soundRoot = div.querySelector(".qm-sound");
+  soundRoot.querySelector(".qsd-trigger").setAttribute("aria-label", t("qm_sound_title"));
+  loadSoundOptionsForQueue(soundRoot, sn.sound || "notification.mp3");
+  buildSoundDropdown(soundRoot, { onPreview: previewSound });
+  soundRoot.addEventListener("change", saveQueueManagerDebounced);
 
-  div.querySelectorAll("input, select").forEach((inp) => {
+  div.querySelectorAll("input").forEach((inp) => {
     inp.addEventListener("change", saveQueueManagerDebounced);
     inp.addEventListener("input", saveQueueManagerDebounced);
   });

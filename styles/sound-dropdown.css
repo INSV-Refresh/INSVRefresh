@@ -1,0 +1,168 @@
+/* =============================================
+   INSV Refresh — custom sound dropdown (qsd)
+   Design: claude.ai/design — INSV Dropdown spec
+   Shared by the popup and the options status-notification rows.
+   Theme-aware via the semantic --surface/--text/--border tokens, which
+   flip for html.dark-popup (popup) and [data-theme] (options light/dark).
+   Behaviour lives in scripts/util.js (buildSoundDropdown).
+   ============================================= */
+.queue-sound-select {
+  position: relative;
+  width: 103px;
+  font-family: inherit;
+}
+
+.qsd-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 28px;
+  background: var(--surface-2, #161d33);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md);
+  color: var(--text, #f0f3fb);
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform var(--dur-press) var(--ease-out);
+}
+
+.qsd-trigger:hover {
+  background: var(--surface, #1b2340);
+  border-color: rgba(0, 161, 224, 0.35);
+}
+
+.queue-sound-select.open .qsd-trigger,
+.qsd-trigger:focus-visible {
+  background: var(--surface, #1b2340);
+  border-color: rgba(0, 161, 224, 0.45);
+  box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.15);
+}
+
+.qsd-trigger:active {
+  transform: scale(0.97);
+}
+
+.qsd-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.qsd-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted, #6a7299);
+  transition: transform 0.2s ease, color 0.15s;
+}
+
+.qsd-trigger:hover .qsd-arrow {
+  color: var(--text, #8e96ba);
+}
+
+.queue-sound-select.open .qsd-arrow {
+  transform: rotate(180deg);
+  color: var(--brand-500);
+}
+
+.qsd-list {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--surface-2, #161d33);
+  border: 1px solid rgba(0, 161, 224, 0.35);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.22);
+  z-index: var(--z-dropdown);
+  /* Closed visual state. JS toggles .open (and overrides transform-origin
+     when the menu flips upward). Transition (not keyframe) so a rapid
+     open→close retargets from the current position instead of restarting. */
+  transform-origin: top left;
+  opacity: 0;
+  transform: translateY(-6px) scaleY(0.94);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+  /* sem scrollbar visível */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.queue-sound-select.open .qsd-list {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+  pointer-events: auto;
+}
+
+.qsd-list::-webkit-scrollbar {
+  display: none;
+}
+
+.qsd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text, #f0f3fb);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.1s;
+}
+
+.qsd-option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.qsd-option:hover,
+.qsd-option.active {
+  background: rgba(0, 161, 224, 0.12);
+}
+
+.qsd-option.selected {
+  background: var(--brand-500);
+  color: #fff;
+  font-weight: 600;
+}
+
+.qsd-check {
+  flex-shrink: 0;
+  display: none;
+}
+
+.qsd-option.selected .qsd-check {
+  display: block;
+}
+
+.qsd-sep {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--border, rgba(255, 255, 255, 0.1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qsd-list {
+    transition-duration: 0.01ms;
+  }
+}

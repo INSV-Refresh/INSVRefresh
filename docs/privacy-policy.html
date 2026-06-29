@@ -153,7 +153,7 @@
         <ul>
           <li data-i18n="pp_s4_li1">O armazenamento local das suas configurações no navegador</li>
           <li data-i18n="pp_s4_li2">A sincronização dessas configurações via chrome.storage.sync (gerenciada pelo Google)</li>
-          <li data-i18n="pp_s4_li3">A injeção de scripts nas páginas do Salesforce Lightning para permitir o funcionamento da extensão</li>
+          <li data-i18n="pp_s4_li3">A execução de um content script nas páginas do Salesforce Lightning para permitir o funcionamento da extensão</li>
         </ul>
         <p data-i18n="pp_s4_p2">Você pode revogar esse consentimento a qualquer momento desinstalando a extensão. Todos os dados armazenados localmente serão automaticamente removidos.</p>
       </section>
@@ -165,16 +165,19 @@
         <h3 data-i18n="pp_s5_h31">5.1 storage</h3>
         <p data-i18n="pp_s5_p1">Salva suas configurações localmente no navegador. Nenhum dado sai do seu dispositivo, exceto via chrome.storage.sync (conforme seção 3.4).</p>
 
-        <h3 data-i18n="pp_s5_h32">5.2 scripting</h3>
-        <p data-i18n="pp_s5_p2">Injeta código nas páginas do Salesforce Lightning (*.lightning.force.com) para:</p>
+        <h3 data-i18n="pp_s5_h32b">5.2 unlimitedStorage</h3>
+        <p data-i18n="pp_s5_p2b">Permite salvar os arquivos de som personalizados (upload de .mp3) sem atingir o limite de cota padrão do chrome.storage. Os dados permanecem exclusivamente no seu navegador.</p>
+
+        <h3 data-i18n="pp_s5_h32">5.3 Content script (*.lightning.force.com)</h3>
+        <p data-i18n="pp_s5_p2">A extensão registra um content script que roda <strong>apenas</strong> nas páginas do Salesforce Lightning (*.lightning.force.com) para:</p>
         <ul>
           <li data-i18n="pp_s5_li1">Detectar o nome da fila atual</li>
           <li data-i18n="pp_s5_li2">Monitorar o contador de chamados</li>
-          <li data-i18n="pp_s5_li3">Executar atualizações da lista usando a API nativa do Salesforce</li>
+          <li data-i18n="pp_s5_li3">Atualizar a lista (botão nativo do Salesforce ou recarga da visualização)</li>
         </ul>
         <p data-i18n-html="pp_s5_p3">Este código funciona <strong>apenas em páginas do Salesforce</strong> e não afeta outros sites.</p>
 
-        <h3 data-i18n="pp_s5_h33">5.3 Host permission (*.lightning.force.com)</h3>
+        <h3 data-i18n="pp_s5_h33">5.4 Host permission (*.lightning.force.com)</h3>
         <p data-i18n="pp_s5_p4">Permite que a extensão funcione apenas em páginas do Salesforce Lightning. A extensão permanece completamente inativa em todos os outros sites.</p>
       </section>
 

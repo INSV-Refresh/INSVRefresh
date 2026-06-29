@@ -305,6 +305,17 @@ function bindSoundDropdownDismiss() {
   soundDropdownScrollBound = true;
 }
 
+// One document-level outside-click listener for the lifetime of the popup.
+// Bound lazily on first open; closes whichever dropdown is open (only one is).
+let soundDropdownOutsideBound = false;
+function bindSoundDropdownOutside() {
+  if (soundDropdownOutsideBound) return;
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".queue-sound-select")) closeAllSoundDropdowns();
+  });
+  soundDropdownOutsideBound = true;
+}
+
 let qsdSeq = 0;
 function buildSoundDropdown(root) {
   if (root._qsdBuilt) return;
@@ -356,6 +367,7 @@ function buildSoundDropdown(root) {
   const open = () => {
     closeAllSoundDropdowns(root); // só um aberto por vez
     bindSoundDropdownDismiss();
+    bindSoundDropdownOutside();
     list.hidden = false;
     root.classList.add("open");
     trigger.setAttribute("aria-expanded", "true");
@@ -384,9 +396,9 @@ function buildSoundDropdown(root) {
     if (opt) commitOption(opt);
   });
 
-  document.addEventListener("click", (e) => {
-    if (!root.contains(e.target)) close();
-  });
+  // Outside-click dismiss is a single document-level listener (see
+  // bindSoundDropdownOutside), NOT one per root — re-renders destroy the rows
+  // but a per-root listener would outlive them, accumulating on the document.
 
   // Full ARIA listbox keyboard contract (was Escape-only).
   root.addEventListener("keydown", (e) => {
@@ -521,14 +533,14 @@ function saveOptions() {
   queueList.querySelectorAll(".queue-item").forEach((item) => {
     const soundSelect = item.querySelector(".queue-sound-select");
     const nameInput = item.querySelector(".queue-name");
-    const activeBtn = item.querySelector(".queue-active");
+    const activeBtn = item.querySelector(".active-toggle button");
     const intervalInput = item.querySelector(".queue-interval");
     const soundBtn = item.querySelector(".queue-sound");
 
     if (nameInput && intervalInput && soundBtn) {
       queues.push(Object.assign({}, item._insvQueue || {}, {
         name: nameInput.value,
-        active: activeBtn !== null,
+        active: activeBtn ? activeBtn.getAttribute("aria-pressed") === "true" : false,
         interval: parseInt(intervalInput.value, 10),
         soundEnabled: !soundBtn.classList.contains("off"),
         customSound: soundSelect ? soundSelect.value : "",

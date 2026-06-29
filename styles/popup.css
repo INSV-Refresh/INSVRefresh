@@ -26,7 +26,7 @@ body {
   font-family: var(--font-ui);
   color: var(--ink-50);
   overflow-x: hidden;
-  width: 320px;
+  width: 330px; /* match html shell — 320 left a 10px gap on the right edge */
   display: flex;
   flex-direction: column;
   max-height: 580px;

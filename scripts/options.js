@@ -117,7 +117,7 @@ function validateAudioFile(input) {
   const file = input.files[0];
   if (!file) {
     document.getElementById('save-audio-btn').disabled = true;
-    document.getElementById('audio-preview').innerHTML = '';
+    clearAudioPreview();
     return;
   }
 
@@ -128,7 +128,7 @@ function validateAudioFile(input) {
     showToast(t("invalid_format"), "error");
     input.value = "";
     document.getElementById('save-audio-btn').disabled = true;
-    document.getElementById('audio-preview').innerHTML = '';
+    clearAudioPreview();
     resetDropArea();
     return;
   }
@@ -137,7 +137,7 @@ function validateAudioFile(input) {
     showToast(t("file_too_big"), "error");
     input.value = "";
     document.getElementById('save-audio-btn').disabled = true;
-    document.getElementById('audio-preview').innerHTML = '';
+    clearAudioPreview();
     resetDropArea();
     return;
   }
@@ -154,20 +154,24 @@ function validateAudioFile(input) {
   showDropSuccess();
 }
 
+// Revoke the preview's blob URL before discarding it, then clear the node.
+// Without this every selected/cleared preview leaks a Blob URL.
+function clearAudioPreview() {
+  const preview = document.getElementById('audio-preview');
+  if (!preview) return;
+  const a = preview.querySelector('audio');
+  if (a && a.src && a.src.startsWith('blob:')) URL.revokeObjectURL(a.src);
+  preview.innerHTML = '';
+}
+
 function showAudioPreview(file) {
   const previewContainer = document.getElementById('audio-preview');
-  const existingAudio = previewContainer.querySelector('audio');
-  
-  if (existingAudio) {
-    existingAudio.remove();
-  }
+  clearAudioPreview(); // revokes any prior preview URL before replacing
 
   const audio = document.createElement('audio');
   audio.controls = true;
-  
-  const url = URL.createObjectURL(file);
-  audio.src = url;
-  
+  audio.src = URL.createObjectURL(file);
+
   previewContainer.appendChild(audio);
 }
 
@@ -237,6 +241,11 @@ function loadCustomAudios() {
     const container = document.getElementById('custom-audios-list');
     if (!container) return;
 
+    // Stop any audio still playing from the previous render before its row
+    // refs are dropped by the innerHTML clear (otherwise it plays on, unstoppable).
+    (loadCustomAudios._active || []).forEach(a => { try { a.pause(); } catch (e) {} });
+    loadCustomAudios._active = [];
+
     container.innerHTML = '';
     
     const audioKeys = Object.keys(customAudios);
@@ -276,6 +285,7 @@ function loadCustomAudios() {
       playBtn.addEventListener('click', function() {
         if (!audioObj) {
           audioObj = new Audio(audioInfo.data);
+          loadCustomAudios._active.push(audioObj);
           audioObj.addEventListener('ended', () => {
             playBtn.classList.remove('playing');
           });

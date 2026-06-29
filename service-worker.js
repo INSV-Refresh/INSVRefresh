@@ -3,7 +3,15 @@ importScripts("ExtPay.js");
 const extpay = ExtPay("insv-refresh");
 extpay.startBackground();
 
-const ICON_ACTIVE = { 128: "assets/icons/INSVRefresh.png" };
+// All four sizes so Chrome picks a crisp toolbar icon instead of downscaling 128.
+const ICON_ACTIVE = {
+  16: "assets/icons/INSVRefresh-16.png",
+  32: "assets/icons/INSVRefresh-32.png",
+  48: "assets/icons/INSVRefresh-48.png",
+  128: "assets/icons/INSVRefresh.png",
+};
+// Inactive only ships a 128px grey asset. Add INSVRefresh-grey-{16,32,48}.png
+// and wire them here to make the inactive icon crisp at small sizes too.
 const ICON_INACTIVE = { 128: "assets/icons/INSVRefresh-grey.png" };
 
 function setExtensionIcon(active) {
@@ -37,6 +45,33 @@ function computeAccessLevel(user) {
   return { level: "free", isPaid: false, trialDaysLeft: 0 };
 }
 
+// GET_ACCESS_LEVEL fires on every relevant storage change (volume nudge, queue
+// edit, …); each call hit ExtPay over the network. Cache the user with a short
+// TTL so a burst of writes shares one lookup. Access level is recomputed fresh
+// each call (so trialDaysLeft stays current); the cache is dropped on payment.
+let _userCache = null;
+let _userCacheAt = 0;
+const USER_CACHE_TTL_MS = 60 * 1000;
+
+function getUserCached() {
+  const now = Date.now();
+  if (_userCache && now - _userCacheAt < USER_CACHE_TTL_MS) {
+    return Promise.resolve(_userCache);
+  }
+  return extpay.getUser().then((user) => {
+    _userCache = user;
+    _userCacheAt = now;
+    return user;
+  });
+}
+
+// Reflect a new payment immediately instead of waiting out the TTL.
+try {
+  extpay.onPaid.addListener(() => { _userCache = null; });
+} catch (e) {
+  console.warn("[INSV] onPaid listener:", e);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   try {
     if (msg && msg.type === "INSV_EXTENSION_ACTIVE") {
@@ -52,7 +87,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return true;
     }
     if (msg && msg.type === "GET_ACCESS_LEVEL") {
-      extpay.getUser().then((user) => {
+      getUserCached().then((user) => {
         sendResponse(computeAccessLevel(user));
       }).catch((err) => {
         console.error("[INSV] ExtPay getUser error:", err);

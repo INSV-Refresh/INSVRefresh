@@ -6,7 +6,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.lightning.force.com/*"],
-      "js": ["gridRefresh.js"],
+      "js": ["scripts/i18n.js", "scripts/util.js", "gridRefresh.js"],
       "run_at": "document_idle"
     },
     {

@@ -107,11 +107,7 @@ function importSettings(event) {
   event.target.value = "";
 }
 
-function applyDarkMode(enabled) {
-  // Theme is driven entirely by [data-theme] on <html> (see variaveis.css).
-  // body.dark-mode was a dead write — no CSS or JS reads it.
-  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
-}
+// applyDarkMode / watchDarkMode now live in util.js (shared by every page).
 
 function validateAudioFile(input) {
   const file = input.files[0];
@@ -321,23 +317,7 @@ function deleteCustomAudio(audioKey) {
   });
 }
 
-function showToast(message, type = "success", duration = 5000) {
-  const container = document.getElementById("toast-container");
-  
-  if (!container) return;
-
-  const toast = document.createElement("div");
-  toast.classList.add("toast", `toast-${type}`);
-  toast.textContent = message;
-
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    if (toast.parentNode) {
-      toast.remove();
-    }
-  }, duration);
-}
+// showToast now lives in util.js (shared toast for every surface).
 
 function setupDragAndDrop() {
   const dropArea = document.getElementById('drop-area');
@@ -721,6 +701,7 @@ i18nReady.then(function() {
   document.getElementById("export-settings-btn")?.addEventListener("click", exportSettings);
   document.getElementById("import-settings-input")?.addEventListener("change", importSettings);
 
+  watchDarkMode(); // apply saved theme + sync across tabs/pages
   const darkModeToggle = document.getElementById("darkModeToggle");
   if (darkModeToggle) {
     chrome.storage.local.get("darkMode", (data) => {
@@ -743,7 +724,7 @@ i18nReady.then(function() {
       if (trialBanner) {
         const dias = access.trialDaysLeft;
         trialBanner.innerHTML = `
-          ⏳ <strong>${t("trial_active")}</strong> — ${dias === 1 ? t("trial_days_left_one") : t("trial_days_left", { n: dias })}.
+          ⏳ <strong>${t("trial_active")}</strong>: ${dias === 1 ? t("trial_days_left_one") : t("trial_days_left", { n: dias })}.
           <a href="${chrome.runtime.getURL("pricing.html")}">${t("subscribe_now")}</a>
         `;
         trialBanner.style.display = "flex";

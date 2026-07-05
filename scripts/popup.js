@@ -565,9 +565,17 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // ── Dark mode no popup ──────────────────────────────
-// Chave única darkMode (chrome.storage.local), controlada pelo toggle
-// do options — vale para popup, options e pricing. Migra a antiga
-// popupDarkMode na primeira carga.
+// Chave única darkMode (chrome.storage.local), controlada pelo toggle do
+// options — vale para popup, options e pricing. Migra a antiga popupDarkMode
+// na primeira carga.
+// O popup NÃO tem tema claro: dark on → [data-theme="dark"] (gradiente +
+// tokens escuros); dark off → sem atributo, então o dropdown de som e demais
+// consumidores de token caem nos fallbacks escuros, nunca no tema claro.
+function applyPopupTheme(dark) {
+  if (dark) document.documentElement.setAttribute("data-theme", "dark");
+  else document.documentElement.removeAttribute("data-theme");
+}
+
 chrome.storage.local.get(["darkMode", "popupDarkMode"], (data) => {
   let dark = data.darkMode;
   if (dark === undefined && data.popupDarkMode !== undefined) {
@@ -575,12 +583,12 @@ chrome.storage.local.get(["darkMode", "popupDarkMode"], (data) => {
     chrome.storage.local.set({ darkMode: dark });
     chrome.storage.local.remove("popupDarkMode");
   }
-  document.documentElement.classList.toggle("dark-popup", !!dark);
+  applyPopupTheme(!!dark);
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.darkMode) {
-    document.documentElement.classList.toggle("dark-popup", !!changes.darkMode.newValue);
+    applyPopupTheme(!!changes.darkMode.newValue);
   }
 });
 

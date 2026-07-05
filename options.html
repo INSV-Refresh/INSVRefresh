@@ -91,50 +91,6 @@
             <section id="intro">
                 <h1 data-i18n="intro_title">Bem-vindo!</h1>
                 <p data-i18n="intro_p">Aqui você encontra as configurações e recursos disponíveis na extensão INSV Refresh.</p>
-                    <div class="demo">
-                        <div class="vp" id="demo-player" data-state="idle">
-                            <video id="demo-video" src="" poster="assets/video/mockup.svg" preload="none" data-i18n="video_unsupported">
-                                Seu navegador não suporta a visualização de vídeos.
-                            </video>
-
-                            <!-- Center play overlay -->
-                            <div class="vp-overlay" id="vp-overlay">
-                                <button class="vp-big-play" id="vp-big-play" aria-label="Reproduzir demo" data-i18n-aria="vp_play_demo">
-                                    <span class="vp-ring vp-ring-a"></span>
-                                    <span class="vp-ring vp-ring-b"></span>
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                                </button>
-                            </div>
-
-                            <!-- Bottom HUD -->
-                            <div class="vp-hud" id="vp-hud">
-                                <div class="vp-step-text" id="vp-step-text"></div>
-                                <div class="vp-scrub" id="vp-scrub">
-                                    <div class="vp-scrub-track">
-                                        <div class="vp-scrub-fill" id="vp-scrub-fill"></div>
-                                        <div class="vp-scrub-thumb" id="vp-scrub-thumb"></div>
-                                    </div>
-                                    <div class="vp-dots" id="vp-dots"></div>
-                                </div>
-                                <div class="vp-controls-row">
-                                    <button class="vp-btn" id="vp-play-pause" aria-label="Play/Pause" data-i18n-aria="vp_playpause">
-                                        <svg class="icon-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                                        <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                                    </button>
-                                    <span class="vp-time" id="vp-time">0:00 / 0:00</span>
-                                    <div class="vp-spacer"></div>
-                                    <button class="vp-btn" id="vp-mute" aria-label="Mudo" data-i18n-aria="vp_mute">
-                                        <svg class="icon-sound" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                                        <svg class="icon-mute" viewBox="0 0 24 24" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-                                    </button>
-                                    <button class="vp-btn" id="vp-fullscreen" aria-label="Tela cheia" data-i18n-aria="vp_fullscreen">
-                                        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="caption" data-i18n="video_caption">Exemplo visual do funcionamento da extensão.</p>
-                    </div>
             </section>
 
             <section id="funcionalidades">
@@ -316,11 +272,9 @@
             </footer>
         </main>
     </div>
-    <div id="toast-container"></div>
     <script src="scripts/i18n.js"></script>
     <script src="scripts/util.js"></script>
     <script src="scripts/options.js"></script>
-    <script src="scripts/demo-player.js"></script>
 </body>
 
 </html>

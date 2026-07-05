@@ -1,28 +1,5 @@
-function showToast(message, type) {
-  if (!type) type = 'info';
-  const existing = document.getElementById('pricing-toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id = 'pricing-toast';
-  toast.className = 'pricing-toast pricing-toast--' + type;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
-}
-
-function applyDarkMode(enabled) {
-  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
-}
-
-chrome.storage.local.get("darkMode", (data) => {
-  applyDarkMode(!!data.darkMode);
-});
-
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.darkMode) {
-    applyDarkMode(!!changes.darkMode.newValue);
-  }
-});
+// showToast + applyDarkMode/watchDarkMode are shared from util.js.
+watchDarkMode();
 
 document.getElementById("pay-normal-btn").addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {

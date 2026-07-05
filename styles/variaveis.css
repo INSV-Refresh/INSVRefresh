@@ -16,6 +16,11 @@
   --brand-500: #00A1E0; /* primary */
   --brand-600: #0085BB;
   --brand-700: #006A95;
+  /* Brand at alpha — for tints/borders/glows that used raw rgba(0,161,224,…) */
+  --brand-a12: color-mix(in srgb, var(--brand-500) 12%, transparent);
+  --brand-a15: color-mix(in srgb, var(--brand-500) 15%, transparent);
+  --brand-a35: color-mix(in srgb, var(--brand-500) 35%, transparent);
+  --brand-a45: color-mix(in srgb, var(--brand-500) 45%, transparent);
 
   /* ── Ink (surfaces & text) ───────── */
   --ink-50:  #F0F3FB;
@@ -62,10 +67,43 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
 
+  /* ── Spacing (4px base) ──────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-20: 80px;
+
   /* ── Type ────────────────────────── */
   --font-display: 'YoureGone', sans-serif;  /* logo ONLY */
   --font-ui:      'Outfit', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* Font sizes — single scale shared by every page */
+  --fs-xs:   0.75rem;    /* 12px — meta / labels */
+  --fs-sm:   0.85rem;    /* ~13.6px — secondary text */
+  --fs-base: 0.9375rem;  /* 15px — body */
+  --fs-lg:   1.25rem;    /* 20px — h2 */
+  --fs-2xl:  1.75rem;    /* 28px — page h1 */
+  --fs-3xl:  2rem;       /* 32px — pricing hero (deliberate) */
+
+  /* Line-heights */
+  --leading-tight:   1.15;  /* headings */
+  --leading-snug:    1.4;
+  --leading-normal:  1.6;   /* body */
+  --leading-relaxed: 1.75;  /* long prose (privacy) */
+
+  /* Weights — kit tops at 700 */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
 
   /* ── Z-index scale ───────────────── */
   --z-dropdown: 100;
@@ -86,8 +124,8 @@
   --dur-slow:  250ms; /* larger surfaces */
 }
 
-/* Dark popup & options share the same ink scale */
-[data-theme="dark"], html.dark-popup {
+/* Dark theme — popup, options, pricing & privacy all use [data-theme] now */
+[data-theme="dark"] {
   --surface:        var(--ink-950);
   --surface-2:      var(--ink-800);
   --surface-sunken: #080B14; /* chrome (topbar/footer) — one step under body */

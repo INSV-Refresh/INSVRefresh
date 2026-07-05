@@ -818,22 +818,22 @@ a:focus-visible {
 }
 
 /* ── Dark mode popup (chave darkMode unificada) ── */
-html.dark-popup {
+html[data-theme="dark"] {
   background: linear-gradient(135deg, var(--ink-950) 0%, #0e1326 100%);
 }
 
-html.dark-popup .queue-item {
+html[data-theme="dark"] .queue-item {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-html.dark-popup input[type="text"].queue-name,
-html.dark-popup input[type="number"].queue-interval {
+html[data-theme="dark"] input[type="text"].queue-name,
+html[data-theme="dark"] input[type="number"].queue-interval {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-html.dark-popup .add-queue-btn {
+html[data-theme="dark"] .add-queue-btn {
   border-color: rgba(0, 161, 224, 0.35);
   background: rgba(0, 161, 224, 0.06);
 }

@@ -55,6 +55,83 @@ function playSound(value, volume) {
   }
 }
 
+// ── Theme (dark/light) ───────────────────────────────────────
+// One source for every page. Theme is driven by [data-theme] on <html>
+// (see variaveis.css); the popup uses the same attribute now too.
+function applyDarkMode(enabled) {
+  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
+}
+
+// Apply the saved theme and keep it in sync across pages/tabs. Falls back to
+// the OS preference when there is no chrome.storage (e.g. a doc opened directly).
+function watchDarkMode() {
+  if (typeof chrome !== "undefined" && chrome.storage) {
+    chrome.storage.local.get("darkMode", (d) => applyDarkMode(!!d.darkMode));
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes.darkMode) applyDarkMode(!!changes.darkMode.newValue);
+    });
+  } else {
+    applyDarkMode(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+// One implementation for every surface, including the Salesforce content
+// script. The injected CSS reads brand tokens when the page loads
+// variaveis.css (popup/options/pricing/privacy) and falls back to literal
+// hex in the content script, which can't see our CSS variables.
+function showToast(message, type, duration) {
+  if (!type) type = "info";
+  if (!duration) duration = 4000;
+
+  if (!document.getElementById("insv-toast-style")) {
+    const s = document.createElement("style");
+    s.id = "insv-toast-style";
+    s.textContent = [
+      "#insv-toast-container{position:fixed;bottom:30px;right:20px;z-index:2147483647;",
+      "display:flex;flex-direction:column;gap:10px;pointer-events:none;",
+      "font-family:var(--font-ui,'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif)}",
+      ".insv-toast{width:300px;padding:14px 18px;border-radius:var(--radius-md,8px);",
+      "color:var(--white-color,#fff);font-size:0.9rem;font-weight:600;",
+      "line-height:var(--leading-snug,1.4);",
+      "box-shadow:var(--box-shadow,0 8px 24px -8px rgba(0,0,0,.35),0 2px 6px -2px rgba(0,0,0,.25));",
+      // AA: white text needs brand-600/success-700, not brand-500/success-500
+      "background:var(--brand-600,#0085BB);opacity:0;transform:translateY(10px);",
+      "transition:opacity var(--dur-base,200ms) var(--ease-out,ease),transform var(--dur-base,200ms) var(--ease-out,ease)}",
+      ".insv-toast.show{opacity:1;transform:translateY(0)}",
+      ".insv-toast.success{background:var(--success-700,#15803D)}",
+      ".insv-toast.error{background:var(--danger-500,#EF4444)}",
+      ".insv-toast.warning{background:var(--gold-500,#FFD166);color:var(--ink-800,#1B2340)}",
+      ".insv-toast.info{background:var(--brand-600,#0085BB)}",
+      "@media (prefers-reduced-motion:reduce){.insv-toast{transition:opacity var(--dur-fast,150ms) linear;",
+      "transform:none}.insv-toast.show{transform:none}}",
+    ].join("");
+    document.head.appendChild(s);
+  }
+
+  let container = document.getElementById("insv-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "insv-toast-container";
+    container.setAttribute("role", "status");
+    container.setAttribute("aria-live", "polite");
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = "insv-toast " + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add("show"));
+  });
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
+  }, duration);
+}
+
 // Canonical queue shape — one source for the default fields.
 const DEFAULT_INTERVAL = 15;
 const DEFAULT_SOUND = "notification.mp3";

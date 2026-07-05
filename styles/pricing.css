@@ -19,7 +19,7 @@ body {
 /* ── Content ───────────────────────────────── */
 .pricing-content {
   flex: 1;
-  padding: 52px 40px 56px;
+  padding: var(--space-14) var(--space-10);
 }
 
 .pricing-layout {
@@ -30,12 +30,12 @@ body {
 /* ── Heading ───────────────────────────────── */
 .pricing-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .pricing-header h1 {
-  font-size: 2.1rem;
-  font-weight: 700;
+  font-size: var(--fs-3xl); /* deliberate hero step above page h1 */
+  font-weight: var(--weight-bold);
   color: var(--text, var(--ink-800));
   margin-bottom: 10px;
   letter-spacing: -0.5px;
@@ -43,7 +43,7 @@ body {
 }
 
 .pricing-header p {
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   color: var(--text-muted, #6B7390);
 }
 
@@ -51,7 +51,7 @@ body {
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: var(--space-5);
 }
 
 /* ── Cards ─────────────────────────────────── */
@@ -252,35 +252,7 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Toast ─────────────────────────────────── */
-/* Same visual language as the options + in-page toasts: solid semantic fill,
-   white text, slide-in. Semantic colors read fine in light AND dark, so no
-   dark override is needed. */
-.pricing-toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1100;
-  max-width: 320px;
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
-  background: var(--brand-600);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  box-shadow: var(--box-shadow);
-  animation: pricingToastIn 0.3s ease;
-}
-
-@keyframes pricingToastIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.pricing-toast--success { background: var(--success-700); }
-.pricing-toast--warning { background: var(--gold-500); color: var(--ink-800); }
-.pricing-toast--info    { background: var(--brand-600); }
+/* Toast styling is shared (showToast in scripts/util.js injects .insv-toast). */
 
 /* ── Dark mode ─────────────────────────────── */
 [data-theme="dark"] .pricing-header h1 { color: var(--ink-50); }
@@ -341,5 +313,4 @@ body {
 /* ── Reduced motion ────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }
-  .pricing-toast { animation: none; }
 }

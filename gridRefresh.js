@@ -2,61 +2,11 @@
 const DEBUG = false;
 const log = (...args) => DEBUG && console.log(...args);
 
-// ── Toast de notificação visual na página do Salesforce ──────
-function showInsvToast(message, type, duration) {
-  if (!type) type = 'success';
-  if (!duration) duration = 3000;
-
-  if (!document.getElementById('insv-toast-style')) {
-    const s = document.createElement('style');
-    s.id = 'insv-toast-style';
-    // Mirrors the options-page toast (.toast in styles/options.css): solid
-    // per-type fill, white text (dark on gold), 300px, weight 600, brand
-    // box-shadow. Tokens hardcoded — can't import variaveis.css into a
-    // content script.
-    s.textContent = [
-      '#insv-toast-container{position:fixed;bottom:30px;right:20px;z-index:2147483647;',
-      'display:flex;flex-direction:column;gap:10px;pointer-events:none;',
-      "font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}",
-      '.insv-toast{width:300px;padding:14px 18px;border-radius:8px;color:#fff;',
-      'font-size:0.9rem;font-weight:600;line-height:1.4;',
-      'box-shadow:0 8px 24px -8px rgba(0,0,0,.35),0 2px 6px -2px rgba(0,0,0,.25);',
-      // AA: white text needs brand-600/success-700, not brand-500/success-500
-      'background:#0085BB;opacity:0;transform:translateY(10px);',
-      'transition:opacity .3s ease,transform .3s ease}',
-      '.insv-toast.show{opacity:1;transform:translateY(0)}',
-      '.insv-toast.success{background:#15803D}',
-      '.insv-toast.error{background:#EF4444}',
-      '.insv-toast.warning{background:#FFD166;color:#1B2340}',
-      '.insv-toast.info{background:#0085BB}',
-      '@media (prefers-reduced-motion:reduce){.insv-toast{transition:opacity .2s linear;',
-      'transform:none}.insv-toast.show{transform:none}}',
-    ].join('');
-    document.head.appendChild(s);
-  }
-
-  let container = document.getElementById('insv-toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'insv-toast-container';
-    container.setAttribute('role', 'status');
-    container.setAttribute('aria-live', 'polite');
-    document.body.appendChild(container);
-  }
-
-  const toast = document.createElement('div');
-  toast.className = 'insv-toast ' + type;
-  toast.textContent = message;
-  container.appendChild(toast);
-
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() { toast.classList.add('show'); });
-  });
-  setTimeout(function() {
-    toast.classList.remove('show');
-    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 250);
-  }, duration);
-}
+// ── Toast ─────────────────────────────────────────────────────
+// showToast is shared from scripts/util.js (loaded as a content script
+// before this file). Its injected CSS reads brand tokens on our own pages and
+// falls back to literal hex here, where the Salesforce page can't see them.
+// Strings are localized via t() (scripts/i18n.js, also a content script).
 
 function insvStart() {
   log("[Debug] GRID REFRESH ATIVADO");
@@ -251,7 +201,7 @@ function initNormalMode() {
         log("[Debug] Audio desabilitado, clique na tela");
         if (!_needsClickToastShown) {
           _needsClickToastShown = true;
-          showInsvToast('Ação necessária — clique na página para ativar o áudio', 'warning', 5000);
+          showToast(t('audio_activation_required'), 'warning', 5000);
         }
         return;
       }
@@ -323,7 +273,7 @@ function initNormalMode() {
 
       if (!_initToastShown.has(fila.name)) {
         _initToastShown.add(fila.name);
-        showInsvToast('INSV ativo — monitorando ' + fila.name, 'info', 4000);
+        showToast(t('monitoring_active', { name: fila.name }), 'info', 4000);
       }
 
       const userIsEditing = document.querySelector(".mainContentMark .split-left .slds-checkbox [type=checkbox]:checked");
@@ -520,12 +470,12 @@ function initNormalMode() {
       if (hasAcceptText && !btn.disabled && btn.offsetParent !== null) {
         btn.click();
         log("[Debug] Botão Aceitar clicado via atalho");
-        showInsvToast('Chamado aceito', 'success', 2500);
+        showToast(t('case_accepted'), 'success', 2500);
         return true;
       }
     }
     log("[Debug] Botão Aceitar não encontrado");
-    showInsvToast('Nenhum chamado selecionado', 'warning', 2500);
+    showToast(t('no_case_selected'), 'warning', 2500);
     return false;
   }
 
@@ -633,8 +583,8 @@ function initNormalMode() {
       const isPaused = !!(changes.advanced.newValue && changes.advanced.newValue.globalPaused);
       if (wasPaused !== isPaused) {
         log(`[Debug] Pausa global ${isPaused ? "ativada" : "desativada"}`);
-        showInsvToast(
-          isPaused ? 'Atualização de filas pausada' : 'Atualização de filas retomada',
+        showToast(
+          isPaused ? t('queues_paused') : t('queues_resumed'),
           isPaused ? 'warning' : 'success',
           3000
         );

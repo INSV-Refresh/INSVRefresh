@@ -1,24 +1,8 @@
 // Privacy Policy — dark mode, TOC scroll-spy, dynamic <html lang>.
 // i18n is handled by the shared i18n.js (loaded before this script).
 
-// ── Dark mode (same key as options.js) ──────────────────────
-function applyDarkMode(enabled) {
-  document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
-}
-
-if (typeof chrome !== "undefined" && chrome.storage) {
-  chrome.storage.local.get("darkMode", (data) => {
-    applyDarkMode(!!data.darkMode);
-  });
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.darkMode) {
-      applyDarkMode(!!changes.darkMode.newValue);
-    }
-  });
-} else {
-  // Fallback for direct file open outside extension context
-  applyDarkMode(window.matchMedia("(prefers-color-scheme: dark)").matches);
-}
+// ── Dark mode (shared from util.js) ─────────────────────────
+watchDarkMode();
 
 // ── Keep <html lang> in sync with the active locale ─────────
 if (typeof i18nReady !== "undefined") {

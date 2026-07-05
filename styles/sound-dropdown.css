@@ -3,7 +3,7 @@
    Design: claude.ai/design — INSV Dropdown spec
    Shared by the popup and the options status-notification rows.
    Theme-aware via the semantic --surface/--text/--border tokens, which
-   flip for html.dark-popup (popup) and [data-theme] (options light/dark).
+   flip for [data-theme] across popup / options / pricing / privacy.
    Behaviour lives in scripts/util.js (buildSoundDropdown).
    ============================================= */
 .queue-sound-select {
@@ -29,19 +29,19 @@
   cursor: pointer;
   outline: none;
   user-select: none;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform var(--dur-press) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
 
 .qsd-trigger:hover {
   background: var(--surface, #1b2340);
-  border-color: rgba(0, 161, 224, 0.35);
+  border-color: var(--brand-a35);
 }
 
 .queue-sound-select.open .qsd-trigger,
 .qsd-trigger:focus-visible {
   background: var(--surface, #1b2340);
-  border-color: rgba(0, 161, 224, 0.45);
-  box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.15);
+  border-color: var(--brand-a45);
+  box-shadow: 0 0 0 2px var(--brand-a15);
 }
 
 .qsd-trigger:active {
@@ -60,7 +60,7 @@
 .qsd-arrow {
   flex-shrink: 0;
   color: var(--text-muted, #6a7299);
-  transition: transform 0.2s ease, color 0.15s;
+  transition: transform var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 .qsd-trigger:hover .qsd-arrow {
@@ -83,7 +83,7 @@
   padding: 4px 0;
   list-style: none;
   background: var(--surface-2, #161d33);
-  border: 1px solid rgba(0, 161, 224, 0.35);
+  border: 1px solid var(--brand-a35);
   border-radius: var(--radius-md);
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.22);
   z-index: var(--z-dropdown);
@@ -125,7 +125,7 @@
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
-  transition: background 0.1s;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 
 .qsd-option > span {
@@ -137,12 +137,12 @@
 
 .qsd-option:hover,
 .qsd-option.active {
-  background: rgba(0, 161, 224, 0.12);
+  background: var(--brand-a12);
 }
 
 .qsd-option.selected {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--white-color);
   font-weight: 600;
 }
 

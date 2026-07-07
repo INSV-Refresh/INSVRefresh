@@ -239,7 +239,14 @@ function closeAllSoundDropdowns(except) {
 let soundDropdownScrollBound = false;
 function bindSoundDropdownDismiss() {
   if (soundDropdownScrollBound) return;
-  const onMove = () => closeAllSoundDropdowns();
+  const onMove = (e) => {
+    // Ignore scroll that originates inside a dropdown's own list — the list is
+    // fixed-positioned, so its internal scroll doesn't move it. Only a scroll of
+    // the page/container behind it should dismiss the menu.
+    const t = e && e.target;
+    if (t && t.closest && t.closest(".qsd-list")) return;
+    closeAllSoundDropdowns();
+  };
   // Capturing scroll listener on the document catches scroll from ANY
   // descendant (popup's #queue-list, the options page/section) — scroll events
   // don't bubble, but the capture phase still delivers them here, so one

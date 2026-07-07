@@ -1,6 +1,7 @@
 /* =============================================
    INSV Refresh — Pricing / Plans page
    Topbar + footer + wordmark come from app-chrome.css.
+   Tokens: variaveis.css (fs, space, radius, weight, brand-a, motion).
    ============================================= */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +14,7 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.2s, color 0.2s;
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
 }
 
 /* ── Content ───────────────────────────────── */
@@ -37,7 +38,7 @@ body {
   font-size: var(--fs-3xl); /* deliberate hero step above page h1 */
   font-weight: var(--weight-bold);
   color: var(--text, var(--ink-800));
-  margin-bottom: 10px;
+  margin-bottom: var(--space-3);
   letter-spacing: -0.5px;
   text-wrap: balance;
 }
@@ -59,7 +60,7 @@ body {
   background: var(--surface, #fff);
   border: 1px solid var(--border, #E5E7EF);
   border-radius: var(--radius-xl);
-  padding: 28px 24px;
+  padding: var(--space-8) var(--space-6);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -68,7 +69,7 @@ body {
 
 .plan-card.featured {
   border: 2px solid var(--brand-500);
-  box-shadow: 0 0 32px rgba(0, 161, 224, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 32px var(--brand-a12), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
 }
 
 /* Badge only renders once JS injects the localized label (no pt-BR flash) */
@@ -80,22 +81,22 @@ body {
   transform: translateX(-50%);
   background: var(--brand-700); /* white on brand-500 was 2.93:1 — small badge text needs 4.5:1 */
   color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--weight-bold);
   letter-spacing: 1.2px;
   padding: 4px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
 /* ── Plan tier label ───────────────────────── */
 .plan-tier {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: 1.2px;
   color: var(--brand-700); /* brand-500 was 2.93:1 on white — small bold label needs 4.5:1 */
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2);
 }
 
 .plan-tier.pro        { color: var(--brand-700); }
@@ -103,34 +104,34 @@ body {
 
 /* ── Price ─────────────────────────────────── */
 .plan-price {
-  font-size: 2.2rem;
-  font-weight: 700; /* kit type scale tops at 700; 800 was the only use, now dropped from the font load */
+  font-size: 2.2rem; /* deliberate hero price, above the shared scale */
+  font-weight: var(--weight-bold); /* kit type scale tops at 700 */
   color: var(--text, var(--ink-800));
   line-height: 1;
   margin-bottom: 4px;
 }
 
 .plan-price-cadence {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted, #9CA3AF);
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 /* ── Features list ─────────────────────────── */
 .plan-features {
   list-style: none;
-  margin-bottom: 28px;
+  margin-bottom: var(--space-8);
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: var(--space-3);
 }
 
 .plan-features li {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  font-size: 0.83rem;
+  font-size: var(--fs-sm);
   color: var(--text, var(--ink-700));
   line-height: 1.4;
 }
@@ -145,19 +146,19 @@ body {
 .plan-cta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   margin-top: auto;
 }
 
 .btn-plan {
   width: 100%;
-  padding: 11px 1rem;
+  padding: 11px var(--space-4);
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--fs-base);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   border: none;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
   text-decoration: none;
   text-align: center;
   font-family: inherit;
@@ -172,7 +173,7 @@ body {
 .btn-plan.primary {
   background: var(--brand-600); /* white on brand-500 was 2.93:1 — below AA 3:1 for the primary CTA */
   color: #fff;
-  box-shadow: 0 4px 16px rgba(0, 161, 224, 0.3);
+  box-shadow: 0 4px 16px var(--brand-a30);
 }
 
 .btn-plan.primary:hover {
@@ -194,11 +195,11 @@ body {
 .btn-plan.trial {
   background: transparent;
   color: var(--brand-500);
-  border: 1.5px dashed rgba(0, 161, 224, 0.5);
-  font-size: 0.85rem;
+  border: 1.5px dashed color-mix(in srgb, var(--brand-500) 50%, transparent);
+  font-size: var(--fs-sm);
 }
 
-.btn-plan.trial:hover { background: rgba(0, 161, 224, 0.06); }
+.btn-plan.trial:hover { background: color-mix(in srgb, var(--brand-500) 6%, transparent); }
 
 /* Press feedback (Emil) — dip on :active; primary keeps its hover lift */
 .btn-plan:active { transform: scale(0.97); }
@@ -210,19 +211,19 @@ body {
   align-self: flex-start;
   margin-top: auto;
   padding: 7px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--surface-2);
   color: var(--ink-500);
   border: 1px solid var(--border, #E5E7EF);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-semibold);
 }
 
 /* ── Login row ─────────────────────────────── */
 .login-row {
   text-align: center;
-  margin-top: 28px;
-  font-size: 0.82rem;
+  margin-top: var(--space-8);
+  font-size: var(--fs-sm);
   color: var(--text-muted, #9CA3AF);
 }
 
@@ -238,7 +239,7 @@ body {
   margin-left: 0.3em;
   padding: 2px 4px;
   border-radius: var(--radius-sm);
-  transition: color 0.2s;
+  transition: color var(--dur-base) var(--ease-out);
 }
 
 #login-btn:hover { color: var(--brand-600); text-decoration: underline; }
@@ -267,7 +268,7 @@ body {
 [data-theme="dark"] .plan-card.featured {
   background: #0E1829;
   border-color: var(--brand-500);
-  box-shadow: 0 0 40px rgba(0, 161, 224, 0.2), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--brand-500) 20%, transparent), 0 8px 28px -8px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="dark"] .plan-tier        { color: var(--brand-300); }
@@ -297,7 +298,7 @@ body {
 
 [data-theme="dark"] .btn-plan.trial {
   color: var(--brand-400);
-  border-color: rgba(0, 161, 224, 0.6);
+  border-color: color-mix(in srgb, var(--brand-500) 60%, transparent);
 }
 
 [data-theme="dark"] #login-btn { color: var(--brand-300); }
@@ -306,7 +307,7 @@ body {
 
 /* ── Responsive ────────────────────────────── */
 @media (max-width: 768px) {
-  .pricing-content { padding: 36px 20px 44px; }
+  .pricing-content { padding: var(--space-8) var(--space-5) 44px; }
   .pricing-grid { grid-template-columns: 1fr; }
 }
 

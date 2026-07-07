@@ -197,9 +197,9 @@ body > hr:nth-of-type(2) {
 }
 
 .queue-name-wrapper:focus-within {
-  background: rgba(0, 161, 224, 0.08);
+  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(0, 161, 224, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 18%, transparent);
 }
 
 input[type="text"].queue-name {
@@ -321,7 +321,7 @@ input[type="number"].queue-interval {
 
 input[type="number"].queue-interval:focus {
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.15);
+  box-shadow: 0 0 0 2px var(--brand-a15);
 }
 
 .seconds {
@@ -345,8 +345,8 @@ input[type="number"].queue-interval {
 
 /* ── Sound button ───────────────────────────── */
 .queue-sound {
-  background: rgba(0, 161, 224, 0.1);
-  border: 1px solid rgba(0, 161, 224, 0.3);
+  background: var(--brand-a10);
+  border: 1px solid var(--brand-a30);
   border-radius: var(--radius-md);
   padding: 5px 7px;
   cursor: pointer;
@@ -360,8 +360,8 @@ input[type="number"].queue-interval {
 }
 
 .queue-sound:hover {
-  background: rgba(0, 161, 224, 0.2);
-  border-color: rgba(0, 161, 224, 0.5);
+  background: color-mix(in srgb, var(--brand-500) 20%, transparent);
+  border-color: color-mix(in srgb, var(--brand-500) 50%, transparent);
 }
 
 .queue-sound.off {
@@ -426,8 +426,8 @@ input[type="number"].queue-interval {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(0, 161, 224, 0.08);
-  border: 1.5px dashed rgba(0, 161, 224, 0.45);
+  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
+  border: 1.5px dashed var(--brand-a45);
   border-radius: 50%;
   cursor: pointer;
   margin: 4px auto 12px;
@@ -440,8 +440,8 @@ input[type="number"].queue-interval {
 }
 
 .add-queue-btn:hover {
-  background: rgba(0, 161, 224, 0.16);
-  border-color: rgba(0, 161, 224, 0.7);
+  background: color-mix(in srgb, var(--brand-500) 16%, transparent);
+  border-color: color-mix(in srgb, var(--brand-500) 70%, transparent);
 }
 
 /* Premium state — gold */
@@ -520,8 +520,8 @@ input[type="number"].queue-interval {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 161, 224, 0.08);
-  border: 1px solid rgba(0, 161, 224, 0.28);
+  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-500) 28%, transparent);
   border-radius: var(--radius-md);
   padding: 8px 12px;
   margin: 0 16px 10px;
@@ -635,7 +635,7 @@ input[type="range"] {
     var(--brand-500) var(--pct, 50%),
     rgba(255, 255, 255, 0.15) var(--pct, 50%)
   );
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   cursor: grab;
   padding: 0;
   box-shadow: none;
@@ -661,7 +661,7 @@ input[type="range"]::-webkit-slider-thumb:active {
 
 input[type="range"]::-webkit-slider-runnable-track {
   height: 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .volume-control input[type="range"] {
@@ -834,8 +834,8 @@ html[data-theme="dark"] input[type="number"].queue-interval {
 }
 
 html[data-theme="dark"] .add-queue-btn {
-  border-color: rgba(0, 161, 224, 0.35);
-  background: rgba(0, 161, 224, 0.06);
+  border-color: var(--brand-a35);
+  background: color-mix(in srgb, var(--brand-500) 6%, transparent);
 }
 
 /* ── Reduced motion ──────────────────────────── */

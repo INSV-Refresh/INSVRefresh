@@ -1,0 +1,20 @@
+Self-hosted webfonts — SIL Open Font License 1.1
+=================================================
+
+Outfit
+  Copyright (c) Rodrigo Fuenzalida and contributors.
+  https://fonts.google.com/specimen/Outfit
+  Files: outfit/outfit-latin.woff2, outfit/outfit-latin-ext.woff2
+  (Latin + Latin-Ext subsets of the variable font, weight axis 300–700.)
+
+JetBrains Mono
+  Copyright (c) 2020 The JetBrains Mono Project Authors.
+  https://fonts.google.com/specimen/JetBrains+Mono
+  Files: jetbrains-mono/jetbrains-mono-latin.woff2
+  (Latin subset of the variable font, weight axis 400–600.)
+
+Both fonts are licensed under the SIL Open Font License, Version 1.1.
+Full license text: https://openfontlicense.org/open-font-license-official-text/
+
+These files are self-hosted (see @font-face in styles/variaveis.css) because
+the Google Fonts CDN is blocked by the extension's MV3 content security policy.

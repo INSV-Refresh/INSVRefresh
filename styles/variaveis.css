@@ -17,9 +17,13 @@
   --brand-600: #0085BB;
   --brand-700: #006A95;
   /* Brand at alpha — for tints/borders/glows that used raw rgba(0,161,224,…) */
+  --brand-a10: color-mix(in srgb, var(--brand-500) 10%, transparent);
   --brand-a12: color-mix(in srgb, var(--brand-500) 12%, transparent);
   --brand-a15: color-mix(in srgb, var(--brand-500) 15%, transparent);
+  --brand-a25: color-mix(in srgb, var(--brand-500) 25%, transparent);
+  --brand-a30: color-mix(in srgb, var(--brand-500) 30%, transparent);
   --brand-a35: color-mix(in srgb, var(--brand-500) 35%, transparent);
+  --brand-a40: color-mix(in srgb, var(--brand-500) 40%, transparent);
   --brand-a45: color-mix(in srgb, var(--brand-500) 45%, transparent);
 
   /* ── Ink (surfaces & text) ───────── */
@@ -66,6 +70,7 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-full: 999px; /* pills: toggles, badges, scrub tracks */
 
   /* ── Spacing (4px base) ──────────── */
   --space-1:  4px;

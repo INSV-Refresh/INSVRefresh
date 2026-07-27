@@ -195,6 +195,46 @@ function initNormalMode() {
     return map;
   }
 
+  // Canal único de áudio para todo o monitoramento. Sons sobrepostos somam
+  // amplitude: quando vários alertas disparavam no mesmo instante (ao voltar
+  // para a aba com um lote de casos novos, ou casos novos + mudança de status
+  // no mesmo ciclo) o resultado soava muito mais alto que o volume configurado.
+  // Agora só um som toca por vez e há um intervalo mínimo entre disparos.
+  const SOUND_COOLDOWN_MS = 1500;
+  let _currentAudio = null;
+  let _lastSoundAt = 0;
+
+  function podeTocarSom() {
+    const now = Date.now();
+    if (now - _lastSoundAt < SOUND_COOLDOWN_MS) {
+      log("[Debug] Som suprimido — dentro do cooldown");
+      return false;
+    }
+    _lastSoundAt = now;
+    return true;
+  }
+
+  function reproduzir(src, volume) {
+    // Corta o som anterior antes de iniciar o próximo — nunca dois elementos
+    // de áudio tocando ao mesmo tempo.
+    if (_currentAudio) {
+      try {
+        _currentAudio.pause();
+        _currentAudio.currentTime = 0;
+      } catch (e) {
+        log("[Debug] Erro ao parar áudio anterior:", e);
+      }
+      _currentAudio = null;
+    }
+    const audio = new Audio(src);
+    audio.volume = Math.min(1, Math.max(0, Number(volume) || 0));
+    _currentAudio = audio;
+    audio.addEventListener("ended", () => {
+      if (_currentAudio === audio) _currentAudio = null;
+    });
+    return audio;
+  }
+
   function tocarSom(soundName, volume) {
     try {
       if (!audioEnabled) {
@@ -206,6 +246,8 @@ function initNormalMode() {
         return;
       }
 
+      if (!podeTocarSom()) return;
+
       if (soundName.startsWith("custom_")) {
       chrome.storage.local.get("audiosPersonalizados", (data) => {
         const customAudios = data.audiosPersonalizados || {};
@@ -215,8 +257,7 @@ function initNormalMode() {
           log(`[Debug] Tocando áudio personalizado: ${customAudio.name}`);
           try {
             // Data URLs play directly — no manual base64 → Blob → object URL.
-            const audio = new Audio(customAudio.data);
-            audio.volume = volume;
+            const audio = reproduzir(customAudio.data, volume);
             audio.addEventListener("error", (e) => {
               log("Erro ao tocar áudio personalizado:", e);
               tocarSomPadrao("notification.mp3", volume);
@@ -247,15 +288,19 @@ function initNormalMode() {
     }
   }
 
+  // Chamada só a partir de tocarSom (direto ou como fallback do áudio
+  // personalizado), que já consumiu o cooldown — não re-checa podeTocarSom.
   function tocarSomPadrao(soundName, volume) {
     log(`[Debug] Tocando áudio padrão: ${soundName}`);
     const audioSrc = chrome.runtime.getURL("assets/sounds/" + soundName);
-    const audio = new Audio(audioSrc);
-    audio.volume = volume;
-    audio.play().catch(() => {});
+    reproduzir(audioSrc, volume).play().catch(() => {});
   }
 
-  const filaMonitores = new Map();
+  // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a
+  // entrada e o monitor antigo virava órfão — timer e listener de
+  // visibilitychange vivos para sempre, cada um com seu próprio seenCaseIds,
+  // todos tocando som ao mesmo tempo quando a aba voltava a ficar visível.
+  let filaMonitores = [];
   const statusNotificationPrevious = {};
 
   function iniciarMonitoramentoFila(fila, globalSound, globalVolume, isPaid) {
@@ -286,6 +331,16 @@ function initNormalMode() {
       }
 
       function afterRefreshReady() {
+        cicloEmAndamento = false;
+        // O ciclo é assíncrono (espera o spinner sumir). Se o monitor foi
+        // cancelado nesse meio-tempo — qualquer gravação em storage recria
+        // todos os monitores — este callback ainda estava agendado e tocava
+        // som com o seenCaseIds antigo, somando ao som do monitor novo.
+        if (cancelled) {
+          log(`[Debug] Ciclo descartado, monitor cancelado: "${fila.name}"`);
+          return;
+        }
+
         const novos = getNewCaseIds(seenCaseIds);
 
         if (primed && novos.length > 0 && fila.soundEnabled) {
@@ -330,6 +385,8 @@ function initNormalMode() {
         }
       }
 
+      cicloEmAndamento = true;
+
       (function waitForRefreshDone() {
         const grid = document.querySelector(".mainContentMark .split-left");
         const spinner = grid && grid.querySelector('.slds-spinner, [class*="spinner"], [role="progressbar"]');
@@ -337,17 +394,24 @@ function initNormalMode() {
           setTimeout(afterRefreshReady, 400);
           return;
         }
+        // done() precisa ser idempotente e sempre desconectar o observer.
+        // Antes, quando o fallback de 5s disparava primeiro, o observer ficava
+        // conectado: observers órfãos de vários ciclos se acumulavam e
+        // disparavam todos de uma vez na primeira mutação após a aba voltar.
+        let concluido = false;
+        let fallback = null;
+        let observer = null;
         const done = () => {
+          if (concluido) return;
+          concluido = true;
           clearTimeout(fallback);
+          if (observer) observer.disconnect();
           afterRefreshReady();
         };
-        const fallback = setTimeout(done, 5000);
-        const observer = new MutationObserver(() => {
+        fallback = setTimeout(done, 5000);
+        observer = new MutationObserver(() => {
           const still = grid && grid.querySelector('.slds-spinner, [class*="spinner"], [role="progressbar"]');
-          if (!still) {
-            observer.disconnect();
-            done();
-          }
+          if (!still) done();
         });
         if (grid) observer.observe(grid, { childList: true, subtree: true });
       })();
@@ -360,6 +424,7 @@ function initNormalMode() {
     let timerId = null;
     let lastRefreshAt = Date.now();
     let cancelled = false;
+    let cicloEmAndamento = false;
 
     function schedule(delay) {
       if (cancelled) return;
@@ -369,6 +434,14 @@ function initNormalMode() {
 
     function runCycle() {
       if (cancelled) return;
+      // Não empilha ciclos: o anterior ainda está esperando o grid terminar de
+      // carregar (até 5s). Dois ciclos em paralelo detectam o mesmo lote de
+      // casos novos e disparam dois sons juntos.
+      if (cicloEmAndamento) {
+        log(`[Debug] Ciclo anterior ainda em andamento: "${fila.name}"`);
+        schedule(intervalMs);
+        return;
+      }
       lastRefreshAt = Date.now();
       loop();
       schedule(intervalMs);
@@ -388,7 +461,8 @@ function initNormalMode() {
     document.addEventListener("visibilitychange", onVisibilityChange);
     schedule(intervalMs);
 
-    filaMonitores.set(fila.name, {
+    filaMonitores.push({
+      name: fila.name,
       cancel() {
         cancelled = true;
         clearTimeout(timerId);
@@ -398,11 +472,11 @@ function initNormalMode() {
   }
 
   function pararMonitoramentosAtuais() {
-    filaMonitores.forEach((monitor, nomeFila) => {
+    filaMonitores.forEach((monitor) => {
       monitor.cancel();
-      log(`[Debug] Parando monitoramento da fila: ${nomeFila}`);
+      log(`[Debug] Parando monitoramento da fila: ${monitor.name}`);
     });
-    filaMonitores.clear();
+    filaMonitores = [];
   }
 
   function carregarEIniciarTodos() {
@@ -423,6 +497,16 @@ function initNormalMode() {
               }
               const isPaid = !!(access && access.isPaid);
               let filas = (data.queues || []).filter((q) => q.active);
+              // Uma fila só pode ser monitorada uma vez: entradas duplicadas
+              // (mesmo nome, ignorando caixa) rodariam monitores paralelos na
+              // mesma página, cada um tocando seu próprio som.
+              const vistos = new Set();
+              filas = filas.filter((q) => {
+                const chave = (q.name || "").toLowerCase().trim();
+                if (!chave || vistos.has(chave)) return false;
+                vistos.add(chave);
+                return true;
+              });
               if (!isPaid && filas.length > 1) filas = filas.slice(0, 1);
               const defaultSound = "notification.mp3";
               const volume = (data.general && data.general.volume) || 0.5;
@@ -449,6 +533,18 @@ function initNormalMode() {
     } catch (e) {
       console.error("[Debug] Erro ao carregar configurações:", e);
     }
+  }
+
+  // Um único ajuste na UI (arrastar o slider de volume, editar uma fila) gera
+  // uma rajada de gravações em storage. Sem debounce cada uma recriava todos os
+  // monitores, deixando ciclos assíncronos anteriores em voo.
+  let _recargaTimer = null;
+  function agendarRecarga() {
+    clearTimeout(_recargaTimer);
+    _recargaTimer = setTimeout(() => {
+      carregarEIniciarTodos();
+      reportExtensionActive();
+    }, 300);
   }
 
   function reportExtensionActive() {
@@ -573,8 +669,7 @@ function initNormalMode() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && (changes.queues || changes.general || changes.audiosPersonalizados)) {
       log("[Debug] Alterações detectadas no storage. Reiniciando monitoramento...");
-      carregarEIniciarTodos();
-      if (typeof reportExtensionActive === "function") reportExtensionActive();
+      agendarRecarga();
     }
     if (area === "local" && changes.advanced) {
       setupAcceptShortcut();
@@ -588,8 +683,7 @@ function initNormalMode() {
           isPaused ? 'warning' : 'success',
           3000
         );
-        carregarEIniciarTodos();
-        reportExtensionActive();
+        agendarRecarga();
       }
     }
 

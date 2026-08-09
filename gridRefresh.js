@@ -154,8 +154,12 @@ function initNormalMode() {
     return title && title.innerText.toLowerCase().trim() === queueName.toLowerCase().trim();
   }
 
+  // Compartilhado por getNewCaseIds e highlightNewCaseRows — mesma extração de
+  // texto (.textContent.trim()) não pode divergir entre os dois pontos.
+  const CASE_LINK_SELECTOR = '.mainContentMark .split-left table[role="grid"] tbody tr th span a';
+
   function getNewCaseIds(seenCaseIds) {
-    const caseLinks = document.querySelectorAll('.mainContentMark .split-left table[role="grid"] tbody tr th span a');
+    const caseLinks = document.querySelectorAll(CASE_LINK_SELECTOR);
     const newIds = [];
 
     caseLinks.forEach((link) => {
@@ -203,6 +207,20 @@ function initNormalMode() {
   const SOUND_COOLDOWN_MS = 1500;
   let _currentAudio = null;
   let _lastSoundAt = 0;
+
+  // ── Detecção por mutation-settle ─────────────────────────────
+  // Um MutationObserver não distingue "refresh ainda não respondeu" de
+  // "respondeu e nada mudou" — os dois parecem silêncio. GRID_SETTLE_INITIAL_GRACE_MS
+  // cobre o primeiro caso (espera mais antes de concluir que nada aconteceu);
+  // GRID_SETTLE_QUIET_MS detecta quando a rajada de mutações do render parou,
+  // pra não ler o grid no meio do render.
+  const GRID_SETTLE_QUIET_MS = 300;
+  const GRID_SETTLE_INITIAL_GRACE_MS = 700;
+  const GRID_SETTLE_HARD_FALLBACK_MS = 5000;
+
+  // ── Destaque de linha nova ───────────────────────────────────
+  const ROW_HIGHLIGHT_HOLD_MS = 5000;
+  const ROW_HIGHLIGHT_FADE_MS = 400;
 
   function podeTocarSom() {
     const now = Date.now();
@@ -296,6 +314,104 @@ function initNormalMode() {
     reproduzir(audioSrc, volume).play().catch(() => {});
   }
 
+  // Espera o grid "assentar" após um refresh, em vez de confiar só no spinner
+  // (que às vezes não aparece em refreshes silenciosos) ou num timeout fixo.
+  // Cobre spinner e refresh silencioso com o mesmo mecanismo: observa mutações
+  // no grid e só chama onSettle quando elas param por um tempo (quiet period),
+  // com um fallback duro pra nunca travar um ciclo indefinidamente.
+  function waitForGridSettle(onSettle) {
+    const grid = document.querySelector(".mainContentMark .split-left");
+    if (!grid) {
+      // Grid can be transiently absent right after the refresh click (a
+      // Lightning component teardown/rebuild in flight) — give it the same
+      // grace period a silent refresh gets instead of reading on the very
+      // next tick. Retry once; if it's still gone, give up rather than hang
+      // the cycle (afterRefreshReady's own querySelectorAlls just no-op on a
+      // missing grid).
+      setTimeout(() => {
+        const retryGrid = document.querySelector(".mainContentMark .split-left");
+        if (retryGrid) {
+          watchGridUntilSettle(retryGrid, onSettle);
+        } else {
+          onSettle();
+        }
+      }, GRID_SETTLE_INITIAL_GRACE_MS);
+      return;
+    }
+    watchGridUntilSettle(grid, onSettle);
+  }
+
+  function watchGridUntilSettle(grid, onSettle) {
+    let concluido = false;
+    let quietTimer = null;
+    let hardFallback = null;
+    let observer = null;
+
+    const done = () => {
+      if (concluido) return;
+      concluido = true;
+      clearTimeout(quietTimer);
+      clearTimeout(hardFallback);
+      observer.disconnect();
+      onSettle();
+    };
+
+    hardFallback = setTimeout(done, GRID_SETTLE_HARD_FALLBACK_MS);
+    quietTimer = setTimeout(done, GRID_SETTLE_INITIAL_GRACE_MS);
+
+    observer = new MutationObserver(() => {
+      clearTimeout(quietTimer);
+      quietTimer = setTimeout(done, GRID_SETTLE_QUIET_MS);
+    });
+    observer.observe(grid, { childList: true, subtree: true });
+  }
+
+  // Destaca a(s) linha(s) do(s) chamado(s) novo(s) com um background suave que
+  // aparece e some sozinho — feedback visual imediato, independente do som
+  // estar habilitado pra essa fila. Tabelas Lightning podem reciclar linhas em
+  // re-renders internos: se isso acontecer o destaque pode desgrudar cedo ou
+  // grudar na linha errada — decorativo, não vale complicar com revalidação.
+  function ensureRowHighlightStyle() {
+    if (document.getElementById("insv-row-highlight-style")) return;
+    const s = document.createElement("style");
+    s.id = "insv-row-highlight-style";
+    s.textContent = [
+      "tr.insv-row-highlight > th, tr.insv-row-highlight > td{",
+      "background-color:transparent;",
+      "transition:background-color " + ROW_HIGHLIGHT_FADE_MS + "ms ease}",
+      "tr.insv-row-highlight-on > th, tr.insv-row-highlight-on > td{",
+      "background-color:rgba(0,133,187,0.14)}",
+      "@media (prefers-reduced-motion:reduce){",
+      "tr.insv-row-highlight > th, tr.insv-row-highlight > td{transition:none}}",
+    ].join("");
+    document.head.appendChild(s);
+  }
+
+  function highlightNewCaseRows(caseIds) {
+    ensureRowHighlightStyle();
+    const idSet = new Set(caseIds);
+    const rows = [];
+    document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
+      if (!idSet.has(link.textContent.trim())) return;
+      const row = link.closest("tr");
+      if (row) rows.push(row);
+    });
+    if (!rows.length) return;
+
+    rows.forEach((row) => row.classList.add("insv-row-highlight"));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        rows.forEach((row) => row.classList.add("insv-row-highlight-on"));
+      });
+    });
+    setTimeout(() => {
+      rows.forEach((row) => row.classList.remove("insv-row-highlight-on"));
+      setTimeout(() => {
+        rows.forEach((row) => row.classList.remove("insv-row-highlight"));
+      }, ROW_HIGHLIGHT_FADE_MS);
+    }, ROW_HIGHLIGHT_HOLD_MS);
+  }
+
   // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a
   // entrada e o monitor antigo virava órfão — timer e listener de
   // visibilitychange vivos para sempre, cada um com seu próprio seenCaseIds,
@@ -332,7 +448,7 @@ function initNormalMode() {
 
       function afterRefreshReady() {
         cicloEmAndamento = false;
-        // O ciclo é assíncrono (espera o spinner sumir). Se o monitor foi
+        // O ciclo é assíncrono (espera o grid assentar). Se o monitor foi
         // cancelado nesse meio-tempo — qualquer gravação em storage recria
         // todos os monitores — este callback ainda estava agendado e tocava
         // som com o seenCaseIds antigo, somando ao som do monitor novo.
@@ -342,6 +458,10 @@ function initNormalMode() {
         }
 
         const novos = getNewCaseIds(seenCaseIds);
+
+        if (primed && novos.length > 0 && isRightQueue(fila.name)) {
+          highlightNewCaseRows(novos);
+        }
 
         if (primed && novos.length > 0 && fila.soundEnabled) {
           log(`[Debug] Novos casos na fila "${fila.name}": "${novos}"`);
@@ -363,58 +483,37 @@ function initNormalMode() {
           const targetStatuses = new Set(sn.statuses.map((s) => s.trim().toLowerCase()));
           // Per-queue sub-map keyed by caseId. Nested (not "name_caseId") so
           // eviction can't be fooled by queue names sharing a prefix.
-          const filaPrev =
-            statusNotificationPrevious[fila.name] ||
-            (statusNotificationPrevious[fila.name] = {});
+          // isFirstStatusCheck must be read BEFORE the map is created below —
+          // same "prime silently" gate as `primed` above, applied here too:
+          // without it, the first status poll ever for this queue name (page
+          // load / extension reload) has no baseline, prev is undefined for
+          // every case, and any case already sitting in a target status dings
+          // immediately even though nothing changed.
+          const filaPrev = statusNotificationPrevious[fila.name];
+          const isFirstStatusCheck = !filaPrev;
+          const filaMap = filaPrev || (statusNotificationPrevious[fila.name] = {});
           let played = false;
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
-            const prev = filaPrev[caseId];
-            if (targetStatuses.has(statusLower) && prev !== status) {
+            const prev = filaMap[caseId];
+            if (!isFirstStatusCheck && targetStatuses.has(statusLower) && prev !== status) {
               if (!played) {
                 tocarSom(sn.sound || "notification.mp3", globalVolume);
                 played = true;
               }
             }
-            filaPrev[caseId] = status;
+            filaMap[caseId] = status;
           }
           // Evict cases that have left the queue so the map stays bounded.
-          for (const id of Object.keys(filaPrev)) {
-            if (!(id in currentMap)) delete filaPrev[id];
+          for (const id of Object.keys(filaMap)) {
+            if (!(id in currentMap)) delete filaMap[id];
           }
         }
       }
 
       cicloEmAndamento = true;
 
-      (function waitForRefreshDone() {
-        const grid = document.querySelector(".mainContentMark .split-left");
-        const spinner = grid && grid.querySelector('.slds-spinner, [class*="spinner"], [role="progressbar"]');
-        if (!spinner) {
-          setTimeout(afterRefreshReady, 400);
-          return;
-        }
-        // done() precisa ser idempotente e sempre desconectar o observer.
-        // Antes, quando o fallback de 5s disparava primeiro, o observer ficava
-        // conectado: observers órfãos de vários ciclos se acumulavam e
-        // disparavam todos de uma vez na primeira mutação após a aba voltar.
-        let concluido = false;
-        let fallback = null;
-        let observer = null;
-        const done = () => {
-          if (concluido) return;
-          concluido = true;
-          clearTimeout(fallback);
-          if (observer) observer.disconnect();
-          afterRefreshReady();
-        };
-        fallback = setTimeout(done, 5000);
-        observer = new MutationObserver(() => {
-          const still = grid && grid.querySelector('.slds-spinner, [class*="spinner"], [role="progressbar"]');
-          if (!still) done();
-        });
-        if (grid) observer.observe(grid, { childList: true, subtree: true });
-      })();
+      waitForGridSettle(afterRefreshReady);
     };
     // Agendamento por timestamp em vez de setInterval: navegadores
     // limitam timers em abas em background, então ao voltar a aba

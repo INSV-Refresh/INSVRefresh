@@ -578,9 +578,20 @@ function initNormalMode() {
     filaMonitores = [];
   }
 
+  // Chamada de novo a cada storage change relevante (debounced) — sem
+  // sequenciamento, uma chamada mais lenta (ex.: GET_ACCESS_LEVEL sem cache)
+  // podia resolver DEPOIS de uma mais rápida e disparada depois dela,
+  // sobrescrevendo os monitores recém-criados com um snapshot mais antigo.
+  let _cargaSeq = 0;
+
   function carregarEIniciarTodos() {
+    const minhaSeq = ++_cargaSeq;
     try {
       chrome.storage.local.get(["queues", "general", "advanced"], (data) => {
+        if (minhaSeq !== _cargaSeq) {
+          log("[Debug] carregarEIniciarTodos superado por chamada mais recente, descartando");
+          return;
+        }
         try {
           // Pausa global: suspende todos os timers sem alterar o flag
           // active de cada fila — ao retomar, o conjunto ativo é restaurado
@@ -590,6 +601,10 @@ function initNormalMode() {
             return;
           }
           chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
+            if (minhaSeq !== _cargaSeq) {
+              log("[Debug] carregarEIniciarTodos (pós GET_ACCESS_LEVEL) superado, descartando");
+              return;
+            }
             try {
               if (chrome.runtime.lastError) {
                 console.warn("[INSV] Erro ao obter nível de acesso:", chrome.runtime.lastError);
@@ -684,8 +699,15 @@ function initNormalMode() {
     );
   }
 
+  // Duas mudanças rápidas em "advanced" (ex.: import de settings + edição
+  // manual do atalho em seguida) disparam duas leituras assíncronas; sem
+  // sequenciamento, a mais antiga podia resolver por último e deixar o
+  // atalho velho religado, revertendo silenciosamente a mudança mais nova.
+  let _acceptShortcutSeq = 0;
   function setupAcceptShortcut() {
+    const minhaSeq = ++_acceptShortcutSeq;
     chrome.storage.local.get("advanced", (data) => {
+      if (minhaSeq !== _acceptShortcutSeq) return;
       const adv = data.advanced || {};
       const shortcut = adv.acceptShortcut && adv.acceptShortcut.code ? adv.acceptShortcut : null;
       const legacyKey = (adv.acceptShortcutKey || "").trim();
@@ -727,8 +749,11 @@ function initNormalMode() {
     });
   }
 
+  let _pauseShortcutSeq = 0;
   function setupPauseShortcut() {
+    const minhaSeq = ++_pauseShortcutSeq;
     chrome.storage.local.get("advanced", (data) => {
+      if (minhaSeq !== _pauseShortcutSeq) return;
       const adv = data.advanced || {};
       const shortcut = adv.pauseAllShortcut && adv.pauseAllShortcut.code ? adv.pauseAllShortcut : null;
       if (window._insvPauseShortcutHandler) {

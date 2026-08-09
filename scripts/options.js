@@ -576,17 +576,15 @@ const saveQueueManagerDebounced = debounce(saveQueueManager, 600);
 function loadQueueManager() {
   const container = document.getElementById("status-notifications-list");
   if (!container) return;
-  chrome.storage.local.get(["queues", "statusNotifications"], (data) => {
-    let queues = data.queues || [];
-    if (data.statusNotifications && data.statusNotifications.length) {
-      queues = mergeLegacyStatusNotifications(queues, data.statusNotifications);
-      qmQueues = queues;
-      qmSelfWrite = JSON.stringify(queues);
-      chrome.storage.local.set({ queues });
-      chrome.storage.local.remove("statusNotifications");
-    } else {
-      qmQueues = queues;
-    }
+  // Legado statusNotifications[] → queues[].statusNotify é migrado por
+  // migrateStorage() no service-worker (versionado via storageVersion), não
+  // aqui. Fazer a mesma mescla aqui de novo corria em paralelo com essa
+  // migração em background: se esta leitura pegasse o storage entre o
+  // set(queues) e o remove(statusNotifications) do service-worker, essa
+  // página fazia sua própria gravação redundante por cima. O onChanged de
+  // "queues" abaixo já re-renderiza quando a migração em background termina.
+  chrome.storage.local.get("queues", (data) => {
+    qmQueues = data.queues || [];
     renderQueueManager();
   });
 }

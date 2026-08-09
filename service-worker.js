@@ -24,6 +24,26 @@ function setExtensionIcon(active) {
   }
 }
 
+// setIcon with no tabId sets one global icon. Each open Salesforce tab
+// reports its own active/inactive state independently (on its own storage
+// debounce / click / load timing), so without aggregation whichever tab's
+// message the service worker processed last "wins" and the icon can show
+// the wrong state while another tab is genuinely monitoring. Track state
+// per tab and treat the extension as active if ANY known tab is.
+const activeTabs = new Map(); // tabId -> boolean
+
+function recomputeExtensionIcon() {
+  let anyActive = false;
+  for (const v of activeTabs.values()) {
+    if (v) { anyActive = true; break; }
+  }
+  setExtensionIcon(anyActive);
+}
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  if (activeTabs.delete(tabId)) recomputeExtensionIcon();
+});
+
 
 // ── Nível de acesso (free / trial / paid) ───────────────────
 // Fonte única da regra de acesso, usada por popup, options e gridRefresh
@@ -72,10 +92,24 @@ try {
   console.warn("[INSV] onPaid listener:", e);
 }
 
+// Same as onPaid above — without this, a user who starts a trial can see up
+// to USER_CACHE_TTL_MS of stale free-tier UI (premium features still locked)
+// if GET_ACCESS_LEVEL was called and cached shortly before the trial began.
+try {
+  extpay.onTrialStarted.addListener(() => { _userCache = null; });
+} catch (e) {
+  console.warn("[INSV] onTrialStarted listener:", e);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   try {
     if (msg && msg.type === "INSV_EXTENSION_ACTIVE") {
-      setExtensionIcon(msg.active === true);
+      if (sender.tab && typeof sender.tab.id === "number") {
+        activeTabs.set(sender.tab.id, msg.active === true);
+        recomputeExtensionIcon();
+      } else {
+        setExtensionIcon(msg.active === true);
+      }
       sendResponse({ ok: true });
       return true;
     }

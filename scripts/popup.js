@@ -255,9 +255,12 @@ function attachScrollToInterval(input) {
 // usuário voltar a ser pago.
 let hiddenPaidQueues = [];
 
-// Guarda da última gravação feita pelo próprio popup, para não
-// re-renderizar (e perder foco) quando o onChanged for nosso próprio save
-let popupSelfWriteQueues = null;
+// Guarda das gravações feitas pelo próprio popup, para não re-renderizar (e
+// perder foco) quando o onChanged for nosso próprio save. Set, não slot
+// único: duas gravações sobrepostas (ex. drag reorder + edit debounced)
+// podiam fazer a 2ª pisar na assinatura da 1ª antes do onChanged dela
+// chegar, fazendo o próprio save parecer externo e disparar re-render.
+let pendingSelfWriteQueues = new Set();
 
 function saveOptions() {
   const queues = [];
@@ -284,7 +287,7 @@ function saveOptions() {
   };
 
   const fullQueues = queues.concat(hiddenPaidQueues);
-  popupSelfWriteQueues = JSON.stringify(fullQueues);
+  pendingSelfWriteQueues.add(JSON.stringify(fullQueues));
   chrome.storage.local.set({ queues: fullQueues, general }, showSaving);
 }
 
@@ -374,7 +377,7 @@ function restoreOptions() {
 
     if (queues.length === 0) {
       queues = [defaultQueue()];
-      popupSelfWriteQueues = JSON.stringify(queues);
+      pendingSelfWriteQueues.add(JSON.stringify(queues));
       chrome.storage.local.set({ queues });
     }
 
@@ -479,7 +482,8 @@ function getDragAfterElement(container, y) {
 // externas em queues re-renderizam a lista do popup
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.queues) {
-    if (JSON.stringify(changes.queues.newValue || []) === popupSelfWriteQueues) return;
+    const incoming = JSON.stringify(changes.queues.newValue || []);
+    if (pendingSelfWriteQueues.delete(incoming)) return; // nossa própria gravação
     chrome.storage.sync.get("legacyMode", (result) => {
       if (!result.legacyMode) restoreOptions();
     });

@@ -368,9 +368,7 @@ function initNormalMode() {
 
   // Destaca a(s) linha(s) do(s) chamado(s) novo(s) com um background suave que
   // aparece e some sozinho — feedback visual imediato, independente do som
-  // estar habilitado pra essa fila. Tabelas Lightning podem reciclar linhas em
-  // re-renders internos: se isso acontecer o destaque pode desgrudar cedo ou
-  // grudar na linha errada — decorativo, não vale complicar com revalidação.
+  // estar habilitado pra essa fila.
   function ensureRowHighlightStyle() {
     if (document.getElementById("insv-row-highlight-style")) return;
     const s = document.createElement("style");
@@ -387,8 +385,33 @@ function initNormalMode() {
     document.head.appendChild(s);
   }
 
+  // Tabelas Lightning podem reciclar/repatchar linhas num re-render (mais
+  // provável quando o intervalo da fila é parecido com ROW_HIGHLIGHT_HOLD_MS
+  // — o refresh cai bem no meio da animação). Registro por elemento evita
+  // reagendar duas remoções pro mesmo nó reciclado, e a varredura no início
+  // de cada chamada limpa qualquer classe que tenha ficado órfã de um ciclo
+  // anterior (nó cuja remoção não "pegou" visualmente por reuso do Salesforce).
+  const _rowHighlightTimers = new Map(); // tr -> {holdId, fadeId}
+
+  function clearRowHighlight(row) {
+    const pending = _rowHighlightTimers.get(row);
+    if (pending) {
+      clearTimeout(pending.holdId);
+      clearTimeout(pending.fadeId);
+      _rowHighlightTimers.delete(row);
+    }
+    row.classList.remove("insv-row-highlight-on", "insv-row-highlight");
+  }
+
   function highlightNewCaseRows(caseIds) {
     ensureRowHighlightStyle();
+
+    // Varredura: qualquer linha ainda pintada mas sem timer pendente ficou
+    // órfã (Salesforce reciclou o nó sem nossa remoção rodar nele).
+    document.querySelectorAll(".insv-row-highlight").forEach((row) => {
+      if (!_rowHighlightTimers.has(row)) row.classList.remove("insv-row-highlight", "insv-row-highlight-on");
+    });
+
     const idSet = new Set(caseIds);
     const rows = [];
     document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
@@ -398,18 +421,28 @@ function initNormalMode() {
     });
     if (!rows.length) return;
 
-    rows.forEach((row) => row.classList.add("insv-row-highlight"));
+    rows.forEach((row) => {
+      clearRowHighlight(row); // nó reciclado que já tinha destaque pendente
+      row.classList.add("insv-row-highlight");
+    });
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         rows.forEach((row) => row.classList.add("insv-row-highlight-on"));
       });
     });
-    setTimeout(() => {
-      rows.forEach((row) => row.classList.remove("insv-row-highlight-on"));
-      setTimeout(() => {
-        rows.forEach((row) => row.classList.remove("insv-row-highlight"));
-      }, ROW_HIGHLIGHT_FADE_MS);
-    }, ROW_HIGHLIGHT_HOLD_MS);
+
+    rows.forEach((row) => {
+      const holdId = setTimeout(() => {
+        row.classList.remove("insv-row-highlight-on");
+        const fadeId = setTimeout(() => {
+          row.classList.remove("insv-row-highlight");
+          _rowHighlightTimers.delete(row);
+        }, ROW_HIGHLIGHT_FADE_MS);
+        const entry = _rowHighlightTimers.get(row);
+        if (entry) entry.fadeId = fadeId;
+      }, ROW_HIGHLIGHT_HOLD_MS);
+      _rowHighlightTimers.set(row, { holdId, fadeId: null });
+    });
   }
 
   // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a

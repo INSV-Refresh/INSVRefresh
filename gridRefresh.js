@@ -154,7 +154,7 @@ function initNormalMode() {
     return title && title.innerText.toLowerCase().trim() === queueName.toLowerCase().trim();
   }
 
-  // Compartilhado por getNewCaseIds e highlightNewCaseRows — mesma extração de
+  // Compartilhado por getNewCaseIds e showNewCaseToast — mesma extração de
   // texto (.textContent.trim()) não pode divergir entre os dois pontos.
   const CASE_LINK_SELECTOR = '.mainContentMark .split-left table[role="grid"] tbody tr th span a';
 
@@ -218,10 +218,8 @@ function initNormalMode() {
   const GRID_SETTLE_INITIAL_GRACE_MS = 700;
   const GRID_SETTLE_HARD_FALLBACK_MS = 5000;
 
-  // ── Destaque de linha nova ───────────────────────────────────
-  const ROW_HIGHLIGHT_HOLD_MS = 15000;
-  const ROW_HIGHLIGHT_FADE_MS = 400;
-  const ROW_HIGHLIGHT_SWEEP_INTERVAL_MS = 2000;
+  // ── Notificação de chamado novo ──────────────────────────────
+  const CASE_TOAST_DURATION_MS = 10000;
 
   function podeTocarSom() {
     const now = Date.now();
@@ -367,94 +365,121 @@ function initNormalMode() {
     observer.observe(grid, { childList: true, subtree: true });
   }
 
-  // Destaca a(s) linha(s) do(s) chamado(s) novo(s) com um background suave que
-  // aparece e some sozinho. Mesmo gate do som (fila.soundEnabled) — feedback
-  // visual e sonoro andam juntos, não é um recurso independente.
-  function ensureRowHighlightStyle() {
-    if (document.getElementById("insv-row-highlight-style")) return;
+  // Toast com o(s) número(s) do(s) chamado(s) novo(s): número é clicável
+  // (abre o chamado, igual clicar nele na grid) e tem botão de copiar do
+  // lado. Fica na tela por CASE_TOAST_DURATION_MS, mas pausa a contagem
+  // enquanto o mouse estiver em cima — só reinicia quando o hover sai.
+  function ensureCaseToastStyle() {
+    if (document.getElementById("insv-case-toast-style")) return;
     const s = document.createElement("style");
-    s.id = "insv-row-highlight-style";
+    s.id = "insv-case-toast-style";
     s.textContent = [
-      "tr.insv-row-highlight > th, tr.insv-row-highlight > td{",
-      "background-color:transparent;",
-      "transition:background-color " + ROW_HIGHLIGHT_FADE_MS + "ms ease}",
-      "tr.insv-row-highlight-on > th, tr.insv-row-highlight-on > td{",
-      "background-color:rgba(0,133,187,0.14)}",
-      "@media (prefers-reduced-motion:reduce){",
-      "tr.insv-row-highlight > th, tr.insv-row-highlight > td{transition:none}}",
+      ".insv-case-toast{display:flex;flex-direction:column;gap:6px}",
+      ".insv-case-toast-row{display:flex;align-items:center;gap:8px}",
+      ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
+      ".insv-case-toast-link:hover{opacity:0.85}",
+      ".insv-case-toast-copy{background:rgba(255,255,255,0.18);border:none;border-radius:4px;",
+      "color:inherit;padding:4px;display:inline-flex;cursor:pointer;flex-shrink:0}",
+      ".insv-case-toast-copy:hover{background:rgba(255,255,255,0.3)}",
+      ".insv-case-toast-copy.copied{background:rgba(255,255,255,0.45)}",
     ].join("");
     document.head.appendChild(s);
   }
 
-  // Tabelas Lightning podem reciclar/repatchar linhas num re-render (mais
-  // provável quando o intervalo da fila é parecido com ROW_HIGHLIGHT_HOLD_MS
-  // — o refresh cai bem no meio da animação). Registro por elemento evita
-  // reagendar duas remoções pro mesmo nó reciclado, e a varredura no início
-  // de cada chamada limpa qualquer classe que tenha ficado órfã de um ciclo
-  // anterior (nó cuja remoção não "pegou" visualmente por reuso do Salesforce).
-  const _rowHighlightTimers = new Map(); // tr -> {holdId, fadeId}
-
-  function clearRowHighlight(row) {
-    const pending = _rowHighlightTimers.get(row);
-    if (pending) {
-      clearTimeout(pending.holdId);
-      clearTimeout(pending.fadeId);
-      _rowHighlightTimers.delete(row);
-    }
-    row.classList.remove("insv-row-highlight-on", "insv-row-highlight");
-  }
-
-  // Qualquer linha ainda pintada mas sem timer pendente ficou órfã
-  // (Salesforce reciclou/repatchou o nó sem nossa remoção rodar nele).
-  // Idempotente e barata — segura de chamar a qualquer momento.
-  function sweepOrphanedHighlights() {
-    document.querySelectorAll(".insv-row-highlight").forEach((row) => {
-      if (!_rowHighlightTimers.has(row)) row.classList.remove("insv-row-highlight", "insv-row-highlight-on");
-    });
-  }
-
-  // Backstop por tempo, independente do timer de cada linha e de qualquer
-  // ciclo da fila: cobre tanto um refresh disparado pela extensão quanto um
-  // clique manual do usuário no botão de atualizar do Salesforce — os dois
-  // podem reciclar linhas do jeito que deixa um timer individual sem efeito
-  // visual. Pior caso, uma linha órfã fica visível por até este intervalo.
-  setInterval(sweepOrphanedHighlights, ROW_HIGHLIGHT_SWEEP_INTERVAL_MS);
-
-  function highlightNewCaseRows(caseIds) {
-    ensureRowHighlightStyle();
-    sweepOrphanedHighlights();
-
+  function showNewCaseToast(caseIds) {
     const idSet = new Set(caseIds);
-    const rows = [];
+    const cases = [];
     document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
-      if (!idSet.has(link.textContent.trim())) return;
-      const row = link.closest("tr");
-      if (row) rows.push(row);
+      const id = link.textContent.trim();
+      if (idSet.has(id) && !cases.some((c) => c.id === id)) {
+        cases.push({ id, href: link.getAttribute("href") || "" });
+      }
     });
-    if (!rows.length) return;
+    if (!cases.length) return;
 
-    rows.forEach((row) => {
-      clearRowHighlight(row); // nó reciclado que já tinha destaque pendente
-      row.classList.add("insv-row-highlight");
-    });
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        rows.forEach((row) => row.classList.add("insv-row-highlight-on"));
+    ensureCaseToastStyle();
+
+    // showToast() (util.js) já criou style+container do toast no primeiro
+    // ciclo desta fila (toast "monitoring_active" sempre dispara antes de
+    // qualquer detecção) — este fallback só importa se essa ordem mudar.
+    let container = document.getElementById("insv-toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "insv-toast-container";
+      container.setAttribute("role", "status");
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "insv-toast info insv-case-toast";
+
+    cases.forEach((c) => {
+      const row = document.createElement("div");
+      row.className = "insv-case-toast-row";
+
+      const link = document.createElement("a");
+      link.className = "insv-case-toast-link";
+      link.href = c.href || "javascript:void(0)";
+      link.textContent = c.id;
+      link.addEventListener("click", (e) => {
+        if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return; // deixa o navegador abrir em nova aba etc.
+        e.preventDefault();
+        // Reconsulta na hora do clique — a linha pode ter se movido/sido
+        // reciclada desde que o toast apareceu. Clique sintético no link
+        // real, pra se comportar exatamente como o usuário clicando nele.
+        const current = Array.from(document.querySelectorAll(CASE_LINK_SELECTOR))
+          .find((a) => a.textContent.trim() === c.id);
+        if (current) current.click();
+        else if (c.href) window.location.assign(c.href);
       });
+      row.appendChild(link);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "insv-case-toast-copy";
+      copyBtn.setAttribute("aria-label", t("copy_case_number"));
+      copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      copyBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(c.id).then(() => {
+          copyBtn.classList.add("copied");
+          setTimeout(() => copyBtn.classList.remove("copied"), 1200);
+        }).catch(() => {});
+      });
+      row.appendChild(copyBtn);
+
+      toast.appendChild(row);
     });
 
-    rows.forEach((row) => {
-      const holdId = setTimeout(() => {
-        row.classList.remove("insv-row-highlight-on");
-        const fadeId = setTimeout(() => {
-          row.classList.remove("insv-row-highlight");
-          _rowHighlightTimers.delete(row);
-        }, ROW_HIGHLIGHT_FADE_MS);
-        const entry = _rowHighlightTimers.get(row);
-        if (entry) entry.fadeId = fadeId;
-      }, ROW_HIGHLIGHT_HOLD_MS);
-      _rowHighlightTimers.set(row, { holdId, fadeId: null });
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add("show"));
     });
+
+    let hideTimer = null;
+    let remaining = CASE_TOAST_DURATION_MS;
+    let startedAt = Date.now();
+
+    const remove = () => {
+      toast.classList.remove("show");
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
+    };
+    const startHide = () => {
+      startedAt = Date.now();
+      hideTimer = setTimeout(remove, remaining);
+    };
+
+    toast.addEventListener("mouseenter", () => {
+      clearTimeout(hideTimer);
+      remaining -= Date.now() - startedAt;
+      if (remaining < 0) remaining = 0;
+    });
+    toast.addEventListener("mouseleave", startHide);
+
+    startHide();
   }
 
   // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a
@@ -505,7 +530,7 @@ function initNormalMode() {
         const novos = getNewCaseIds(seenCaseIds);
 
         if (primed && novos.length > 0 && fila.soundEnabled && isRightQueue(fila.name)) {
-          highlightNewCaseRows(novos);
+          showNewCaseToast(novos);
         }
 
         if (primed && novos.length > 0 && fila.soundEnabled) {
@@ -538,24 +563,16 @@ function initNormalMode() {
           const isFirstStatusCheck = !filaPrev;
           const filaMap = filaPrev || (statusNotificationPrevious[fila.name] = {});
           let played = false;
-          const statusChangedIds = [];
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
             const prev = filaMap[caseId];
             if (!isFirstStatusCheck && targetStatuses.has(statusLower) && prev !== status) {
-              statusChangedIds.push(caseId);
               if (!played) {
                 tocarSom(sn.sound || "notification.mp3", globalVolume);
                 played = true;
               }
             }
             filaMap[caseId] = status;
-          }
-          // Som toca só 1x por ciclo (evita empilhar alertas), mas o destaque
-          // visual não tem esse limite — marca toda linha cujo status mudou
-          // pro alvo monitorado, não só a que disparou o som.
-          if (statusChangedIds.length > 0) {
-            highlightNewCaseRows(statusChangedIds);
           }
           // Evict cases that have left the queue so the map stays bounded.
           for (const id of Object.keys(filaMap)) {

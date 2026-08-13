@@ -368,8 +368,8 @@ function initNormalMode() {
   }
 
   // Destaca a(s) linha(s) do(s) chamado(s) novo(s) com um background suave que
-  // aparece e some sozinho — feedback visual imediato, independente do som
-  // estar habilitado pra essa fila.
+  // aparece e some sozinho. Mesmo gate do som (fila.soundEnabled) — feedback
+  // visual e sonoro andam juntos, não é um recurso independente.
   function ensureRowHighlightStyle() {
     if (document.getElementById("insv-row-highlight-style")) return;
     const s = document.createElement("style");
@@ -504,7 +504,7 @@ function initNormalMode() {
 
         const novos = getNewCaseIds(seenCaseIds);
 
-        if (primed && novos.length > 0 && isRightQueue(fila.name)) {
+        if (primed && novos.length > 0 && fila.soundEnabled && isRightQueue(fila.name)) {
           highlightNewCaseRows(novos);
         }
 

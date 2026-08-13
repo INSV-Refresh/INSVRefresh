@@ -219,8 +219,9 @@ function initNormalMode() {
   const GRID_SETTLE_HARD_FALLBACK_MS = 5000;
 
   // ── Destaque de linha nova ───────────────────────────────────
-  const ROW_HIGHLIGHT_HOLD_MS = 5000;
+  const ROW_HIGHLIGHT_HOLD_MS = 15000;
   const ROW_HIGHLIGHT_FADE_MS = 400;
+  const ROW_HIGHLIGHT_SWEEP_INTERVAL_MS = 2000;
 
   function podeTocarSom() {
     const now = Date.now();
@@ -403,14 +404,25 @@ function initNormalMode() {
     row.classList.remove("insv-row-highlight-on", "insv-row-highlight");
   }
 
-  function highlightNewCaseRows(caseIds) {
-    ensureRowHighlightStyle();
-
-    // Varredura: qualquer linha ainda pintada mas sem timer pendente ficou
-    // órfã (Salesforce reciclou o nó sem nossa remoção rodar nele).
+  // Qualquer linha ainda pintada mas sem timer pendente ficou órfã
+  // (Salesforce reciclou/repatchou o nó sem nossa remoção rodar nele).
+  // Idempotente e barata — segura de chamar a qualquer momento.
+  function sweepOrphanedHighlights() {
     document.querySelectorAll(".insv-row-highlight").forEach((row) => {
       if (!_rowHighlightTimers.has(row)) row.classList.remove("insv-row-highlight", "insv-row-highlight-on");
     });
+  }
+
+  // Backstop por tempo, independente do timer de cada linha e de qualquer
+  // ciclo da fila: cobre tanto um refresh disparado pela extensão quanto um
+  // clique manual do usuário no botão de atualizar do Salesforce — os dois
+  // podem reciclar linhas do jeito que deixa um timer individual sem efeito
+  // visual. Pior caso, uma linha órfã fica visível por até este intervalo.
+  setInterval(sweepOrphanedHighlights, ROW_HIGHLIGHT_SWEEP_INTERVAL_MS);
+
+  function highlightNewCaseRows(caseIds) {
+    ensureRowHighlightStyle();
+    sweepOrphanedHighlights();
 
     const idSet = new Set(caseIds);
     const rows = [];

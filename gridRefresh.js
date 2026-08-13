@@ -538,16 +538,24 @@ function initNormalMode() {
           const isFirstStatusCheck = !filaPrev;
           const filaMap = filaPrev || (statusNotificationPrevious[fila.name] = {});
           let played = false;
+          const statusChangedIds = [];
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
             const prev = filaMap[caseId];
             if (!isFirstStatusCheck && targetStatuses.has(statusLower) && prev !== status) {
+              statusChangedIds.push(caseId);
               if (!played) {
                 tocarSom(sn.sound || "notification.mp3", globalVolume);
                 played = true;
               }
             }
             filaMap[caseId] = status;
+          }
+          // Som toca só 1x por ciclo (evita empilhar alertas), mas o destaque
+          // visual não tem esse limite — marca toda linha cujo status mudou
+          // pro alvo monitorado, não só a que disparou o som.
+          if (statusChangedIds.length > 0) {
+            highlightNewCaseRows(statusChangedIds);
           }
           // Evict cases that have left the queue so the map stays bounded.
           for (const id of Object.keys(filaMap)) {

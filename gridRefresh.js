@@ -219,7 +219,7 @@ function initNormalMode() {
   const GRID_SETTLE_HARD_FALLBACK_MS = 5000;
 
   // ── Notificação de chamado novo ──────────────────────────────
-  const CASE_TOAST_DURATION_MS = 10000;
+  const CASE_TOAST_DURATION_MS = 15000;
 
   function podeTocarSom() {
     const now = Date.now();
@@ -384,10 +384,6 @@ function initNormalMode() {
       ".insv-case-toast-label{opacity:0.85}",
       ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
       ".insv-case-toast-link:hover{opacity:0.85}",
-      ".insv-case-toast-copy{background:rgba(255,255,255,0.18);border:none;border-radius:4px;",
-      "color:inherit;padding:4px;display:inline-flex;cursor:pointer;flex-shrink:0}",
-      ".insv-case-toast-copy:hover{background:rgba(255,255,255,0.3)}",
-      ".insv-case-toast-copy.copied{background:rgba(255,255,255,0.45)}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -445,21 +441,6 @@ function initNormalMode() {
         else if (c.href) window.location.assign(c.href);
       });
       row.appendChild(link);
-
-      const copyBtn = document.createElement("button");
-      copyBtn.type = "button";
-      copyBtn.className = "insv-case-toast-copy";
-      copyBtn.setAttribute("aria-label", t("copy_case_number"));
-      copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-      copyBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        navigator.clipboard.writeText(c.id).then(() => {
-          copyBtn.classList.add("copied");
-          setTimeout(() => copyBtn.classList.remove("copied"), 1200);
-        }).catch(() => {});
-      });
-      row.appendChild(copyBtn);
 
       toast.appendChild(row);
     });

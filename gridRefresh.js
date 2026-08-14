@@ -154,7 +154,7 @@ function initNormalMode() {
     return title && title.innerText.toLowerCase().trim() === queueName.toLowerCase().trim();
   }
 
-  // Compartilhado por getNewCaseIds e showNewCaseToast — mesma extração de
+  // Compartilhado por getNewCaseIds e showCaseToast — mesma extração de
   // texto (.textContent.trim()) não pode divergir entre os dois pontos.
   const CASE_LINK_SELECTOR = '.mainContentMark .split-left table[role="grid"] tbody tr th span a';
 
@@ -365,17 +365,23 @@ function initNormalMode() {
     observer.observe(grid, { childList: true, subtree: true });
   }
 
-  // Toast com o(s) número(s) do(s) chamado(s) novo(s): número é clicável
-  // (abre o chamado, igual clicar nele na grid) e tem botão de copiar do
-  // lado. Fica na tela por CASE_TOAST_DURATION_MS, mas pausa a contagem
-  // enquanto o mouse estiver em cima — só reinicia quando o hover sai.
+  // Toast com o(s) número(s) de chamado(s) (caso novo ou mudança de status,
+  // conforme labelKey): número é clicável (abre o chamado, igual clicar nele
+  // na grid) e tem botão de copiar do lado. Fica na tela por
+  // CASE_TOAST_DURATION_MS, mas pausa a contagem enquanto o mouse estiver em
+  // cima — só reinicia quando o hover sai.
   function ensureCaseToastStyle() {
     if (document.getElementById("insv-case-toast-style")) return;
     const s = document.createElement("style");
     s.id = "insv-case-toast-style";
     s.textContent = [
-      ".insv-case-toast{display:flex;flex-direction:column;gap:6px}",
+      // #insv-toast-container (util.js) is pointer-events:none so toasts
+      // never block clicks on the page behind them — fine for plain-text
+      // toasts, but it also blocked our link/button AND hover events here.
+      // Re-enable on our own toast specifically.
+      ".insv-case-toast{display:flex;flex-direction:column;gap:6px;pointer-events:auto}",
       ".insv-case-toast-row{display:flex;align-items:center;gap:8px}",
+      ".insv-case-toast-label{opacity:0.85}",
       ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
       ".insv-case-toast-link:hover{opacity:0.85}",
       ".insv-case-toast-copy{background:rgba(255,255,255,0.18);border:none;border-radius:4px;",
@@ -386,7 +392,7 @@ function initNormalMode() {
     document.head.appendChild(s);
   }
 
-  function showNewCaseToast(caseIds) {
+  function showCaseToast(caseIds, labelKey) {
     const idSet = new Set(caseIds);
     const cases = [];
     document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
@@ -417,6 +423,11 @@ function initNormalMode() {
     cases.forEach((c) => {
       const row = document.createElement("div");
       row.className = "insv-case-toast-row";
+
+      const label = document.createElement("span");
+      label.className = "insv-case-toast-label";
+      label.textContent = t(labelKey) + ":";
+      row.appendChild(label);
 
       const link = document.createElement("a");
       link.className = "insv-case-toast-link";
@@ -530,7 +541,7 @@ function initNormalMode() {
         const novos = getNewCaseIds(seenCaseIds);
 
         if (primed && novos.length > 0 && fila.soundEnabled && isRightQueue(fila.name)) {
-          showNewCaseToast(novos);
+          showCaseToast(novos, "new_case_toast_label");
         }
 
         if (primed && novos.length > 0 && fila.soundEnabled) {
@@ -563,16 +574,24 @@ function initNormalMode() {
           const isFirstStatusCheck = !filaPrev;
           const filaMap = filaPrev || (statusNotificationPrevious[fila.name] = {});
           let played = false;
+          const statusChangedIds = [];
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
             const prev = filaMap[caseId];
             if (!isFirstStatusCheck && targetStatuses.has(statusLower) && prev !== status) {
+              statusChangedIds.push(caseId);
               if (!played) {
                 tocarSom(sn.sound || "notification.mp3", globalVolume);
                 played = true;
               }
             }
             filaMap[caseId] = status;
+          }
+          // Som toca só 1x por ciclo (evita empilhar alertas), mas o toast
+          // não tem esse limite — lista todo chamado cujo status mudou pro
+          // alvo monitorado, não só o que disparou o som.
+          if (statusChangedIds.length > 0) {
+            showCaseToast(statusChangedIds, "status_updated_toast_label");
           }
           // Evict cases that have left the queue so the map stays bounded.
           for (const id of Object.keys(filaMap)) {

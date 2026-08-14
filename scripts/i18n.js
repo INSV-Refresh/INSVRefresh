@@ -38,6 +38,8 @@ const I18N_MESSAGES = {
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Ação necessária: clique na página para ativar o áudio",
     monitoring_active: "INSV Refresh ativo: monitorando {name}",
+    new_case_toast_label: "Chamado novo",
+    status_updated_toast_label: "Status atualizado",
     copy_case_number: "Copiar número do chamado",
     case_accepted: "Chamado aceito",
     no_case_selected: "Nenhum chamado selecionado",
@@ -374,6 +376,8 @@ const I18N_MESSAGES = {
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Action needed: click the page to enable audio",
     monitoring_active: "INSV Refresh active: monitoring {name}",
+    new_case_toast_label: "New case",
+    status_updated_toast_label: "Status updated",
     copy_case_number: "Copy case number",
     case_accepted: "Case accepted",
     no_case_selected: "No case selected",
@@ -700,6 +704,8 @@ const I18N_MESSAGES = {
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Acción necesaria: haz clic en la página para activar el audio",
     monitoring_active: "INSV Refresh activo: monitoreando {name}",
+    new_case_toast_label: "Caso nuevo",
+    status_updated_toast_label: "Estado actualizado",
     copy_case_number: "Copiar número de caso",
     case_accepted: "Caso aceptado",
     no_case_selected: "Ningún caso seleccionado",

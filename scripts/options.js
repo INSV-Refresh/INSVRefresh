@@ -736,7 +736,7 @@ i18nReady.then(function() {
     const banner = document.getElementById("changelog-banner");
     if (!banner) return;
     banner.style.display = "block";
-    const items = ["cl_1", "cl_2", "cl_3", "cl_4", "cl_5", "cl_6", "cl_7", "cl_8"]
+    const items = ["cl_1", "cl_2", "cl_3", "cl_4", "cl_5", "cl_6", "cl_7", "cl_8", "cl_9", "cl_10"]
       .map((k) => `<li>${t(k)}</li>`)
       .join("");
     banner.innerHTML = `

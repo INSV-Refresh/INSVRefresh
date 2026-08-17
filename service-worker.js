@@ -10,38 +10,41 @@ const ICON_ACTIVE = {
   48: "assets/icons/INSVRefresh-48.png",
   128: "assets/icons/INSVRefresh.png",
 };
-// Inactive only ships a 128px grey asset. Add INSVRefresh-grey-{16,32,48}.png
-// and wire them here to make the inactive icon crisp at small sizes too.
+// Paused/inactive only ship a 128px asset each. Add the *-{16,32,48}.png
+// variants and wire them here to make these icons crisp at small sizes too.
+const ICON_PAUSED = { 128: "assets/icons/INSVRefresh-yellow.png" };
 const ICON_INACTIVE = { 128: "assets/icons/INSVRefresh-grey.png" };
 
-function setExtensionIcon(active) {
+// state: "active" | "paused" | "inactive"
+function setExtensionIcon(state) {
   try {
-    chrome.action.setIcon({
-      path: active ? ICON_ACTIVE : ICON_INACTIVE,
-    });
+    const path = state === "active" ? ICON_ACTIVE : state === "paused" ? ICON_PAUSED : ICON_INACTIVE;
+    chrome.action.setIcon({ path });
   } catch (e) {
     console.warn("[INSV] setIcon:", e);
   }
 }
 
 // setIcon with no tabId sets one global icon. Each open Salesforce tab
-// reports its own active/inactive state independently (on its own storage
-// debounce / click / load timing), so without aggregation whichever tab's
-// message the service worker processed last "wins" and the icon can show
-// the wrong state while another tab is genuinely monitoring. Track state
-// per tab and treat the extension as active if ANY known tab is.
-const activeTabs = new Map(); // tabId -> boolean
+// reports its own active/paused/inactive state independently (on its own
+// storage debounce / click / load timing), so without aggregation whichever
+// tab's message the service worker processed last "wins" and the icon can
+// show the wrong state while another tab is genuinely monitoring or paused.
+// Track state per tab: active beats paused beats inactive.
+const tabStates = new Map(); // tabId -> {active, paused}
 
 function recomputeExtensionIcon() {
   let anyActive = false;
-  for (const v of activeTabs.values()) {
-    if (v) { anyActive = true; break; }
+  let anyPaused = false;
+  for (const s of tabStates.values()) {
+    if (s.active) { anyActive = true; break; }
+    if (s.paused) anyPaused = true;
   }
-  setExtensionIcon(anyActive);
+  setExtensionIcon(anyActive ? "active" : anyPaused ? "paused" : "inactive");
 }
 
 chrome.tabs.onRemoved.addListener((tabId) => {
-  if (activeTabs.delete(tabId)) recomputeExtensionIcon();
+  if (tabStates.delete(tabId)) recomputeExtensionIcon();
 });
 
 
@@ -104,11 +107,12 @@ try {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   try {
     if (msg && msg.type === "INSV_EXTENSION_ACTIVE") {
+      const state = { active: msg.active === true, paused: msg.paused === true };
       if (sender.tab && typeof sender.tab.id === "number") {
-        activeTabs.set(sender.tab.id, msg.active === true);
+        tabStates.set(sender.tab.id, state);
         recomputeExtensionIcon();
       } else {
-        setExtensionIcon(msg.active === true);
+        setExtensionIcon(state.active ? "active" : state.paused ? "paused" : "inactive");
       }
       sendResponse({ ok: true });
       return true;
@@ -244,5 +248,5 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     chrome.storage.local.set({ pendingChangelogVersion: v });
   }
   migrateStorage();
-  setExtensionIcon(false);
+  setExtensionIcon("inactive");
 });

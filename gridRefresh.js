@@ -365,11 +365,10 @@ function initNormalMode() {
     observer.observe(grid, { childList: true, subtree: true });
   }
 
-  // Toast com o(s) número(s) de chamado(s) (caso novo ou mudança de status,
+  // Toast com o número de um chamado (caso novo ou mudança de status,
   // conforme labelKey): número é clicável (abre o chamado, igual clicar nele
-  // na grid) e tem botão de copiar do lado. Fica na tela por
-  // CASE_TOAST_DURATION_MS, mas pausa a contagem enquanto o mouse estiver em
-  // cima — só reinicia quando o hover sai.
+  // na grid). Fica na tela por CASE_TOAST_DURATION_MS, mas pausa a contagem
+  // enquanto o mouse estiver em cima — só reinicia quando o hover sai.
   function ensureCaseToastStyle() {
     if (document.getElementById("insv-case-toast-style")) return;
     const s = document.createElement("style");
@@ -379,8 +378,7 @@ function initNormalMode() {
       // never block clicks on the page behind them — fine for plain-text
       // toasts, but it also blocked our link/button AND hover events here.
       // Re-enable on our own toast specifically.
-      ".insv-case-toast{display:flex;flex-direction:column;gap:6px;pointer-events:auto}",
-      ".insv-case-toast-row{display:flex;align-items:center;gap:8px}",
+      ".insv-case-toast{display:flex;align-items:center;gap:8px;pointer-events:auto}",
       ".insv-case-toast-label{opacity:0.85}",
       ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
       ".insv-case-toast-link:hover{opacity:0.85}",
@@ -388,19 +386,7 @@ function initNormalMode() {
     document.head.appendChild(s);
   }
 
-  function showCaseToast(caseIds, labelKey) {
-    const idSet = new Set(caseIds);
-    const cases = [];
-    document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
-      const id = link.textContent.trim();
-      if (idSet.has(id) && !cases.some((c) => c.id === id)) {
-        cases.push({ id, href: link.getAttribute("href") || "" });
-      }
-    });
-    if (!cases.length) return;
-
-    ensureCaseToastStyle();
-
+  function ensureCaseToastContainer() {
     // showToast() (util.js) já criou style+container do toast no primeiro
     // ciclo desta fila (toast "monitoring_active" sempre dispara antes de
     // qualquer detecção) — este fallback só importa se essa ordem mudar.
@@ -412,38 +398,37 @@ function initNormalMode() {
       container.setAttribute("aria-live", "polite");
       document.body.appendChild(container);
     }
+    return container;
+  }
 
+  // Um toast independente por chamado — cada um com seu próprio link, timer
+  // e hover, pra não ter chamado nenhum "escondido" atrás de outro dentro da
+  // mesma notificação.
+  function showSingleCaseToast(caseInfo, labelKey, container) {
     const toast = document.createElement("div");
     toast.className = "insv-toast info insv-case-toast";
 
-    cases.forEach((c) => {
-      const row = document.createElement("div");
-      row.className = "insv-case-toast-row";
+    const label = document.createElement("span");
+    label.className = "insv-case-toast-label";
+    label.textContent = t(labelKey) + ":";
+    toast.appendChild(label);
 
-      const label = document.createElement("span");
-      label.className = "insv-case-toast-label";
-      label.textContent = t(labelKey) + ":";
-      row.appendChild(label);
-
-      const link = document.createElement("a");
-      link.className = "insv-case-toast-link";
-      link.href = c.href || "javascript:void(0)";
-      link.textContent = c.id;
-      link.addEventListener("click", (e) => {
-        if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return; // deixa o navegador abrir em nova aba etc.
-        e.preventDefault();
-        // Reconsulta na hora do clique — a linha pode ter se movido/sido
-        // reciclada desde que o toast apareceu. Clique sintético no link
-        // real, pra se comportar exatamente como o usuário clicando nele.
-        const current = Array.from(document.querySelectorAll(CASE_LINK_SELECTOR))
-          .find((a) => a.textContent.trim() === c.id);
-        if (current) current.click();
-        else if (c.href) window.location.assign(c.href);
-      });
-      row.appendChild(link);
-
-      toast.appendChild(row);
+    const link = document.createElement("a");
+    link.className = "insv-case-toast-link";
+    link.href = caseInfo.href || "javascript:void(0)";
+    link.textContent = caseInfo.id;
+    link.addEventListener("click", (e) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return; // deixa o navegador abrir em nova aba etc.
+      e.preventDefault();
+      // Reconsulta na hora do clique — a linha pode ter se movido/sido
+      // reciclada desde que o toast apareceu. Clique sintético no link
+      // real, pra se comportar exatamente como o usuário clicando nele.
+      const current = Array.from(document.querySelectorAll(CASE_LINK_SELECTOR))
+        .find((a) => a.textContent.trim() === caseInfo.id);
+      if (current) current.click();
+      else if (caseInfo.href) window.location.assign(caseInfo.href);
     });
+    toast.appendChild(link);
 
     container.appendChild(toast);
 
@@ -472,6 +457,22 @@ function initNormalMode() {
     toast.addEventListener("mouseleave", startHide);
 
     startHide();
+  }
+
+  function showCaseToast(caseIds, labelKey) {
+    const idSet = new Set(caseIds);
+    const cases = [];
+    document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
+      const id = link.textContent.trim();
+      if (idSet.has(id) && !cases.some((c) => c.id === id)) {
+        cases.push({ id, href: link.getAttribute("href") || "" });
+      }
+    });
+    if (!cases.length) return;
+
+    ensureCaseToastStyle();
+    const container = ensureCaseToastContainer();
+    cases.forEach((c) => showSingleCaseToast(c, labelKey, container));
   }
 
   // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a
@@ -734,9 +735,12 @@ function initNormalMode() {
   function reportExtensionActive() {
     chrome.storage.local.get(["queues", "advanced"], (data) => {
       const queues = (data.queues || []).filter((q) => q.active);
-      const paused = !!(data.advanced && data.advanced.globalPaused);
-      const active = audioEnabled && queues.length > 0 && !paused;
-      chrome.runtime.sendMessage({ type: "INSV_EXTENSION_ACTIVE", active }).catch(() => {});
+      const globalPaused = !!(data.advanced && data.advanced.globalPaused);
+      const active = audioEnabled && queues.length > 0 && !globalPaused;
+      // Só conta como "pausado" (ícone âmbar) se havia algo de fato pausado —
+      // pausa global com nenhuma fila ativa não é diferente de estar inativo.
+      const paused = globalPaused && queues.length > 0;
+      chrome.runtime.sendMessage({ type: "INSV_EXTENSION_ACTIVE", active, paused }).catch(() => {});
     });
   }
 

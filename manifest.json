@@ -1,7 +1,7 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "manifest_version": 3,
   "content_scripts": [
     {
@@ -43,6 +43,7 @@
         "assets/icons/INSVRefresh.png",
         "assets/icons/light-dark-mode.svg",
         "assets/icons/INSVRefresh-grey.png",
+        "assets/icons/INSVRefresh-yellow.png",
         "assets/sounds/bubble.mp3",
         "assets/sounds/interface.mp3",
         "assets/sounds/limba.mp3",

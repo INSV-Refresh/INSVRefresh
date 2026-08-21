@@ -34,6 +34,11 @@
             <span data-i18n="paused_banner">Atualização pausada</span>
             <button type="button" id="resume-all-btn" data-i18n="resume">Retomar</button>
         </div>
+        <div id="work-schedule-banner" class="global-paused-banner" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span data-i18n="ws_popup_banner">Fora do expediente</span>
+            <a href="options.html#expediente" target="_blank" id="ws-adjust-link" data-i18n="ws_adjust">Ajustar</a>
+        </div>
         <div id="queue-list"></div>
         <button id="add-queue-btn" class="add-queue-btn has-tooltip has-tooltip-add-queue-btn"
             data-tooltip="Adicionar fila" data-i18n-tooltip="tt_add_queue" aria-label="Adicionar fila">

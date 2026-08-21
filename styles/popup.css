@@ -855,3 +855,22 @@ html[data-theme="dark"] .add-queue-btn {
     transition: opacity 0.01ms !important;
   }
 }
+
+/* ── Banner de expediente ───────────────────────────── */
+/* Mesmo visual do banner de pausa; o "Ajustar" é um link pras opções
+   com a cara dos botões do banner. */
+#ws-adjust-link {
+  background: rgba(255, 209, 102, 0.18);
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  border-radius: var(--radius-sm);
+  color: var(--gold-500);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+#ws-adjust-link:hover {
+  background: rgba(255, 209, 102, 0.32);
+}

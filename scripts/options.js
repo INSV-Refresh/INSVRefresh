@@ -763,6 +763,8 @@ i18nReady.then(function() {
     storageProp: "pauseAllShortcut",
   });
 
+  setupWorkSchedule();
+
   // Seletor de idioma (Aparência)
   const langSelect = document.getElementById("langSelect");
   if (langSelect) {
@@ -928,6 +930,64 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyPro
   }
 }
 
+
+// ── Horário de expediente ───────────────────────────────────
+// Persiste em chrome.storage.local.advanced.workSchedule:
+//   { enabled, start: "HH:MM", end: "HH:MM", days: [0..6] }
+// O content script (gridRefresh) observa mudanças em advanced e recarrega
+// os monitores; a checagem de "dentro/fora" é isWithinWorkSchedule (util.js).
+function setupWorkSchedule() {
+  const enabledEl = document.getElementById("ws-enabled");
+  const fieldsEl = document.getElementById("ws-fields");
+  const startEl = document.getElementById("ws-start");
+  const endEl = document.getElementById("ws-end");
+  const daysEl = document.getElementById("ws-days");
+  if (!enabledEl || !fieldsEl || !startEl || !endEl || !daysEl) return;
+
+  const dayInputs = Array.from(daysEl.querySelectorAll('input[type="checkbox"]'));
+
+  function renderDisabledState() {
+    fieldsEl.classList.toggle("disabled", !enabledEl.checked);
+  }
+
+  function currentValue() {
+    const days = dayInputs.filter((i) => i.checked).map((i) => Number(i.value));
+    return {
+      enabled: enabledEl.checked,
+      start: startEl.value || "08:00",
+      end: endEl.value || "18:00",
+      days,
+    };
+  }
+
+  // Rajada de cliques nos dias / digitação no time input = uma gravação só.
+  const persist = debounce(() => {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      adv.workSchedule = currentValue();
+      chrome.storage.local.set({ advanced: adv }, () => {
+        showToast(t("queues_saved"), "success", 2000);
+      });
+    });
+  }, 400);
+
+  chrome.storage.local.get("advanced", (data) => {
+    const ws = (data.advanced && data.advanced.workSchedule) || {};
+    enabledEl.checked = !!ws.enabled;
+    if (/^\d{1,2}:\d{2}$/.test(ws.start || "")) startEl.value = ws.start;
+    if (/^\d{1,2}:\d{2}$/.test(ws.end || "")) endEl.value = ws.end;
+    const days = Array.isArray(ws.days) && ws.days.length ? ws.days : [1, 2, 3, 4, 5];
+    dayInputs.forEach((i) => { i.checked = days.includes(Number(i.value)); });
+    renderDisabledState();
+  });
+
+  enabledEl.addEventListener("change", () => {
+    renderDisabledState();
+    persist();
+  });
+  [startEl, endEl].forEach((el) => el.addEventListener("change", persist));
+  dayInputs.forEach((i) => i.addEventListener("change", persist));
+}
 
 document.getElementById("nav-pricing") && document.getElementById("nav-pricing").addEventListener("click", (e) => {
   e.preventDefault();

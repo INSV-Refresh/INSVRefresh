@@ -104,8 +104,46 @@ try {
   console.warn("[INSV] onTrialStarted listener:", e);
 }
 
+// ── Dedupe de som entre abas ────────────────────────────────
+// Abas com a mesma fila detectam o mesmo lote de casos com defasagem (timers
+// de abas em background são estrangulados a ~1/min) e cada uma tocaria seu
+// som. Registro em memória do que já tocou em qualquer aba: um pedido só
+// autoriza o som se o lote tiver algum id inédito; ids repetidos dentro do
+// TTL são considerados o mesmo evento. Memória é suficiente — se o service
+// worker reiniciar, o pior caso é um som duplicado, nunca um perdido.
+const RING_TTL_MS = 2 * 60 * 1000;
+const RING_MAX_ENTRIES = 3000; // backstop contra crescimento sem fim
+const rungIds = new Map(); // "kind|fila|id" -> expiraEm
+
+function handleDedupeRing(msg) {
+  const now = Date.now();
+  for (const [key, exp] of rungIds) {
+    if (exp <= now) rungIds.delete(key);
+  }
+  const queue = String(msg.queue || "");
+  const kind = String(msg.kind || "new");
+  let anyNew = false;
+  for (const id of Array.isArray(msg.ids) ? msg.ids : []) {
+    const key = kind + "|" + queue + "|" + String(id);
+    if (!rungIds.has(key)) anyNew = true;
+    rungIds.set(key, now + RING_TTL_MS);
+  }
+  if (rungIds.size > RING_MAX_ENTRIES) {
+    // Map itera em ordem de inserção — descarta os mais antigos.
+    for (const key of rungIds.keys()) {
+      if (rungIds.size <= RING_MAX_ENTRIES) break;
+      rungIds.delete(key);
+    }
+  }
+  return { ring: anyNew };
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   try {
+    if (msg && msg.type === "DEDUPE_RING") {
+      sendResponse(handleDedupeRing(msg));
+      return true;
+    }
     if (msg && msg.type === "INSV_EXTENSION_ACTIVE") {
       const state = { active: msg.active === true, paused: msg.paused === true };
       if (sender.tab && typeof sender.tab.id === "number") {

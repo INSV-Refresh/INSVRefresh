@@ -528,6 +528,27 @@ if (resumeAllBtn) {
   });
 }
 
+// ── Indicador de horário de expediente ──────────────
+// O popup é efêmero: avaliar na abertura (e em mudança de config) basta —
+// não precisa de timer acompanhando o relógio.
+const workScheduleBanner = document.getElementById("work-schedule-banner");
+
+function renderWorkScheduleBanner(ws) {
+  if (!workScheduleBanner) return;
+  const fora = ws && ws.enabled && !isWithinWorkSchedule(ws);
+  workScheduleBanner.style.display = fora ? "flex" : "none";
+}
+
+chrome.storage.local.get("advanced", (data) => {
+  renderWorkScheduleBanner(data.advanced && data.advanced.workSchedule);
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.advanced) {
+    renderWorkScheduleBanner(changes.advanced.newValue && changes.advanced.newValue.workSchedule);
+  }
+});
+
 // Aguarda o idioma carregar antes de renderizar conteúdo dinâmico
 i18nReady.then(() => {
   chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {

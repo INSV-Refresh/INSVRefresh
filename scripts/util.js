@@ -132,6 +132,35 @@ function showToast(message, type, duration) {
   }, duration);
 }
 
+// ── Horário de expediente ────────────────────────────────────
+// Uma função para todas as superfícies (content script decide monitorar;
+// popup decide mostrar o banner "fora do expediente"). ws vem de
+// chrome.storage.local.advanced.workSchedule:
+//   { enabled, start: "HH:MM", end: "HH:MM", days: [0..6] } (0 = domingo)
+// Janela com start > end atravessa a meia-noite e pertence ao dia em que
+// começa (ex.: 22:00–06:00 na sexta cobre sáb. 00:00–06:00).
+function isWithinWorkSchedule(ws, nowDate) {
+  if (!ws || !ws.enabled) return true;
+  const parse = (s, fallback) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(s || "");
+    if (!m) return fallback;
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    if (h > 23 || min > 59) return fallback;
+    return h * 60 + min;
+  };
+  const start = parse(ws.start, 8 * 60);
+  const end = parse(ws.end, 18 * 60);
+  const days = Array.isArray(ws.days) && ws.days.length ? ws.days : [1, 2, 3, 4, 5];
+  const now = nowDate || new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const day = now.getDay();
+  if (start === end) return days.includes(day); // início = fim: dia inteiro
+  if (start < end) return days.includes(day) && cur >= start && cur < end;
+  const prevDay = (day + 6) % 7;
+  return (days.includes(day) && cur >= start) || (days.includes(prevDay) && cur < end);
+}
+
 // Canonical queue shape — one source for the default fields.
 const DEFAULT_INTERVAL = 15;
 const DEFAULT_SOUND = "notification.mp3";

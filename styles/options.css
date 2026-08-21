@@ -1721,3 +1721,111 @@ button.delete-audio-btn:hover {
   }
 
 }
+
+/* ── Horário de expediente ─────────────────────────────────── */
+.ws-card {
+  gap: var(--space-3);
+}
+
+.ws-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* Toggle desligado: campos visíveis (dá pra ver o que está configurado)
+   porém inertes e apagados */
+.ws-fields.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ws-time-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ws-time-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-800);
+}
+
+.ws-time-label + input[type="time"] {
+  margin-right: var(--space-3);
+}
+
+.ws-time-row input[type="time"] {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  padding: 5px 8px;
+}
+
+.ws-time-row input[type="time"]:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 1px;
+}
+
+.ws-days {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ws-day {
+  position: relative;
+}
+
+.ws-day input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ws-day span {
+  display: inline-block;
+  padding: 4px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.ws-day input:checked + span {
+  background: var(--brand-600);
+  border-color: var(--brand-400);
+  color: var(--white-color, #fff);
+}
+
+.ws-day input:focus-visible + span {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .ws-time-label {
+  color: var(--ink-50);
+}
+
+[data-theme="dark"] .ws-time-row input[type="time"] {
+  background: var(--ink-850);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--ink-50);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .ws-day span {
+  border-color: rgba(255, 255, 255, 0.16);
+}

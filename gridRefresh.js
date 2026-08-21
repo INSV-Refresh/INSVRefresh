@@ -149,14 +149,23 @@ function initNormalMode() {
     { once: true }
   );
 
-  function isRightQueue(queueName) {
-    const title = document.querySelector(".slds-page-header__title");
-    return title && title.innerText.toLowerCase().trim() === queueName.toLowerCase().trim();
+  // innerText de elemento oculto (splitview colapsada com um chamado
+  // aberto/focado) degrada para textContent cru: espaços internos duplicados
+  // deixam de ser colapsados e o nome não bate mais com o configurado.
+  // Normalizar os dois lados mantém o monitoramento vivo com chamado em foco.
+  function normalizarNomeFila(s) {
+    return (s || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
 
+  function isRightQueue(queueName) {
+    const title = document.querySelector(".slds-page-header__title");
+    return !!title && normalizarNomeFila(title.innerText) === normalizarNomeFila(queueName);
+  }
+
+  const CASE_TABLE_SELECTOR = '.mainContentMark .split-left table[role="grid"]';
   // Compartilhado por getNewCaseIds e showCaseToast — mesma extração de
   // texto (.textContent.trim()) não pode divergir entre os dois pontos.
-  const CASE_LINK_SELECTOR = '.mainContentMark .split-left table[role="grid"] tbody tr th span a';
+  const CASE_LINK_SELECTOR = CASE_TABLE_SELECTOR + " tbody tr th span a";
 
   function getNewCaseIds(seenCaseIds) {
     const caseLinks = document.querySelectorAll(CASE_LINK_SELECTOR);
@@ -173,7 +182,7 @@ function initNormalMode() {
   }
 
   function getStatusColumnIndex() {
-    const table = document.querySelector('.mainContentMark .split-left table[role="grid"]');
+    const table = document.querySelector(CASE_TABLE_SELECTOR);
     if (!table) return -1;
     const headers = table.querySelectorAll('thead th, thead tr th, [role="columnheader"]');
     for (let i = 0; i < headers.length; i++) {
@@ -184,7 +193,7 @@ function initNormalMode() {
   }
 
   function getCaseStatusMap() {
-    const table = document.querySelector('.mainContentMark .split-left table[role="grid"]');
+    const table = document.querySelector(CASE_TABLE_SELECTOR);
     const statusCol = getStatusColumnIndex();
     if (!table || statusCol < 0) return {};
     const rows = table.querySelectorAll('tbody tr');
@@ -220,6 +229,10 @@ function initNormalMode() {
 
   // ── Notificação de chamado novo ──────────────────────────────
   const CASE_TOAST_DURATION_MS = 15000;
+  // Teto de toasts de chamado simultâneos na tela. O excedente entra numa
+  // fila e aparece conforme os visíveis expiram — sem som ao aparecer, o som
+  // do lote já tocou na detecção.
+  const MAX_CASE_TOASTS_VISIVEIS = 5;
 
   function podeTocarSom() {
     const now = Date.now();
@@ -313,6 +326,37 @@ function initNormalMode() {
     reproduzir(audioSrc, volume).play().catch(() => {});
   }
 
+  // ── Dedupe de som entre abas ─────────────────────────────────
+  // Duas abas com a mesma fila detectam o mesmo lote (com defasagem de até
+  // ~1min, timers de aba em background são estrangulados) e tocariam dois
+  // sons. O service worker guarda por alguns minutos o que já tocou em
+  // qualquer aba e só autoriza se o lote tiver algo inédito. Sem resposta
+  // do service worker, toca assim mesmo — alerta perdido é pior que dobrado.
+  // Toasts NÃO passam por aqui: cada aba mostra os seus.
+  function tocarSomDedupado(queueName, kind, ids, ring) {
+    // Sem gesto de clique o tocarSom só mostra o aviso "clique na página" —
+    // não consome o registro do dedupe, senão silenciaria a aba que pode tocar.
+    if (!audioEnabled) {
+      ring();
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage(
+        { type: "DEDUPE_RING", queue: normalizarNomeFila(queueName), kind, ids },
+        (res) => {
+          if (chrome.runtime.lastError || !res) {
+            ring();
+            return;
+          }
+          if (res.ring) ring();
+          else log(`[Debug] Som suprimido — outra aba já tocou este lote (${kind})`);
+        }
+      );
+    } catch (e) {
+      ring();
+    }
+  }
+
   // Espera o grid "assentar" após um refresh, em vez de confiar só no spinner
   // (que às vezes não aparece em refreshes silenciosos) ou num timeout fixo.
   // Cobre spinner e refresh silencioso com o mesmo mecanismo: observa mutações
@@ -367,8 +411,9 @@ function initNormalMode() {
 
   // Toast com o número de um chamado (caso novo ou mudança de status,
   // conforme labelKey): número é clicável (abre o chamado, igual clicar nele
-  // na grid). Fica na tela por CASE_TOAST_DURATION_MS, mas pausa a contagem
-  // enquanto o mouse estiver em cima — só reinicia quando o hover sai.
+  // na grid). Fica na tela por CASE_TOAST_DURATION_MS, mas hover em QUALQUER
+  // toast pausa a contagem de TODOS os visíveis — nenhum some enquanto o
+  // usuário está lendo/escolhendo qual abrir.
   function ensureCaseToastStyle() {
     if (document.getElementById("insv-case-toast-style")) return;
     const s = document.createElement("style");
@@ -382,8 +427,29 @@ function initNormalMode() {
       ".insv-case-toast-label{opacity:0.85}",
       ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
       ".insv-case-toast-link:hover{opacity:0.85}",
+      ".insv-case-toast-close{flex:none;background:none;border:0;color:inherit;opacity:0.7;cursor:pointer;font:inherit;font-size:15px;line-height:1;padding:2px 5px;border-radius:4px}",
+      ".insv-case-toast-close:hover{opacity:1;background:rgba(255,255,255,0.18)}",
+      // Mudança de status usa outro azul da paleta (navy ink-700) — distinto
+      // do azul brand dos casos novos de relance, ainda dentro do branding.
+      ".insv-toast.info.insv-case-toast--status{background:var(--ink-700,#29325A)}",
+      // Pill "fechar todos" — primeiro filho do container (fica acima da
+      // pilha de toasts), só existe com 2+ notificações somando fila.
+      "#insv-case-toast-clearall{align-self:flex-end;pointer-events:auto;background:var(--ink-800,#1B2340);color:var(--white-color,#fff);border:0;border-radius:999px;padding:5px 12px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;opacity:0.92;box-shadow:var(--box-shadow,0 8px 24px -8px rgba(0,0,0,.35))}",
+      "#insv-case-toast-clearall:hover{opacity:1}",
     ].join("");
     document.head.appendChild(s);
+  }
+
+  // "Visível de verdade": com um chamado aberto/focado o console colapsa a
+  // splitview — o link da grid continua no DOM porém oculto, e um clique
+  // sintético em elemento oculto é ignorado pelo Lightning. Esta checagem
+  // decide entre clique sintético e navegação direta pela URL.
+  function isElementVisible(el) {
+    if (!el || !el.isConnected) return false;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return false;
+    const cs = window.getComputedStyle(el);
+    return cs.display !== "none" && cs.visibility !== "hidden";
   }
 
   function ensureCaseToastContainer() {
@@ -401,12 +467,73 @@ function initNormalMode() {
     return container;
   }
 
-  // Um toast independente por chamado — cada um com seu próprio link, timer
-  // e hover, pra não ter chamado nenhum "escondido" atrás de outro dentro da
-  // mesma notificação.
-  function showSingleCaseToast(caseInfo, labelKey, container) {
+  // Registro dos toasts de chamado na tela + fila do excedente. O hover é
+  // global: entrar em qualquer toast pausa o timer de todos; sair retoma
+  // todos. Toast criado durante um hover ativo já nasce pausado.
+  const _caseToastsAtivos = new Set();
+  const _caseToastsPendentes = [];
+  let _caseToastHovered = false;
+
+  function pausarTodosCaseToasts() {
+    _caseToastsAtivos.forEach((h) => h.pause());
+  }
+  function retomarTodosCaseToasts() {
+    _caseToastsAtivos.forEach((h) => h.resume());
+  }
+  function drenarCaseToastsPendentes() {
+    while (_caseToastsPendentes.length && _caseToastsAtivos.size < MAX_CASE_TOASTS_VISIVEIS) {
+      const p = _caseToastsPendentes.shift();
+      showSingleCaseToast(p.caseInfo, p.labelKey, p.variant, ensureCaseToastContainer());
+    }
+  }
+
+  function fecharTodosCaseToasts() {
+    _caseToastsPendentes.length = 0; // antes dos dismiss — remove() drena a fila
+    Array.from(_caseToastsAtivos).forEach((h) => h.dismiss());
+    // O clique veio do pill, que some junto — mouseleave não dispara em
+    // elemento removido e o estado de hover ficaria preso em true.
+    _caseToastHovered = false;
+    atualizarBotaoFecharTodos();
+  }
+
+  // Pill "Fechar todos (N)" — aparece com 2+ notificações (visíveis +
+  // pendentes), some abaixo disso. N conta a fila também, pra deixar claro
+  // que o clique descarta o que ainda nem apareceu.
+  function atualizarBotaoFecharTodos() {
+    const total = _caseToastsAtivos.size + _caseToastsPendentes.length;
+    let btn = document.getElementById("insv-case-toast-clearall");
+    if (total < 2) {
+      if (btn) btn.remove();
+      return;
+    }
+    const container = ensureCaseToastContainer();
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.id = "insv-case-toast-clearall";
+      btn.type = "button";
+      btn.addEventListener("click", fecharTodosCaseToasts);
+      // Hover no pill também segura os toasts na tela, igual hover num toast.
+      btn.addEventListener("mouseenter", () => {
+        _caseToastHovered = true;
+        pausarTodosCaseToasts();
+      });
+      btn.addEventListener("mouseleave", () => {
+        _caseToastHovered = false;
+        retomarTodosCaseToasts();
+      });
+    }
+    btn.textContent = t("close_all_toasts") + " (" + total + ")";
+    if (container.firstChild !== btn) container.insertBefore(btn, container.firstChild);
+  }
+
+  // Um toast independente por chamado — cada um com seu próprio link e timer,
+  // pra não ter chamado nenhum "escondido" atrás de outro dentro da mesma
+  // notificação. variant "status" troca o azul (ver ensureCaseToastStyle).
+  function showSingleCaseToast(caseInfo, labelKey, variant, container) {
     const toast = document.createElement("div");
-    toast.className = "insv-toast info insv-case-toast";
+    toast.className =
+      "insv-toast info insv-case-toast" +
+      (variant === "status" ? " insv-case-toast--status" : "");
 
     const label = document.createElement("span");
     label.className = "insv-case-toast-label";
@@ -421,14 +548,27 @@ function initNormalMode() {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return; // deixa o navegador abrir em nova aba etc.
       e.preventDefault();
       // Reconsulta na hora do clique — a linha pode ter se movido/sido
-      // reciclada desde que o toast apareceu. Clique sintético no link
-      // real, pra se comportar exatamente como o usuário clicando nele.
+      // reciclada desde que o toast apareceu. Link visível: clique sintético,
+      // igual o usuário clicando na grid. Link oculto (splitview colapsada,
+      // chamado aberto/focado): o clique sintético é ignorado pelo Lightning,
+      // então navega direto pela URL do chamado — o console reabre com ele
+      // como aba de trabalho.
       const current = Array.from(document.querySelectorAll(CASE_LINK_SELECTOR))
         .find((a) => a.textContent.trim() === caseInfo.id);
-      if (current) current.click();
+      if (current && isElementVisible(current)) current.click();
       else if (caseInfo.href) window.location.assign(caseInfo.href);
+      else if (current) current.click();
     });
     toast.appendChild(link);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "insv-case-toast-close";
+    closeBtn.textContent = "×";
+    closeBtn.title = t("close_toast");
+    closeBtn.setAttribute("aria-label", t("close_toast"));
+    closeBtn.addEventListener("click", () => remove());
+    toast.appendChild(closeBtn);
 
     container.appendChild(toast);
 
@@ -439,27 +579,59 @@ function initNormalMode() {
     let hideTimer = null;
     let remaining = CASE_TOAST_DURATION_MS;
     let startedAt = Date.now();
+    let paused = false;
+    let removed = false;
 
     const remove = () => {
+      if (removed) return; // X + timer podem correr — só o primeiro vale
+      removed = true;
+      clearTimeout(hideTimer);
+      _caseToastsAtivos.delete(handle);
       toast.classList.remove("show");
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
+      // Fechar via X acontece com o mouse sobre o toast, que some sob o
+      // cursor — mouseleave não dispara em elemento removido e o hover
+      // ficaria preso pausando tudo. Via timer o hover já era false.
+      _caseToastHovered = false;
+      retomarTodosCaseToasts();
+      // Abriu vaga — mostra o próximo da fila (sem som: o som desse lote já
+      // tocou quando ele foi detectado).
+      drenarCaseToastsPendentes();
+      atualizarBotaoFecharTodos();
     };
-    const startHide = () => {
-      startedAt = Date.now();
-      hideTimer = setTimeout(remove, remaining);
-    };
-
-    toast.addEventListener("mouseenter", () => {
+    const pause = () => {
+      if (paused) return;
+      paused = true;
       clearTimeout(hideTimer);
       remaining -= Date.now() - startedAt;
       if (remaining < 0) remaining = 0;
-    });
-    toast.addEventListener("mouseleave", startHide);
+    };
+    const resume = () => {
+      if (!paused || removed) return;
+      paused = false;
+      startedAt = Date.now();
+      hideTimer = setTimeout(remove, remaining);
+    };
+    const handle = { pause, resume, dismiss: remove };
+    _caseToastsAtivos.add(handle);
 
-    startHide();
+    toast.addEventListener("mouseenter", () => {
+      _caseToastHovered = true;
+      pausarTodosCaseToasts();
+    });
+    toast.addEventListener("mouseleave", () => {
+      _caseToastHovered = false;
+      retomarTodosCaseToasts();
+    });
+
+    // Nasce pausado e só começa a contar se não houver hover ativo em outro
+    // toast — quem está lendo não perde os que acabaram de chegar.
+    paused = true;
+    if (!_caseToastHovered) resume();
+    atualizarBotaoFecharTodos();
   }
 
-  function showCaseToast(caseIds, labelKey) {
+  function showCaseToast(caseIds, labelKey, variant) {
     const idSet = new Set(caseIds);
     const cases = [];
     document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
@@ -472,7 +644,16 @@ function initNormalMode() {
 
     ensureCaseToastStyle();
     const container = ensureCaseToastContainer();
-    cases.forEach((c) => showSingleCaseToast(c, labelKey, container));
+    cases.forEach((caseInfo) => {
+      if (_caseToastsAtivos.size < MAX_CASE_TOASTS_VISIVEIS) {
+        showSingleCaseToast(caseInfo, labelKey, variant, container);
+      } else {
+        _caseToastsPendentes.push({ caseInfo, labelKey, variant });
+      }
+    });
+    // Cobre o caminho em que tudo foi para a fila (contador do pill muda
+    // mesmo sem toast novo na tela).
+    atualizarBotaoFecharTodos();
   }
 
   // Lista, não Map por nome: duas filas com o mesmo nome sobrescreviam a
@@ -481,6 +662,18 @@ function initNormalMode() {
   // todos tocando som ao mesmo tempo quando a aba voltava a ficar visível.
   let filaMonitores = [];
   const statusNotificationPrevious = {};
+
+  // ── Horário de expediente ────────────────────────────────────
+  // Fora da janela os ciclos são pulados inteiros (sem refresh, sem som, sem
+  // toast); ao voltar pra dentro, o próximo ciclo roda normal e notifica o
+  // que mudou nesse meio-tempo. Snapshot atualizado por carregarEIniciarTodos;
+  // a transição pelo relógio é avaliada a cada ciclo, sem depender de storage.
+  let _workSchedule = null;
+  let _foraDoExpedienteAvisado = false;
+
+  function dentroDoExpediente() {
+    return isWithinWorkSchedule(_workSchedule);
+  }
 
   function iniciarMonitoramentoFila(fila, globalSound, globalVolume, isPaid) {
     let seenCaseIds = new Set();
@@ -495,6 +688,21 @@ function initNormalMode() {
         return;
       }
 
+      if (!dentroDoExpediente()) {
+        if (!_foraDoExpedienteAvisado) {
+          _foraDoExpedienteAvisado = true;
+          showToast(t("ws_paused_toast"), "warning", 4000);
+          reportExtensionActive(); // ícone âmbar
+        }
+        log(`[Debug] Fora do expediente — ciclo ignorado: "${fila.name}"`);
+        return;
+      }
+      if (_foraDoExpedienteAvisado) {
+        _foraDoExpedienteAvisado = false;
+        showToast(t("ws_resumed_toast"), "success", 3000);
+        reportExtensionActive();
+      }
+
       if (!_initToastShown.has(fila.name)) {
         _initToastShown.add(fila.name);
         showToast(t('monitoring_active', { name: fila.name }), 'info', 4000);
@@ -502,7 +710,12 @@ function initNormalMode() {
 
       const userIsEditing = document.querySelector(".mainContentMark .split-left .slds-checkbox [type=checkbox]:checked");
 
-      if (!userIsEditing) {
+      if (!primed) {
+        // Primeira leitura: captura o que já está na fila do jeito que está,
+        // sem clicar em refresh. `primed` garante que essa baseline é
+        // silenciosa — sem som e sem toast.
+        log(`[Debug] Primeira leitura da fila "${fila.name}" — baseline sem refresh`);
+      } else if (!userIsEditing) {
         log(`[Debug] Executando refresh da fila: "${fila.name}"`);
         doRefresh();
       } else {
@@ -520,6 +733,18 @@ function initNormalMode() {
           return;
         }
 
+        // Sem tabela renderizada não há baseline confiável: a leitura imediata
+        // no load podia "primar" com lista vazia e o ciclo seguinte tocaria
+        // som para todos os chamados que já estavam na fila.
+        if (!document.querySelector(CASE_TABLE_SELECTOR)) {
+          log(`[Debug] Grid ainda sem tabela, ciclo ignorado: "${fila.name}"`);
+          if (!primed && fastRetriesLeft > 0) {
+            fastRetriesLeft--;
+            schedule(FAST_RETRY_MS);
+          }
+          return;
+        }
+
         const novos = getNewCaseIds(seenCaseIds);
 
         if (primed && novos.length > 0 && fila.soundEnabled && isRightQueue(fila.name)) {
@@ -531,7 +756,7 @@ function initNormalMode() {
           const soundToUse = fila.customSound || globalSound;
           log(`[Debug] Som para fila "${fila.name}": ${soundToUse}`);
           if (isRightQueue(fila.name)) {
-            tocarSom(soundToUse, globalVolume);
+            tocarSomDedupado(fila.name, "new", novos, () => tocarSom(soundToUse, globalVolume));
           }
         }
 
@@ -555,17 +780,16 @@ function initNormalMode() {
           const filaPrev = statusNotificationPrevious[fila.name];
           const isFirstStatusCheck = !filaPrev;
           const filaMap = filaPrev || (statusNotificationPrevious[fila.name] = {});
-          let played = false;
           const statusChangedIds = [];
+          const statusDedupeKeys = [];
           for (const [caseId, status] of Object.entries(currentMap)) {
             const statusLower = status.toLowerCase();
             const prev = filaMap[caseId];
             if (!isFirstStatusCheck && targetStatuses.has(statusLower) && prev !== status) {
               statusChangedIds.push(caseId);
-              if (!played) {
-                tocarSom(sn.sound || "notification.mp3", globalVolume);
-                played = true;
-              }
+              // Chave inclui o status: o mesmo chamado mudando para OUTRO
+              // status alvo ainda conta como evento inédito no dedupe.
+              statusDedupeKeys.push(caseId + "::" + statusLower);
             }
             filaMap[caseId] = status;
           }
@@ -573,7 +797,10 @@ function initNormalMode() {
           // não tem esse limite — lista todo chamado cujo status mudou pro
           // alvo monitorado, não só o que disparou o som.
           if (statusChangedIds.length > 0) {
-            showCaseToast(statusChangedIds, "status_updated_toast_label");
+            showCaseToast(statusChangedIds, "status_updated_toast_label", "status");
+            tocarSomDedupado(fila.name, "status", statusDedupeKeys, () =>
+              tocarSom(sn.sound || "notification.mp3", globalVolume)
+            );
           }
           // Evict cases that have left the queue so the map stays bounded.
           for (const id of Object.keys(filaMap)) {
@@ -591,6 +818,11 @@ function initNormalMode() {
     // visível comparamos com lastRefreshAt para respeitar o intervalo
     // configurado — no máximo 1 refresh imediato, nunca em rajada.
     const intervalMs = (fila.interval || 15) * 1000;
+    // Antes da baseline, ritmo curto e limitado: se a página/fila ainda está
+    // carregando (título ou tabela ausentes), tenta de novo logo em vez de
+    // esperar o intervalo cheio só pra ler o que já está na tela.
+    const FAST_RETRY_MS = 2000;
+    let fastRetriesLeft = 15;
     let timerId = null;
     let lastRefreshAt = Date.now();
     let cancelled = false;
@@ -614,7 +846,14 @@ function initNormalMode() {
       }
       lastRefreshAt = Date.now();
       loop();
-      schedule(intervalMs);
+      // loop() bailou síncrono (fila errada na tela) e ainda não há baseline
+      // → retry curto. Ciclo em voo ou já primado → cadência normal.
+      if (!primed && !cicloEmAndamento && fastRetriesLeft > 0) {
+        fastRetriesLeft--;
+        schedule(FAST_RETRY_MS);
+      } else {
+        schedule(intervalMs);
+      }
     }
 
     function onVisibilityChange() {
@@ -629,7 +868,10 @@ function initNormalMode() {
     }
 
     document.addEventListener("visibilitychange", onVisibilityChange);
-    schedule(intervalMs);
+    // Primeiro ciclo imediato — a baseline não espera o intervalo (nem faz
+    // refresh, ver loop()). Monitores também são recriados a cada mudança de
+    // configuração, então isso vale pro load E pra qualquer ajuste na UI.
+    schedule(0);
 
     filaMonitores.push({
       name: fila.name,
@@ -664,6 +906,9 @@ function initNormalMode() {
           return;
         }
         try {
+          // Expediente: monitores continuam de pé fora da janela (o pulo é
+          // por ciclo, pra transição do relógio funcionar sem evento novo).
+          _workSchedule = (data.advanced && data.advanced.workSchedule) || null;
           // Pausa global: suspende todos os timers sem alterar o flag
           // active de cada fila — ao retomar, o conjunto ativo é restaurado
           if (data.advanced && data.advanced.globalPaused) {
@@ -735,11 +980,14 @@ function initNormalMode() {
   function reportExtensionActive() {
     chrome.storage.local.get(["queues", "advanced"], (data) => {
       const queues = (data.queues || []).filter((q) => q.active);
-      const globalPaused = !!(data.advanced && data.advanced.globalPaused);
-      const active = audioEnabled && queues.length > 0 && !globalPaused;
+      const adv = data.advanced || {};
+      // Fora do expediente conta como pausado para o ícone, igual à pausa
+      // global — o monitoramento existe mas está deliberadamente suspenso.
+      const suspenso = !!adv.globalPaused || !isWithinWorkSchedule(adv.workSchedule);
+      const active = audioEnabled && queues.length > 0 && !suspenso;
       // Só conta como "pausado" (ícone âmbar) se havia algo de fato pausado —
-      // pausa global com nenhuma fila ativa não é diferente de estar inativo.
-      const paused = globalPaused && queues.length > 0;
+      // suspensão com nenhuma fila ativa não é diferente de estar inativo.
+      const paused = suspenso && queues.length > 0;
       chrome.runtime.sendMessage({ type: "INSV_EXTENSION_ACTIVE", active, paused }).catch(() => {});
     });
   }
@@ -872,6 +1120,10 @@ function initNormalMode() {
     if (area === "local" && changes.advanced) {
       setupAcceptShortcut();
       setupPauseShortcut();
+      // Expediente editado nas opções → recarrega o snapshot dos monitores.
+      const wsOld = JSON.stringify((changes.advanced.oldValue || {}).workSchedule || null);
+      const wsNew = JSON.stringify((changes.advanced.newValue || {}).workSchedule || null);
+      if (wsOld !== wsNew) agendarRecarga();
       const wasPaused = !!(changes.advanced.oldValue && changes.advanced.oldValue.globalPaused);
       const isPaused = !!(changes.advanced.newValue && changes.advanced.newValue.globalPaused);
       if (wasPaused !== isPaused) {

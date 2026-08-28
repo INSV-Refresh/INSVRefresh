@@ -1,22 +1,65 @@
-// Ponte de navegação no mundo da página (content script com "world": "MAIN").
+// Ponte com o Aura no mundo da página (content script com "world": "MAIN").
 //
-// Os toasts vivem no mundo isolado da extensão, que não enxerga o $A do
-// Lightning. Sem essa ponte, a única saída para um chamado fora da grid
-// visível era window.location.assign — e isso derruba e recarrega o one.app
-// inteiro. Aqui disparamos o mesmo evento Aura que a própria grid dispara ao
-// ser clicada, então o console abre o chamado como aba de trabalho, sem
-// reload. Ver docs: force:navigateToSObject / force:navigateToURL são
-// tratados pelo container one.app.
+// O resto da extensão roda no mundo isolado, que não enxerga o $A do
+// Lightning. Sem essa ponte só sobram gambiarras de DOM: navegar por
+// window.location (recarrega o one.app inteiro) e clicar no botão de refresh
+// (some do DOM em vários estados do console). Aqui falamos com o container
+// one.app pelos eventos que ele mesmo publica.
+//
+// Protocolo: o mundo isolado dispara "insv:aura-request" com
+// {reqId, action, ...} e escuta "insv:aura-result" com {reqId, ok, motivo}.
+// Toda ação responde exatamente uma vez; quem pediu usa timeout curto porque
+// esta ponte pode simplesmente não existir (Chrome sem suporte a
+// "world": "MAIN").
 (function () {
   "use strict";
 
-  const REQ_EVENT = "insv:navigate-to-record";
-  const RES_EVENT = "insv:navigate-result";
+  const REQ_EVENT = "insv:aura-request";
+  const RES_EVENT = "insv:aura-result";
 
   function responder(reqId, ok, motivo) {
     window.dispatchEvent(
       new CustomEvent(RES_EVENT, { detail: { reqId, ok: !!ok, motivo: motivo || "" } })
     );
+  }
+
+  // Põe o fire dentro do ciclo do Aura (fila de eventos + rerender). Disparar
+  // cru de fora do framework pode ser descartado silenciosamente.
+  function dispararNoAura(aura, auraEvent) {
+    const fn =
+      typeof aura.getCallback === "function"
+        ? aura.getCallback(() => auraEvent.fire())
+        : () => auraEvent.fire();
+    fn();
+  }
+
+  // navigateToSObject é o caminho direto pro registro: em app de console, o
+  // one.app abre (ou foca, se já estiver aberta) a aba de trabalho dele.
+  // Sem recordId utilizável, a URL relativa também é roteada pelo one.app.
+  function navegar(aura, detail) {
+    let auraEvent = null;
+    if (detail.recordId) {
+      auraEvent = aura.get("e.force:navigateToSObject");
+      if (auraEvent) auraEvent.setParams({ recordId: detail.recordId });
+    }
+    if (!auraEvent && detail.url) {
+      auraEvent = aura.get("e.force:navigateToURL");
+      if (auraEvent) auraEvent.setParams({ url: detail.url });
+    }
+    if (!auraEvent) return "no-event";
+    dispararNoAura(aura, auraEvent);
+    return "";
+  }
+
+  // force:refreshView recarrega os dados dos componentes padrão da view. Só é
+  // usado quando o botão de refresh da list view não está no DOM: as docs
+  // avisam que o evento custa caro e que disparo repetido não é suportado,
+  // então ele é caminho de exceção, não o de todo ciclo.
+  function atualizarView(aura) {
+    const auraEvent = aura.get("e.force:refreshView");
+    if (!auraEvent) return "no-event";
+    dispararNoAura(aura, auraEvent);
+    return "";
   }
 
   window.addEventListener(REQ_EVENT, (event) => {
@@ -25,38 +68,28 @@
     const aura = window.$A;
 
     // $A só existe dentro do one.app. Setup, Visualforce em iframe e telas
-    // pré-Aura não têm — quem pediu cai no fallback de URL.
+    // pré-Aura não têm — quem pediu cai no seu próprio fallback.
     if (!aura || typeof aura.get !== "function") {
       responder(reqId, false, "no-aura");
       return;
     }
 
     try {
-      let auraEvent = null;
-      // Por recordId é o caminho direto: em app de console, o one.app abre (ou
-      // foca, se já estiver aberto) a aba de trabalho do registro.
-      if (detail.recordId) {
-        auraEvent = aura.get("e.force:navigateToSObject");
-        if (auraEvent) auraEvent.setParams({ recordId: detail.recordId });
+      let motivo = "";
+      switch (detail.action) {
+        case "navigate":
+          motivo = navegar(aura, detail);
+          break;
+        case "refresh":
+          motivo = atualizarView(aura);
+          break;
+        case "ping":
+          motivo = "";
+          break;
+        default:
+          motivo = "unknown-action";
       }
-      // Sem recordId utilizável (URL em outro formato), a navegação por URL
-      // relativa também é roteada pelo one.app, sem recarregar a página.
-      if (!auraEvent && detail.url) {
-        auraEvent = aura.get("e.force:navigateToURL");
-        if (auraEvent) auraEvent.setParams({ url: detail.url });
-      }
-      if (!auraEvent) {
-        responder(reqId, false, "no-event");
-        return;
-      }
-      // getCallback põe o fire dentro do ciclo do Aura (fila de eventos +
-      // rerender). Disparar cru de fora do framework pode ser descartado.
-      const disparar =
-        typeof aura.getCallback === "function"
-          ? aura.getCallback(() => auraEvent.fire())
-          : () => auraEvent.fire();
-      disparar();
-      responder(reqId, true);
+      responder(reqId, !motivo, motivo);
     } catch (e) {
       responder(reqId, false, (e && e.message) || "erro");
     }

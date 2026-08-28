@@ -2,70 +2,128 @@
 const DEBUG = false;
 const log = (...args) => DEBUG && console.log(...args);
 
+// ── Ponte com o Aura ──────────────────────────────────────────
+// scripts/sf-nav-bridge.js roda no mundo da página e fala com o $A do
+// Lightning; aqui (mundo isolado) só despachamos pedidos e esperamos a
+// resposta. Resolve false quando não há $A na página ou quando a ponte nem
+// existe (Chrome sem suporte a "world": "MAIN") — todo chamador precisa ter
+// seu próprio plano B para esse caso.
+const AURA_BRIDGE_TIMEOUT_MS = 400;
+let _auraReqSeq = 0;
+
+function pedirAoAura(action, payload) {
+  return new Promise((resolve) => {
+    const reqId = "insv-aura-" + ++_auraReqSeq;
+    let resolvido = false;
+    const finalizar = (ok) => {
+      if (resolvido) return;
+      resolvido = true;
+      window.removeEventListener("insv:aura-result", onResultado);
+      clearTimeout(timer);
+      resolve(ok);
+    };
+    const onResultado = (event) => {
+      const d = event.detail || {};
+      if (d.reqId !== reqId) return;
+      if (!d.ok) log(`[Debug] Ponte Aura recusou "${action}": ${d.motivo}`);
+      finalizar(!!d.ok);
+    };
+    window.addEventListener("insv:aura-result", onResultado);
+    const timer = setTimeout(() => finalizar(false), AURA_BRIDGE_TIMEOUT_MS);
+    window.dispatchEvent(
+      new CustomEvent("insv:aura-request", {
+        detail: Object.assign({ reqId, action }, payload || {}),
+      })
+    );
+  });
+}
+
 // ── Toast ─────────────────────────────────────────────────────
 // showToast is shared from scripts/util.js (loaded as a content script
 // before this file). Its injected CSS reads brand tokens on our own pages and
 // falls back to literal hex here, where the Salesforce page can't see them.
 // Strings are localized via t() (scripts/i18n.js, also a content script).
 
+// ── Supervisor de modo ────────────────────────────────────────
+// Três estados possíveis: "normal" (monitoramento completo), "legacy" (só
+// refresh periódico) e "idle" (legacy configurado porém desligado).
+// Antes cada troca de estado passava por window.location.reload(), o que
+// derruba o one.app inteiro e custa dezenas de segundos pro usuário. Agora
+// cada modo devolve seu próprio teardown e a troca acontece em memória.
+let _modoAtual = null;
+let _pararModoAtual = null;
+let _ajustarIntervaloLegacy = null;
+
+function aplicarModo(cfg) {
+  const alvo = cfg.legacyMode ? (cfg.legacyActive ? "legacy" : "idle") : "normal";
+  const intervalo = cfg.legacyInterval || 10;
+
+  if (alvo === _modoAtual) {
+    // Mesmo modo, só o intervalo mudou — não recria nada.
+    if (alvo === "legacy" && _ajustarIntervaloLegacy) _ajustarIntervaloLegacy(intervalo);
+    return;
+  }
+
+  if (_pararModoAtual) {
+    log(`[Debug] Encerrando modo "${_modoAtual}"`);
+    try {
+      _pararModoAtual();
+    } catch (e) {
+      console.warn("[INSV] Falha ao encerrar o modo anterior:", e);
+    }
+  }
+  _pararModoAtual = null;
+  _ajustarIntervaloLegacy = null;
+  _modoAtual = alvo;
+
+  if (alvo === "legacy") {
+    log("[Debug] LEGACY MODE ATIVADO");
+    _pararModoAtual = initLegacyMode(intervalo);
+  } else if (alvo === "normal") {
+    _pararModoAtual = initNormalMode();
+  } else {
+    log("[Debug] LEGACY MODE CONFIGURADO MAS INATIVO");
+  }
+}
+
 function insvStart() {
   log("[Debug] GRID REFRESH ATIVADO");
 
-  chrome.storage.sync.get(["legacyMode", "legacyInterval", "legacyActive"], (result) => {
-    if (result.legacyMode) {
-      if (result.legacyActive) {
-        log("[Debug] LEGACY MODE ATIVADO");
-        initLegacyMode(result.legacyInterval || 10);
-      } else {
-        log("[Debug] LEGACY MODE CONFIGURADO MAS INATIVO");
-        initLegacyModeListener();
-      }
-      return;
-    }
+  const CHAVES_MODO = ["legacyMode", "legacyInterval", "legacyActive"];
+  chrome.storage.sync.get(CHAVES_MODO, aplicarModo);
 
-    initNormalMode();
-  });
-};
-
-function initLegacyModeListener() {
-  log("[Debug] Aguardando ativação do Legacy Mode");
-
+  // Listener único e permanente: é ele que decide o modo, então nenhum modo
+  // precisa vigiar a própria desativação (nem se recarregar pra isso).
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "sync") {
-      if (changes.legacyMode && !changes.legacyMode.newValue) {
-        log("[Debug] Legacy Mode desativado. Recarregando página...");
-        window.location.reload();
-        return;
-      }
-
-      if (changes.legacyActive && changes.legacyActive.newValue) {
-        chrome.storage.sync.get(["legacyInterval"], (result) => {
-          log("[Debug] Legacy Mode foi ativado");
-          initLegacyMode(result.legacyInterval || 10);
-        });
-      }
-    }
+    if (area !== "sync") return;
+    if (!changes.legacyMode && !changes.legacyActive && !changes.legacyInterval) return;
+    chrome.storage.sync.get(CHAVES_MODO, aplicarModo);
   });
 }
 
+// Retorna true quando um refresh foi disparado por algum caminho. O caminho
+// da ponte é assíncrono e não confirma nada aqui: quem chama já espera o grid
+// assentar (waitForGridSettle) antes de ler a tela.
 function doRefresh() {
   const refreshButton = document.querySelector('button[name="refreshButton"]');
   if (refreshButton) {
     refreshButton.click();
     return true;
   }
-  return false;
+  // Sem botão no DOM (splitview colapsada, chamado em foco, markup novo do
+  // Salesforce) o ciclo antes virava no-op silencioso: o monitor seguia
+  // rodando e lendo sempre a mesma tela velha. force:refreshView recarrega os
+  // dados dos componentes padrão sem depender de DOM nenhum. É caminho de
+  // exceção de propósito: as docs avisam que o evento é caro e que disparo
+  // repetido não é suportado.
+  log("[Debug] Botão de refresh ausente — usando force:refreshView");
+  pedirAoAura("refresh");
+  return true;
 }
 
-let legacyModeStarted = false;
+// Devolve o teardown do modo. Instância única garantida pelo supervisor:
+// nenhum guard local é necessário aqui.
 function initLegacyMode(intervalSeconds) {
-  // Guard against stacked timers/listeners: initLegacyModeListener calls this
-  // again on every legacyActive toggle, and this function registers its own
-  // storage.onChanged listener + interval. Initialise the controller once per
-  // page; subsequent activate/deactivate is handled by its own listener below.
-  if (legacyModeStarted) return;
-  legacyModeStarted = true;
-
   log(`[Debug] Iniciando Legacy Mode com intervalo de ${intervalSeconds} segundos`);
 
   let legacyTimer = null;
@@ -99,37 +157,15 @@ function initLegacyMode(intervalSeconds) {
 
   startLegacyTimer(intervalSeconds);
 
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "sync") {
-      if (changes.legacyMode && !changes.legacyMode.newValue) {
-        log("[Debug] Legacy Mode desativado. Recarregando página...");
-        stopLegacyTimer();
-        window.location.reload();
-        return;
-      }
-
-      chrome.storage.sync.get(["legacyMode", "legacyActive", "legacyInterval"], (result) => {
-        if (!result.legacyMode) return;
-
-        if (changes.legacyActive) {
-          if (changes.legacyActive.newValue) {
-            log("[Debug] Legacy Mode ativado");
-            startLegacyTimer(result.legacyInterval || 10);
-          } else {
-            log("[Debug] Legacy Mode pausado");
-            stopLegacyTimer();
-          }
-        }
-
-        if (changes.legacyInterval && result.legacyActive) {
-          log(`[Debug] Intervalo do Legacy Mode alterado para ${changes.legacyInterval.newValue} segundos`);
-          startLegacyTimer(changes.legacyInterval.newValue);
-        }
-      });
-    }
-  });
+  // Mudança só de intervalo não passa por teardown: o supervisor chama isto.
+  _ajustarIntervaloLegacy = (interval) => {
+    log(`[Debug] Intervalo do Legacy Mode alterado para ${interval} segundos`);
+    startLegacyTimer(interval);
+  };
 
   log("[Debug] Legacy Mode configurado com sucesso");
+
+  return stopLegacyTimer;
 }
 
 function initNormalMode() {
@@ -157,9 +193,37 @@ function initNormalMode() {
     return (s || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
 
+  // filterName é o identificador de API da list view e aparece na URL do LEX
+  // (/lightning/o/Case/list?filterName=...). No console ele também viaja
+  // dentro do parâmetro ws quando um chamado está em foco, por isso a busca é
+  // feita sobre a URL inteira já decodificada.
+  function filterNameAtual() {
+    let url = "";
+    try {
+      url = decodeURIComponent(location.href);
+    } catch (e) {
+      url = location.href;
+    }
+    const m = /[?&]filterName=([^&#]+)/.exec(url);
+    return m ? m[1] : "";
+  }
+
+  // Casar por texto de cabeçalho é frágil: o rótulo muda com o idioma do
+  // usuário, com renomeação da list view e com re-render do header. O
+  // filterName visto quando o nome casou fica guardado e passa a valer como
+  // segunda prova de identidade — nunca como veto, só como caminho extra.
+  const _filterNameConhecido = new Map();
+
   function isRightQueue(queueName) {
+    const alvo = normalizarNomeFila(queueName);
     const title = document.querySelector(".slds-page-header__title");
-    return !!title && normalizarNomeFila(title.innerText) === normalizarNomeFila(queueName);
+    const filterName = filterNameAtual();
+    if (title && normalizarNomeFila(title.innerText) === alvo) {
+      if (filterName) _filterNameConhecido.set(alvo, filterName);
+      return true;
+    }
+    const conhecido = _filterNameConhecido.get(alvo);
+    return !!(conhecido && filterName && conhecido === filterName);
   }
 
   const CASE_TABLE_SELECTOR = '.mainContentMark .split-left table[role="grid"]';
@@ -548,36 +612,11 @@ function initNormalMode() {
     return m ? m[1] : "";
   }
 
-  let _navReqSeq = 0;
-  // Pede pro bridge (scripts/sf-nav-bridge.js, world MAIN) navegar pelo evento
-  // Aura. Resolve true se o one.app aceitou — aí o console abre o chamado como
-  // aba de trabalho, sem reload. False quando não há $A na página ou o bridge
-  // não está lá (Chrome antigo, sem suporte a "world": "MAIN"): o chamador cai
-  // no window.location.assign, que recarrega tudo.
+  // Resolve true se o one.app aceitou navegar — aí o console abre o chamado
+  // como aba de trabalho, sem reload. False cai no window.location.assign de
+  // quem chamou, que recarrega tudo.
   function navegarViaAura(href) {
-    return new Promise((resolve) => {
-      const reqId = "insv-nav-" + ++_navReqSeq;
-      let resolvido = false;
-      const finalizar = (ok) => {
-        if (resolvido) return;
-        resolvido = true;
-        window.removeEventListener("insv:navigate-result", onResultado);
-        clearTimeout(timer);
-        resolve(ok);
-      };
-      const onResultado = (event) => {
-        const d = event.detail || {};
-        if (d.reqId !== reqId) return;
-        finalizar(!!d.ok);
-      };
-      window.addEventListener("insv:navigate-result", onResultado);
-      const timer = setTimeout(() => finalizar(false), 400);
-      window.dispatchEvent(
-        new CustomEvent("insv:navigate-to-record", {
-          detail: { reqId, recordId: extrairRecordId(href), url: href },
-        })
-      );
-    });
+    return pedirAoAura("navigate", { recordId: extrairRecordId(href), url: href });
   }
 
   // Um toast independente por chamado — cada um com seu próprio link e timer,
@@ -1055,18 +1094,39 @@ function initNormalMode() {
     });
   }
 
+  // Contêineres de ação do Lightning, do mais específico pro mais amplo. A
+  // busca começa neles porque varrer a página inteira significa clicar em
+  // QUALQUER botão cujo rótulo case com "aceitar|accept|take|..." — inclusive
+  // em telas que não são a fila, onde o atalho vira um clique às cegas numa
+  // ação de massa. Só descemos pro escopo amplo (ainda dentro da área de
+  // conteúdo do console) se nenhuma barra de ações tiver o botão.
+  const ACCEPT_SCOPES = [
+    ".mainContentMark .slds-page-header",
+    ".mainContentMark .forceActionsContainer",
+    ".mainContentMark .slds-button-group",
+    '.mainContentMark [role="toolbar"]',
+    ".mainContentMark",
+  ];
+  const ACCEPT_TEXT_RE = /aceitar|accept|assumir|assume|take|tomar/i;
+
+  function isAcceptButton(btn) {
+    const text = (btn.textContent || "").trim();
+    const ariaLabel = btn.getAttribute("aria-label") || "";
+    const title = btn.getAttribute("title") || "";
+    if (!ACCEPT_TEXT_RE.test(text + " " + ariaLabel + " " + title)) return false;
+    return !btn.disabled && btn.offsetParent !== null;
+  }
+
   function clickAcceptButton() {
-    const buttons = document.querySelectorAll("button");
-    for (const btn of buttons) {
-      const text = (btn.textContent || "").trim();
-      const ariaLabel = (btn.getAttribute("aria-label") || "").toLowerCase();
-      const title = (btn.getAttribute("title") || "").toLowerCase();
-      const hasAcceptText = /aceitar|accept|assumir|assume|take|tomar/i.test(text + " " + ariaLabel + " " + title);
-      if (hasAcceptText && !btn.disabled && btn.offsetParent !== null) {
-        btn.click();
-        log("[Debug] Botão Aceitar clicado via atalho");
-        showToast(t('case_accepted'), 'success', 2500);
-        return true;
+    for (const scope of ACCEPT_SCOPES) {
+      for (const container of document.querySelectorAll(scope)) {
+        for (const btn of container.querySelectorAll("button")) {
+          if (!isAcceptButton(btn)) continue;
+          btn.click();
+          log(`[Debug] Botão Aceitar clicado via atalho (escopo: ${scope})`);
+          showToast(t('case_accepted'), 'success', 2500);
+          return true;
+        }
       }
     }
     log("[Debug] Botão Aceitar não encontrado");
@@ -1158,7 +1218,7 @@ function initNormalMode() {
   }
   setupPauseShortcut();
 
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  const onMensagem = (msg, sender, sendResponse) => {
     if (msg && msg.type === "GET_QUEUE_NAME") {
       try {
         const title = document.querySelector(".slds-page-header__title");
@@ -1170,12 +1230,13 @@ function initNormalMode() {
       return true;
     }
     return false;
-  });
+  };
+  chrome.runtime.onMessage.addListener(onMensagem);
 
   carregarEIniciarTodos();
   reportExtensionActive();
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  const onStorageLocal = (changes, area) => {
     if (area === "local" && (changes.queues || changes.general || changes.audiosPersonalizados)) {
       log("[Debug] Alterações detectadas no storage. Reiniciando monitoramento...");
       agendarRecarga();
@@ -1199,12 +1260,30 @@ function initNormalMode() {
         agendarRecarga();
       }
     }
+    // Ligar/desligar o Legacy Mode é assunto do supervisor (aplicarModo): ele
+    // dá o teardown neste modo e sobe o outro, sem recarregar a página.
+  };
+  chrome.storage.onChanged.addListener(onStorageLocal);
 
-    if (area === "sync" && changes.legacyMode && changes.legacyMode.newValue && !changes.legacyMode.oldValue) {
-      log("[Debug] Legacy Mode foi ativado pela primeira vez. Recarregando página...");
-      window.location.reload();
+  // Teardown do modo normal: tudo que foi registrado aqui sai junto. Sem isso
+  // uma troca para o Legacy Mode deixaria monitores, listeners e atalhos vivos
+  // em paralelo — foi por isso que a versão antiga recarregava a página.
+  return function pararModoNormal() {
+    chrome.storage.onChanged.removeListener(onStorageLocal);
+    chrome.runtime.onMessage.removeListener(onMensagem);
+    clearTimeout(_recargaTimer);
+    pararMonitoramentosAtuais();
+    if (window._insvAcceptShortcutHandler) {
+      document.removeEventListener("keydown", window._insvAcceptShortcutHandler);
+      window._insvAcceptShortcutHandler = null;
     }
-  });
+    if (window._insvPauseShortcutHandler) {
+      document.removeEventListener("keydown", window._insvPauseShortcutHandler);
+      window._insvPauseShortcutHandler = null;
+    }
+    // Atalhos e monitores param, mas os toasts na tela continuam: eles somem
+    // sozinhos e sumir na hora seria perda de informação pro usuário.
+  };
 }
 
 // run_at:document_idle can inject this script AFTER the window 'load' event has

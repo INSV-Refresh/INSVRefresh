@@ -1,4 +1,4 @@
-importScripts("ExtPay.js");
+importScripts("ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js");
 
 const extpay = ExtPay("insv-refresh");
 extpay.startBackground();
@@ -155,6 +155,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: true });
       return true;
     }
+    // ── Modo API ────────────────────────────────────────────
+    // Diagnóstico para a tela de opções: o que já está concedido, qual org
+    // seria usado e se a sessão responde. Nenhum dado de chamado aqui.
+    if (msg && msg.type === "SF_API_STATUS") {
+      sfStatusApi(msg.lightningUrl).then(sendResponse);
+      return true;
+    }
+    // Leitura de uma fila. O host de API vem da aba que pediu, nunca de dado
+    // mandado na mensagem: a extensão só roda em *.lightning.force.com, então
+    // isso amarra a requisição ao org que o usuário já está usando.
+    if (msg && msg.type === "SF_QUEUE_RECORDS") {
+      const apiHost = sfApiHostFromUrl((sender.tab && sender.tab.url) || "");
+      if (!apiHost) {
+        sendResponse({ ok: false, erro: "aba fora de um org Salesforce" });
+        return true;
+      }
+      sfLerFila(apiHost, msg.queueLabel)
+        .then((r) => sendResponse({ ok: true, linhas: r.linhas, listView: r.listView }))
+        .catch((e) => sendResponse({ ok: false, erro: limparErro(e) }));
+      return true;
+    }
     if (msg && msg.type === "GET_EXTPAY_USER") {
       extpay.getUser().then(sendResponse).catch((err) => {
         console.error("[INSV] ExtPay getUser error:", err);
@@ -288,3 +309,42 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
   migrateStorage();
   setExtensionIcon("inactive");
 });
+
+
+// ── Modo API: diagnóstico ─────────────────────────────────────
+// Descobre o org a partir da aba passada pela tela de opções ou, se ela não
+// souber, de qualquer aba do Lightning aberta.
+async function sfDescobrirApiHost(lightningUrl) {
+  const doParametro = sfApiHostFromUrl(lightningUrl || "");
+  if (doParametro) return doParametro;
+  try {
+    const abas = await chrome.tabs.query({ url: "*://*.lightning.force.com/*" });
+    for (const aba of abas) {
+      const host = sfApiHostFromUrl(aba.url || "");
+      if (host) return host;
+    }
+  } catch (e) {
+    /* sem permissão de tabs para essa consulta — segue sem host */
+  }
+  return "";
+}
+
+async function sfStatusApi(lightningUrl) {
+  const concedido = await sfTemPermissoes();
+  const apiHost = await sfDescobrirApiHost(lightningUrl);
+  if (!concedido) return { ok: false, concedido: false, apiHost, erro: "permissões não concedidas" };
+  if (!apiHost) return { ok: false, concedido: true, apiHost: "", erro: "nenhuma aba do Salesforce aberta" };
+  try {
+    const versao = await sfVersaoApi(apiHost);
+    const porLabel = await sfCarregarListViews(apiHost);
+    return {
+      ok: true,
+      concedido: true,
+      apiHost,
+      versao,
+      listViews: porLabel.size,
+    };
+  } catch (e) {
+    return { ok: false, concedido: true, apiHost, erro: limparErro(e) };
+  }
+}

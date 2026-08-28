@@ -33,6 +33,8 @@
     "default_title": "INSV Refresh"
   },
   "permissions": ["storage", "unlimitedStorage"],
+  "optional_permissions": ["cookies"],
+  "optional_host_permissions": ["https://*.my.salesforce.com/*"],
   "icons": {
     "16": "assets/icons/INSVRefresh-16.png",
     "32": "assets/icons/INSVRefresh-32.png",

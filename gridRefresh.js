@@ -227,22 +227,65 @@ function initNormalMode() {
   }
 
   const CASE_TABLE_SELECTOR = '.mainContentMark .split-left table[role="grid"]';
-  // Compartilhado por getNewCaseIds e showCaseToast — mesma extração de
+  // Compartilhado por lerLinhasDoDom e showCaseToast — mesma extração de
   // texto (.textContent.trim()) não pode divergir entre os dois pontos.
   const CASE_LINK_SELECTOR = CASE_TABLE_SELECTOR + " tbody tr th span a";
 
-  function getNewCaseIds(seenCaseIds) {
-    const caseLinks = document.querySelectorAll(CASE_LINK_SELECTOR);
-    const newIds = [];
+  // ── Fontes de dados ───────────────────────────────────────
+  // As duas origens devolvem o mesmo formato de linha
+  // ({ caseNumber, recordId, href, status }), então o diff e os alertas não
+  // precisam saber de onde veio o dado.
 
-    caseLinks.forEach((link) => {
-      const caseId = link.textContent.trim();
-      if (!seenCaseIds.has(caseId)) {
-        newIds.push(caseId);
+  // Origem tela: só enxerga o que está renderizado, o status vem como texto
+  // de célula e não há id de registro (o href da grid basta para navegar).
+  function lerLinhasDoDom() {
+    const statusMap = getCaseStatusMap();
+    const vistos = new Set();
+    const linhas = [];
+    document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
+      const caseNumber = link.textContent.trim();
+      if (!caseNumber || vistos.has(caseNumber)) return;
+      vistos.add(caseNumber);
+      linhas.push({
+        caseNumber,
+        recordId: "",
+        href: link.getAttribute("href") || "",
+        status: statusMap[caseNumber] || "",
+      });
+    });
+    return linhas;
+  }
+
+  // Origem org: o service worker resolve a list view e lê os registros pela
+  // UI API. Nunca rejeita a promise — quem chama decide o que fazer com o
+  // erro, e o ciclo cai na leitura de tela.
+  function lerLinhasDaApi(queueLabel) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type: "SF_QUEUE_RECORDS", queueLabel }, (resp) => {
+          if (chrome.runtime.lastError) {
+            resolve({ erro: chrome.runtime.lastError.message || "sem resposta" });
+            return;
+          }
+          if (!resp || !resp.ok) {
+            resolve({ erro: (resp && resp.erro) || "falha na API" });
+            return;
+          }
+          resolve({
+            linhas: (resp.linhas || []).map((l) => ({
+              caseNumber: l.caseNumber,
+              recordId: l.recordId || "",
+              // Link montado a partir do id: no modo API a fila pode nem
+              // estar na tela, então não há link de grid para copiar.
+              href: l.recordId ? `/lightning/r/Case/${l.recordId}/view` : "",
+              status: l.status || "",
+            })),
+          });
+        });
+      } catch (e) {
+        resolve({ erro: (e && e.message) || "erro" });
       }
     });
-
-    return newIds;
   }
 
   function getStatusColumnIndex() {
@@ -733,7 +776,7 @@ function initNormalMode() {
     atualizarBotaoFecharTodos();
   }
 
-  function showCaseToast(caseIds, labelKey, variant) {
+  function showCaseToast(caseIds, labelKey, variant, hrefPorId) {
     const idSet = new Set(caseIds);
     const cases = [];
     document.querySelectorAll(CASE_LINK_SELECTOR).forEach((link) => {
@@ -742,6 +785,16 @@ function initNormalMode() {
         cases.push({ id, href: link.getAttribute("href") || "" });
       }
     });
+    // Chamado detectado pela API com a fila fora da tela não tem link na grid
+    // para consultar. A grid vem primeiro de propósito: com ela na tela, o
+    // clique sintético na linha é a navegação mais fiel ao que o usuário faria.
+    if (hrefPorId) {
+      caseIds.forEach((id) => {
+        if (cases.some((c) => c.id === id)) return;
+        const href = hrefPorId.get(id);
+        if (href) cases.push({ id, href });
+      });
+    }
     if (!cases.length) return;
 
     ensureCaseToastStyle();
@@ -764,6 +817,9 @@ function initNormalMode() {
   // todos tocando som ao mesmo tempo quando a aba voltava a ficar visível.
   let filaMonitores = [];
   const statusNotificationPrevious = {};
+  // Modo API (advanced.apiMode): lê as filas pela UI API em vez de raspar a
+  // tabela. Fica desligado até o usuário conceder as permissões opcionais.
+  let _apiModeAtivo = false;
 
   // ── Horário de expediente ────────────────────────────────────
   // Fora da janela os ciclos são pulados inteiros (sem refresh, sem som, sem
@@ -784,8 +840,24 @@ function initNormalMode() {
     // and rings. The first cycle seeds the baseline silently.
     let primed = false;
 
+    // Um aviso por monitor: se a API falhar todo ciclo, o usuário não é
+    // soterrado de toast — a leitura da tela segue como rede de segurança.
+    let _falhaApiAvisada = false;
+    function avisarFalhaApi(erro) {
+      log(`[Debug] Modo API falhou na fila "${fila.name}": ${erro}`);
+      if (_falhaApiAvisada) return;
+      _falhaApiAvisada = true;
+      showToast(t("api_mode_error"), "warning", 5000);
+    }
+
     const loop = () => {
-      if (!isRightQueue(fila.name)) {
+      const usarApi = _apiModeAtivo;
+      const filaNaTela = isRightQueue(fila.name);
+
+      // Sem modo API a extensão só sabe o que está renderizado, então fila
+      // fora da tela é ciclo perdido. Com modo API o dado vem do org e o
+      // monitoramento continua com o usuário em qualquer página.
+      if (!usarApi && !filaNaTela) {
         log(`[Debug] Retornando, fila incorreta: ${fila.name}`);
         return;
       }
@@ -812,11 +884,16 @@ function initNormalMode() {
 
       const userIsEditing = document.querySelector(".mainContentMark .split-left .slds-checkbox [type=checkbox]:checked");
 
+      // O refresh da grid continua mesmo no modo API: é ele que faz o chamado
+      // novo aparecer na tela do usuário. O que mudou é que ele deixou de ser
+      // a fonte da detecção.
       if (!primed) {
         // Primeira leitura: captura o que já está na fila do jeito que está,
         // sem clicar em refresh. `primed` garante que essa baseline é
         // silenciosa — sem som e sem toast.
         log(`[Debug] Primeira leitura da fila "${fila.name}" — baseline sem refresh`);
+      } else if (!filaNaTela) {
+        log(`[Debug] Fila fora da tela, sem refresh de grid: "${fila.name}"`);
       } else if (!userIsEditing) {
         log(`[Debug] Executando refresh da fila: "${fila.name}"`);
         doRefresh();
@@ -824,22 +901,23 @@ function initNormalMode() {
         log("[Debug] Ignorou refresh - usuário está com chamado selecionado");
       }
 
-      function afterRefreshReady() {
+      // Fecha o ciclo com as linhas lidas (null = leitura inutilizável).
+      // Recebe sempre o mesmo formato, venha do DOM ou da API.
+      function concluirCiclo(linhas) {
         cicloEmAndamento = false;
-        // O ciclo é assíncrono (espera o grid assentar). Se o monitor foi
-        // cancelado nesse meio-tempo — qualquer gravação em storage recria
-        // todos os monitores — este callback ainda estava agendado e tocava
-        // som com o seenCaseIds antigo, somando ao som do monitor novo.
+        // O ciclo é assíncrono. Se o monitor foi cancelado nesse meio-tempo —
+        // qualquer gravação em storage recria todos os monitores — este
+        // callback ainda estava agendado e tocaria som com o seenCaseIds
+        // antigo, somando ao som do monitor novo.
         if (cancelled) {
           log(`[Debug] Ciclo descartado, monitor cancelado: "${fila.name}"`);
           return;
         }
 
-        // Sem tabela renderizada não há baseline confiável: a leitura imediata
-        // no load podia "primar" com lista vazia e o ciclo seguinte tocaria
-        // som para todos os chamados que já estavam na fila.
-        if (!document.querySelector(CASE_TABLE_SELECTOR)) {
-          log(`[Debug] Grid ainda sem tabela, ciclo ignorado: "${fila.name}"`);
+        // Sem leitura confiável não há baseline: primar com lista vazia faria
+        // o ciclo seguinte tocar som para a fila inteira.
+        if (!linhas || (!usarApi && !document.querySelector(CASE_TABLE_SELECTOR))) {
+          log(`[Debug] Sem leitura utilizável, ciclo ignorado: "${fila.name}"`);
           if (!primed && fastRetriesLeft > 0) {
             fastRetriesLeft--;
             schedule(FAST_RETRY_MS);
@@ -847,19 +925,22 @@ function initNormalMode() {
           return;
         }
 
-        const novos = getNewCaseIds(seenCaseIds);
+        // Alertar exige ou a fila na tela (leitura de DOM) ou dado do org
+        // (modo API), nunca uma leitura de tela de outra fila.
+        const podeAlertar = usarApi || isRightQueue(fila.name);
+        const hrefPorId = new Map();
+        linhas.forEach((l) => { if (l.href) hrefPorId.set(l.caseNumber, l.href); });
 
-        if (primed && novos.length > 0 && fila.soundEnabled && isRightQueue(fila.name)) {
-          showCaseToast(novos, "new_case_toast_label");
-        }
+        const novos = linhas
+          .map((l) => l.caseNumber)
+          .filter((id) => !seenCaseIds.has(id));
 
-        if (primed && novos.length > 0 && fila.soundEnabled) {
+        if (primed && novos.length > 0 && fila.soundEnabled && podeAlertar) {
           log(`[Debug] Novos casos na fila "${fila.name}": "${novos}"`);
+          showCaseToast(novos, "new_case_toast_label", undefined, hrefPorId);
           const soundToUse = fila.customSound || globalSound;
           log(`[Debug] Som para fila "${fila.name}": ${soundToUse}`);
-          if (isRightQueue(fila.name)) {
-            tocarSomDedupado(fila.name, "new", novos, () => tocarSom(soundToUse, globalVolume));
-          }
+          tocarSomDedupado(fila.name, "new", novos, () => tocarSom(soundToUse, globalVolume));
         }
 
         novos.forEach((id) => seenCaseIds.add(id));
@@ -868,8 +949,10 @@ function initNormalMode() {
         // Notificação de mudança de status — config por fila
         // (queues[].statusNotify), recurso premium
         const sn = fila.statusNotify;
-        if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && isRightQueue(fila.name)) {
-          const currentMap = getCaseStatusMap();
+        const temStatus = linhas.some((l) => l.status);
+        if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && podeAlertar && temStatus) {
+          const currentMap = {};
+          linhas.forEach((l) => { currentMap[l.caseNumber] = l.status || ""; });
           const targetStatuses = new Set(sn.statuses.map((s) => s.trim().toLowerCase()));
           // Per-queue sub-map keyed by caseId. Nested (not "name_caseId") so
           // eviction can't be fooled by queue names sharing a prefix.
@@ -899,7 +982,7 @@ function initNormalMode() {
           // não tem esse limite — lista todo chamado cujo status mudou pro
           // alvo monitorado, não só o que disparou o som.
           if (statusChangedIds.length > 0) {
-            showCaseToast(statusChangedIds, "status_updated_toast_label", "status");
+            showCaseToast(statusChangedIds, "status_updated_toast_label", "status", hrefPorId);
             tocarSomDedupado(fila.name, "status", statusDedupeKeys, () =>
               tocarSom(sn.sound || "notification.mp3", globalVolume)
             );
@@ -913,7 +996,22 @@ function initNormalMode() {
 
       cicloEmAndamento = true;
 
-      waitForGridSettle(afterRefreshReady);
+      if (usarApi) {
+        lerLinhasDaApi(fila.name).then((r) => {
+          if (!r.erro) {
+            concluirCiclo(r.linhas);
+            return;
+          }
+          // Sessão expirada, fila sem list view correspondente, org fora do
+          // ar: o ciclo não é perdido, cai na leitura de tela quando ela
+          // existe.
+          avisarFalhaApi(r.erro);
+          if (filaNaTela) waitForGridSettle(() => concluirCiclo(lerLinhasDoDom()));
+          else concluirCiclo(null);
+        });
+      } else {
+        waitForGridSettle(() => concluirCiclo(lerLinhasDoDom()));
+      }
     };
     // Agendamento por timestamp em vez de setInterval: navegadores
     // limitam timers em abas em background, então ao voltar a aba
@@ -1011,6 +1109,7 @@ function initNormalMode() {
           // Expediente: monitores continuam de pé fora da janela (o pulo é
           // por ciclo, pra transição do relógio funcionar sem evento novo).
           _workSchedule = (data.advanced && data.advanced.workSchedule) || null;
+          _apiModeAtivo = !!(data.advanced && data.advanced.apiMode);
           // Pausa global: suspende todos os timers sem alterar o flag
           // active de cada fila — ao retomar, o conjunto ativo é restaurado
           if (data.advanced && data.advanced.globalPaused) {
@@ -1248,6 +1347,12 @@ function initNormalMode() {
       const wsOld = JSON.stringify((changes.advanced.oldValue || {}).workSchedule || null);
       const wsNew = JSON.stringify((changes.advanced.newValue || {}).workSchedule || null);
       if (wsOld !== wsNew) agendarRecarga();
+      const apiAntes = !!(changes.advanced.oldValue && changes.advanced.oldValue.apiMode);
+      const apiDepois = !!(changes.advanced.newValue && changes.advanced.newValue.apiMode);
+      if (apiAntes !== apiDepois) {
+        log(`[Debug] Modo API ${apiDepois ? "ativado" : "desativado"}`);
+        agendarRecarga();
+      }
       const wasPaused = !!(changes.advanced.oldValue && changes.advanced.oldValue.globalPaused);
       const isPaused = !!(changes.advanced.newValue && changes.advanced.newValue.globalPaused);
       if (wasPaused !== isPaused) {

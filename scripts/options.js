@@ -764,6 +764,7 @@ i18nReady.then(function() {
   });
 
   setupWorkSchedule();
+  setupApiMode();
 
   // Seletor de idioma (Aparência)
   const langSelect = document.getElementById("langSelect");
@@ -1030,3 +1031,83 @@ document.querySelectorAll(".menu a").forEach(link => {
         }
     });
 });
+
+
+// ── Modo API ──────────────────────────────────────────────────
+// Liga/desliga a leitura das filas pela API do Salesforce e mostra o
+// diagnóstico da conexão. As permissões são opcionais de propósito: quem não
+// usa o modo API nunca concede acesso a cookie nenhum.
+const SF_API_PERMISSIONS_UI = {
+  permissions: ["cookies"],
+  origins: ["https://*.my.salesforce.com/*"],
+};
+
+function setupApiMode() {
+  const toggle = document.getElementById("api-mode-enabled");
+  const btnTest = document.getElementById("api-test");
+  const statusEl = document.getElementById("api-status");
+  if (!toggle || !btnTest || !statusEl) return;
+
+  function pintarStatus(texto, tom) {
+    statusEl.textContent = texto;
+    statusEl.dataset.tone = tom;
+  }
+
+  function consultarStatus() {
+    pintarStatus(t("api_status_checking"), "neutral");
+    chrome.runtime.sendMessage({ type: "SF_API_STATUS" }, (r) => {
+      if (chrome.runtime.lastError || !r) {
+        pintarStatus(t("api_status_error", { e: "sem resposta" }), "error");
+        return;
+      }
+      if (r.ok) {
+        pintarStatus(t("api_status_ok", { host: r.apiHost, v: r.versao, n: r.listViews }), "ok");
+      } else if (!r.concedido) {
+        pintarStatus(t("api_status_denied"), "error");
+      } else {
+        pintarStatus(t("api_status_error", { e: r.erro || "?" }), "error");
+      }
+    });
+  }
+
+  function salvarApiMode(ativo) {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      adv.apiMode = ativo;
+      chrome.storage.local.set({ advanced: adv }, () => {
+        showToast(t("queues_saved"), "success", 2000);
+      });
+    });
+  }
+
+  chrome.storage.local.get("advanced", (data) => {
+    const ativo = !!(data.advanced && data.advanced.apiMode);
+    toggle.checked = ativo;
+    if (ativo) consultarStatus();
+    else pintarStatus(t("api_status_off"), "neutral");
+  });
+
+  toggle.addEventListener("change", () => {
+    if (!toggle.checked) {
+      salvarApiMode(false);
+      pintarStatus(t("api_status_off"), "neutral");
+      // A permissão concedida não é revogada aqui: religar o modo passaria
+      // pelo prompt de novo toda vez. Quem quiser revogar faz em
+      // chrome://extensions, e o modo desligado não usa nada dela.
+      return;
+    }
+    // chrome.permissions.request exige gesto do usuário; este change vem do
+    // clique no toggle, então roda dentro do gesto.
+    chrome.permissions.request(SF_API_PERMISSIONS_UI, (concedido) => {
+      if (chrome.runtime.lastError || !concedido) {
+        toggle.checked = false;
+        pintarStatus(t("api_perm_denied"), "error");
+        return;
+      }
+      salvarApiMode(true);
+      consultarStatus();
+    });
+  });
+
+  btnTest.addEventListener("click", consultarStatus);
+}

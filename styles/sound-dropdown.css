@@ -142,7 +142,10 @@
 
 .qsd-option.selected {
   background: var(--brand-500);
-  color: var(--white-color);
+  /* Mantém o #00A1E0 da spec. Texto branco aqui dava 2.93:1 (reprova AA em
+     12px/600); ink-950 sobre o mesmo azul dá 6.54:1. O check herda via
+     currentColor. */
+  color: var(--ink-950);
   font-weight: 600;
 }
 

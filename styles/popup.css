@@ -82,12 +82,13 @@ small {
   width: auto;
   gap: 4px;
   font-weight: 600;
-  color: var(--ink-400);
+  /* ink-400 dava 3.72:1 no fundo do popup (11px reprova AA); ink-300 dá 5.99:1 */
+  color: var(--ink-300);
   font-size: 11px;
 }
 
 small a {
-  color: var(--ink-400);
+  color: var(--ink-300);
 }
 
 hr {
@@ -217,7 +218,8 @@ input[type="text"].queue-name {
 }
 
 input[type="text"].queue-name::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  /* 0.35 dava 2.93:1 sobre o campo; 0.55 dá 4.95:1 (AA) */
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* Save confirmation flash — on wrapper since input has no border */
@@ -266,7 +268,11 @@ input[type="text"].queue-name::placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--dur-press) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-press) var(--ease-out);
 }
 
 .queue-active {
@@ -275,10 +281,22 @@ input[type="text"].queue-name::placeholder {
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
+/* Não dá para clarear o fundo no hover: success-700 já está em 5.02:1 e o
+   próximo passo de verde derruba o texto branco para 4.4:1. O hover então
+   intensifica o glow que o botão já tem, sem mexer no contraste. */
+.queue-active:hover {
+  box-shadow: 0 3px 12px rgba(34, 197, 94, 0.45);
+}
+
 .queue-inactive {
   background: var(--ink-800);
   color: var(--ink-200);
   border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.queue-inactive:hover {
+  background: var(--ink-700); /* ink-200 sobre ink-700 = 6.78:1 */
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 /* ── Row 2: interval + sound + sound select ─── */
@@ -328,7 +346,8 @@ input[type="number"].queue-interval:focus {
   position: absolute;
   right: 7px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  /* 0.45 dava 3.85:1 sobre o campo; 0.55 dá 4.95:1 (AA) */
+  color: rgba(255, 255, 255, 0.55);
   pointer-events: none;
 }
 
@@ -873,4 +892,10 @@ html[data-theme="dark"] .add-queue-btn {
 
 #ws-adjust-link:hover {
   background: rgba(255, 209, 102, 0.32);
+}
+
+/* Mesmo press feedback dos botões do banner (lista de :active lá em cima
+   cobre só button; este é um <a>) */
+#ws-adjust-link:active {
+  transform: scale(0.97);
 }

@@ -708,8 +708,10 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
+/* Indicador de foco precisa de 3:1 contra o entorno (WCAG 1.4.11). A 45% de
+   alpha o anel dava 1.63:1 no card branco, praticamente invisível. */
 .toggle-switch input:focus-visible + .toggle-slider {
-  box-shadow: 0 0 0 3px var(--brand-a45);
+  box-shadow: 0 0 0 3px var(--brand-600);
 }
 
 [data-theme="dark"] button:focus-visible,
@@ -800,7 +802,9 @@ a:focus-visible,
   height: 38px;
   border-radius: var(--radius-md);
   background: var(--brand-50);
-  color: var(--brand-500);
+  /* Ícone é gráfico não-textual (mín. 3:1): brand-500 sobre brand-50 dava
+     2.64:1, brand-700 dá 5.42:1 */
+  color: var(--brand-700);
   border: 1px solid var(--brand-200);
   cursor: pointer;
   display: flex;
@@ -1134,7 +1138,8 @@ button.delete-audio-btn:hover {
 
 .shortcut-capture.has-shortcut { border-style: solid; }
 
-.shortcut-placeholder { color: var(--ink-400); font-size: var(--fs-sm); }
+/* ink-400 dava 4.34:1 sobre surface-2; ink-500 dá 6.21:1 */
+.shortcut-placeholder { color: var(--ink-500); font-size: var(--fs-sm); }
 
 .shortcut-capture kbd {
   display: inline-block;
@@ -1302,7 +1307,37 @@ button.delete-audio-btn:hover {
   transform: translateY(-1px);
 }
 
-.import-label { cursor: pointer; }
+/* Containing block do input escondido: sem isso o position:absolute sobe até
+   o ICB, escapa do clip de .content (que é overflow-y:auto mas static) e
+   estica a altura do DOCUMENTO até a posição do card, criando um vazio
+   gigante abaixo do footer. */
+.import-label { position: relative; cursor: pointer; }
+
+/* O input de arquivo estava com display:none, o que o tira da ordem de foco.
+   Como <label> também não é focável, "Importar" não tinha NENHUM caminho por
+   teclado (WCAG 2.1.1). Escondido visualmente mas ainda focável, o Tab chega
+   nele e Enter/Espaço abrem o seletor de arquivo; o anel vai no rótulo. */
+.visually-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.import-label:focus-within {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .import-label:focus-within {
+  outline-color: var(--brand-400);
+}
 
 /* ── Banners ─────────────────────────────────── */
 .trial-banner {
@@ -1315,7 +1350,9 @@ button.delete-audio-btn:hover {
   padding: var(--space-3) var(--space-5);
   font-size: var(--fs-base);
   color: var(--warning-700);
-  margin-bottom: var(--space-6);
+  /* Alinha com o recuo das sections (0 40px); antes só tinha margin-bottom e
+     o banner encostava na sidebar enquanto todo o resto ficava recuado. */
+  margin: var(--space-6) var(--space-10);
 }
 
 .trial-banner a {
@@ -1338,7 +1375,8 @@ button.delete-audio-btn:hover {
 }
 
 .changelog-banner strong {
-  color: var(--brand-600);
+  /* brand-600 sobre o tint claro do banner dava 3.57:1; brand-700 dá 5.19:1 */
+  color: var(--brand-700);
   font-size: var(--fs-base);
   display: block;
   margin-bottom: var(--space-4);
@@ -1806,7 +1844,6 @@ button.delete-audio-btn:hover {
 
 .ws-day input:checked + span {
   background: var(--brand-600);
-  border-color: var(--brand-400);
   color: var(--white-color, #fff);
 }
 

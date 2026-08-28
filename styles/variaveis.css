@@ -76,6 +76,7 @@
   --success-500: #22C55E;
   --success-700: #15803D; /* AA: white text passes on this step, not on 500 */
   --danger-500:  #EF4444;
+  --danger-600:  #DC2626; /* AA: texto branco em danger-500 dá 3.76:1, aqui 4.83:1 */
   --info-500:    var(--brand-500);
   --warning-300: #FCD34D;
   --warning-500: #F59E0B;
@@ -160,6 +161,7 @@
 
 /* Dark theme — popup, options, pricing & privacy all use [data-theme] now */
 [data-theme="dark"] {
+  color-scheme: dark; /* native scrollbars/controls flip with the tokens */
   --surface:        var(--ink-950);
   --surface-2:      var(--ink-800);
   --surface-sunken: #080B14; /* chrome (topbar/footer) — one step under body */
@@ -169,10 +171,28 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --surface:        #FFFFFF;
   --surface-2:      #F5F6FB;
   --surface-sunken: #FFFFFF; /* chrome matches surface in light mode */
   --border:         #E5E7EF;
   --text:           var(--ink-800);
   --text-muted:     #6B7390;
+}
+
+/* ── Theme swap ──────────────────────────────────
+   Switching dark/light repaints the whole page at once. Components declare
+   their own transitions for hover/press, and only some of them list color or
+   background, so a token swap used to animate part of the UI while the rest
+   snapped: the uneven "flicker" effect. Rather than force every component to
+   transition the same properties (which would also slow every hover), the
+   swap is frozen for one frame so the entire page changes instantly.
+   scripts/util.js sets [data-theme-switching] around the attribute change.
+   Opt an element out with data-theme-motion when its own animation must keep
+   running through the swap (the dark mode toggle knob). */
+html[data-theme-switching],
+html[data-theme-switching] *:not([data-theme-motion]):not([data-theme-motion] *),
+html[data-theme-switching] *:not([data-theme-motion]):not([data-theme-motion] *)::before,
+html[data-theme-switching] *:not([data-theme-motion]):not([data-theme-motion] *)::after {
+  transition: none !important;
 }

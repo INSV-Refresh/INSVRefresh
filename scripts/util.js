@@ -58,7 +58,28 @@ function playSound(value, volume) {
 // ── Theme (dark/light) ───────────────────────────────────────
 // One source for every page. Theme is driven by [data-theme] on <html>
 // (see variaveis.css); the popup uses the same attribute now too.
+
+// Freezes transitions for one frame so a theme swap lands everywhere at the
+// same instant. Without it, only the components whose transition happens to
+// list color/background animate and the rest snap, which reads as flicker.
+// Elements marked [data-theme-motion] keep animating (see variaveis.css).
+var themeFreezeToken = 0;
+function freezeThemeTransitions() {
+  const root = document.documentElement;
+  const token = ++themeFreezeToken;
+  root.setAttribute("data-theme-switching", "");
+  void root.offsetHeight; // flush styles so the freeze applies before the swap
+  // Two frames: the first paints the new theme, the second re-enables motion
+  // once the values have already settled.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (token === themeFreezeToken) root.removeAttribute("data-theme-switching");
+    });
+  });
+}
+
 function applyDarkMode(enabled) {
+  freezeThemeTransitions();
   document.documentElement.setAttribute("data-theme", enabled ? "dark" : "light");
 }
 
@@ -95,14 +116,15 @@ function showToast(message, type, duration) {
       "color:var(--white-color,#fff);font-size:0.9rem;font-weight:600;",
       "line-height:var(--leading-snug,1.4);",
       "box-shadow:var(--box-shadow,0 8px 24px -8px rgba(0,0,0,.35),0 2px 6px -2px rgba(0,0,0,.25));",
-      // AA: white text needs brand-600/success-700, not brand-500/success-500
-      "background:var(--brand-600,#0085BB);opacity:0;transform:translateY(10px);",
+      // AA at this size (0.9rem/600 is NOT WCAG "large text", so it needs 4.5:1):
+      // white on brand-500 = 2.93, on brand-600 = 4.14, on brand-700 = 6.01.
+      "background:var(--brand-700,#006A95);opacity:0;transform:translateY(10px);",
       "transition:opacity var(--dur-base,200ms) var(--ease-out,ease),transform var(--dur-base,200ms) var(--ease-out,ease)}",
       ".insv-toast.show{opacity:1;transform:translateY(0)}",
       ".insv-toast.success{background:var(--success-700,#15803D)}",
-      ".insv-toast.error{background:var(--danger-500,#EF4444)}",
+      ".insv-toast.error{background:var(--danger-600,#DC2626)}", // 4.83:1 (500 dava 3.76)
       ".insv-toast.warning{background:var(--gold-500,#FFD166);color:var(--ink-800,#1B2340)}",
-      ".insv-toast.info{background:var(--brand-600,#0085BB)}",
+      ".insv-toast.info{background:var(--brand-700,#006A95)}",
       "@media (prefers-reduced-motion:reduce){.insv-toast{transition:opacity var(--dur-fast,150ms) linear;",
       "transform:none}.insv-toast.show{transform:none}}",
     ].join("");

@@ -597,6 +597,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // tokens escuros); dark off → sem atributo, então o dropdown de som e demais
 // consumidores de token caem nos fallbacks escuros, nunca no tema claro.
 function applyPopupTheme(dark) {
+  freezeThemeTransitions(); // swap the whole popup in one frame, no partial fade
   if (dark) document.documentElement.setAttribute("data-theme", "dark");
   else document.documentElement.removeAttribute("data-theme");
 }

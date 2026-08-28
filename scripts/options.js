@@ -947,7 +947,11 @@ function setupWorkSchedule() {
   const dayInputs = Array.from(daysEl.querySelectorAll('input[type="checkbox"]'));
 
   function renderDisabledState() {
-    fieldsEl.classList.toggle("disabled", !enabledEl.checked);
+    const off = !enabledEl.checked;
+    fieldsEl.classList.toggle("disabled", off);
+    // pointer-events:none não bloqueia teclado — sem o atributo disabled o
+    // Tab ainda alcançava e editava campos visualmente inertes.
+    [startEl, endEl, ...dayInputs].forEach((el) => { el.disabled = off; });
   }
 
   function currentValue() {

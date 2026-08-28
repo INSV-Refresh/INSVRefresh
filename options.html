@@ -68,7 +68,7 @@
                 <label class="sidebar-toggle-row">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                     <span data-i18n="dark_mode">Modo escuro</span>
-                    <div class="toggle-switch toggle-switch--sm">
+                    <div class="toggle-switch toggle-switch--sm" data-theme-motion>
                         <input type="checkbox" id="darkModeToggle">
                         <span class="toggle-slider"></span>
                     </div>
@@ -277,7 +277,7 @@
                             <label for="import-settings-input" class="export-import-btn import-label">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v13"/></svg>
                                 <span data-i18n="import">Importar</span>
-                                <input type="file" id="import-settings-input" accept=".json" style="display: none;">
+                                <input type="file" id="import-settings-input" accept=".json" class="visually-hidden-input">
                             </label>
                         </div>
                     </div>

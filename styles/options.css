@@ -1910,3 +1910,19 @@ button.delete-audio-btn:hover {
 
 [data-theme="dark"] .api-status { color: var(--ink-300); }
 [data-theme="dark"] .api-status[data-tone="error"] { color: var(--danger-500); }
+
+/* Streaming depende do modo API: o recuo e a borda dizem isso sem texto. */
+.api-substep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--border);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.api-substep.disabled {
+  opacity: 0.45;
+}
+
+[data-theme="dark"] .api-substep { border-left-color: rgba(255, 255, 255, 0.12); }

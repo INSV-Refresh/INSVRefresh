@@ -1,7 +1,7 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "manifest_version": 3,
   "content_scripts": [
     {
@@ -32,7 +32,7 @@
     "default_popup": "popup.html",
     "default_title": "INSV Refresh"
   },
-  "permissions": ["storage", "unlimitedStorage"],
+  "permissions": ["storage", "unlimitedStorage", "alarms"],
   "optional_permissions": ["cookies"],
   "optional_host_permissions": ["https://*.my.salesforce.com/*"],
   "icons": {

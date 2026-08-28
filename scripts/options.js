@@ -1080,17 +1080,77 @@ function setupApiMode() {
     });
   }
 
+  // ── Streaming (sub-bloco) ───────────────────────────────
+  const streamBlock = document.getElementById("stream-block");
+  const streamToggle = document.getElementById("stream-mode-enabled");
+  const streamBtn = document.getElementById("stream-test");
+  const streamStatusEl = document.getElementById("stream-status");
+
+  function pintarStream(texto, tom) {
+    if (!streamStatusEl) return;
+    streamStatusEl.textContent = texto;
+    streamStatusEl.dataset.tone = tom;
+  }
+
+  // Sem modo API o streaming não tem como ler a fila quando o evento chega,
+  // então o sub-bloco fica inerte junto (inclusive para o teclado).
+  function renderStreamDisponivel() {
+    if (!streamBlock || !streamToggle) return;
+    const disponivel = toggle.checked;
+    streamBlock.classList.toggle("disabled", !disponivel);
+    streamToggle.disabled = !disponivel;
+    if (streamBtn) streamBtn.disabled = !disponivel;
+    if (!disponivel) pintarStream(t("stream_needs_api"), "neutral");
+  }
+
+  function consultarStream() {
+    if (!streamToggle || !streamToggle.checked) {
+      pintarStream(t("stream_status_off"), "neutral");
+      return;
+    }
+    pintarStream(t("stream_status_wait"), "neutral");
+    chrome.runtime.sendMessage({ type: "SF_STREAM_STATUS" }, (r) => {
+      if (chrome.runtime.lastError || !r) {
+        pintarStream(t("stream_status_error", { e: "sem resposta" }), "error");
+        return;
+      }
+      if (r.conectado) pintarStream(t("stream_status_on"), "ok");
+      else if (r.erro) pintarStream(t("stream_status_error", { e: r.erro }), "error");
+      else pintarStream(t("stream_status_wait"), "neutral");
+    });
+  }
+
+  function salvarStreamMode(ativo) {
+    chrome.storage.local.get("advanced", (data) => {
+      const adv = data.advanced || {};
+      adv.streamMode = ativo;
+      chrome.storage.local.set({ advanced: adv }, () => {
+        showToast(t("queues_saved"), "success", 2000);
+      });
+    });
+  }
+
   chrome.storage.local.get("advanced", (data) => {
-    const ativo = !!(data.advanced && data.advanced.apiMode);
+    const adv = data.advanced || {};
+    const ativo = !!adv.apiMode;
     toggle.checked = ativo;
-    if (ativo) consultarStatus();
-    else pintarStatus(t("api_status_off"), "neutral");
+    if (streamToggle) streamToggle.checked = !!adv.streamMode;
+    renderStreamDisponivel();
+    if (ativo) {
+      consultarStatus();
+      // O service worker leva um instante para reconectar depois de acordar;
+      // consultar de imediato quase sempre mostraria "conectando".
+      if (streamToggle && streamToggle.checked) setTimeout(consultarStream, 1200);
+    } else {
+      pintarStatus(t("api_status_off"), "neutral");
+    }
   });
 
   toggle.addEventListener("change", () => {
     if (!toggle.checked) {
       salvarApiMode(false);
       pintarStatus(t("api_status_off"), "neutral");
+      renderStreamDisponivel();
       // A permissão concedida não é revogada aqui: religar o modo passaria
       // pelo prompt de novo toda vez. Quem quiser revogar faz em
       // chrome://extensions, e o modo desligado não usa nada dela.
@@ -1102,12 +1162,29 @@ function setupApiMode() {
       if (chrome.runtime.lastError || !concedido) {
         toggle.checked = false;
         pintarStatus(t("api_perm_denied"), "error");
+        renderStreamDisponivel();
         return;
       }
       salvarApiMode(true);
+      renderStreamDisponivel();
       consultarStatus();
     });
   });
 
+  if (streamToggle) {
+    streamToggle.addEventListener("change", () => {
+      salvarStreamMode(streamToggle.checked);
+      if (!streamToggle.checked) {
+        pintarStream(t("stream_status_off"), "neutral");
+        return;
+      }
+      // Handshake + subscribe levam alguns instantes; consultar na hora
+      // mostraria um erro que não existe.
+      pintarStream(t("stream_status_wait"), "neutral");
+      setTimeout(consultarStream, 2000);
+    });
+  }
+
+  if (streamBtn) streamBtn.addEventListener("click", consultarStream);
   btnTest.addEventListener("click", consultarStatus);
 }

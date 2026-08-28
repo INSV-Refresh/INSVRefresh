@@ -247,9 +247,26 @@
 
                     <p class="field-desc api-security-note" data-i18n="api_security">Ao ativar, o navegador vai pedir duas permissões: ler cookies e acessar o domínio do seu Salesforce. A extensão usa isso para pegar a sessão que você já tem aberta e consultar a própria API do org. A sessão não é gravada, não é enviada para lugar nenhum e só é usada em chamadas para o seu Salesforce.</p>
 
+                    <p class="field-desc" data-i18n="api_quota_hint">Cada verificação consome uma chamada de API do seu org. Intervalos muito curtos, várias filas e várias abas abertas somam. Se a sua organização tiver limite apertado, prefira intervalos maiores.</p>
+
                     <div class="api-status-row">
                         <button type="button" id="api-test" class="export-import-btn" data-i18n="api_test">Testar conexão</button>
                         <span id="api-status" class="api-status" role="status" aria-live="polite"></span>
+                    </div>
+
+                    <div class="api-substep" id="stream-block">
+                        <label class="toggle-switch-label">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="stream-mode-enabled">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <span data-i18n="stream_enable">Tempo real (Change Data Capture)</span>
+                        </label>
+                        <p class="field-desc" data-i18n="stream_p">Assina os eventos de alteração de chamado do org e verifica a fila assim que algo muda, sem esperar o intervalo. Precisa do Change Data Capture habilitado para Case no Setup do Salesforce. Sem isso, a extensão segue no intervalo normal.</p>
+                        <div class="api-status-row">
+                            <button type="button" id="stream-test" class="export-import-btn" data-i18n="stream_test">Verificar streaming</button>
+                            <span id="stream-status" class="api-status" role="status" aria-live="polite"></span>
+                        </div>
                     </div>
                 </div>
             </section>

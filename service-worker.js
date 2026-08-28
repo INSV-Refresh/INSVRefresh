@@ -1,4 +1,4 @@
-importScripts("ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js");
+importScripts("ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js", "scripts/sf-stream.js");
 
 const extpay = ExtPay("insv-refresh");
 extpay.startBackground();
@@ -162,6 +162,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sfStatusApi(msg.lightningUrl).then(sendResponse);
       return true;
     }
+    if (msg && msg.type === "SF_STREAM_STATUS") {
+      // Reconcilia antes de responder: se o service worker acabou de subir, o
+      // estado ainda não reflete a configuração.
+      sfStreamReconciliar().then(() => sendResponse(sfStreamEstado()));
+      return true;
+    }
     // Leitura de uma fila. O host de API vem da aba que pediu, nunca de dado
     // mandado na mensagem: a extensão só roda em *.lightning.force.com, então
     // isso amarra a requisição ao org que o usuário já está usando.
@@ -297,6 +303,12 @@ function migrateStorage() {
   });
 }
 
+// Streaming: sobe junto com o service worker e acompanha a configuração.
+chrome.runtime.onStartup.addListener(() => sfStreamReconciliar());
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.advanced) sfStreamReconciliar(true);
+});
+
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
     const internalUrl = chrome.runtime.getURL("options.html");
@@ -308,6 +320,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
   }
   migrateStorage();
   setExtensionIcon("inactive");
+  sfStreamReconciliar();
 });
 
 

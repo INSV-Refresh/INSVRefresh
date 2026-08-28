@@ -6,10 +6,16 @@
 // Depende de scripts/sf-session.js (mesmo escopo de service worker).
 
 const SF_CASE_PAGE_SIZE = 200;
+// Cada aba do Salesforce roda seu próprio monitor. Sem esta janela curta, três
+// abas abertas na mesma fila viram três chamadas de API por ciclo, e chamada de
+// API é cota do org, não recurso gratuito.
+const SF_FILA_TTL_MS = 5000;
 const SF_LIST_VIEWS_TTL_MS = 10 * 60 * 1000;
 
 // apiHost -> { ts, porLabel: Map(labelNormalizado -> listView) }
 const _sfListViewsCache = new Map();
+// "apiHost|fila" -> { ts, dados }
+const _sfFilaCache = new Map();
 
 function sfNormalizarLabel(s) {
   return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -62,6 +68,10 @@ function sfValorDeCampo(rec, nome) {
 // número do chamado (o que o usuário vê e o que vira toast), id de registro
 // (para a navegação nativa) e status.
 async function sfLerFila(apiHost, label) {
+  const chaveCache = apiHost + "|" + sfNormalizarLabel(label);
+  const emCache = _sfFilaCache.get(chaveCache);
+  if (emCache && Date.now() - emCache.ts < SF_FILA_TTL_MS) return emCache.dados;
+
   const lv = await sfResolverListView(apiHost, label);
   if (!lv) throw new Error("list view não encontrada para esta fila");
 
@@ -82,5 +92,7 @@ async function sfLerFila(apiHost, label) {
       status: sfValorDeCampo(rec, "Status"),
     });
   }
-  return { linhas, listView: lv };
+  const resultado = { linhas, listView: lv };
+  _sfFilaCache.set(chaveCache, { ts: Date.now(), dados: resultado });
+  return resultado;
 }

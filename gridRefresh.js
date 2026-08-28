@@ -820,6 +820,9 @@ function initNormalMode() {
   // Modo API (advanced.apiMode): lê as filas pela UI API em vez de raspar a
   // tabela. Fica desligado até o usuário conceder as permissões opcionais.
   let _apiModeAtivo = false;
+  // Piso entre verificações disparadas por evento de CDC: uma atualização em
+  // massa no org gera muitos eventos e não pode virar rajada de leituras.
+  const STREAM_PULSE_FLOOR_MS = 3000;
 
   // ── Horário de expediente ────────────────────────────────────
   // Fora da janela os ciclos são pulados inteiros (sem refresh, sem som, sem
@@ -1075,6 +1078,14 @@ function initNormalMode() {
 
     filaMonitores.push({
       name: fila.name,
+      // Chegou evento do org: adianta a próxima leitura em vez de esperar o
+      // intervalo. runCycle reagenda o ciclo seguinte a partir de agora.
+      pulsar() {
+        if (cancelled || cicloEmAndamento) return;
+        if (Date.now() - lastRefreshAt < STREAM_PULSE_FLOOR_MS) return;
+        log(`[Debug] Verificação imediata por evento do org: "${fila.name}"`);
+        runCycle();
+      },
       cancel() {
         cancelled = true;
         clearTimeout(timerId);
@@ -1318,6 +1329,11 @@ function initNormalMode() {
   setupPauseShortcut();
 
   const onMensagem = (msg, sender, sendResponse) => {
+    if (msg && msg.type === "SF_STREAM_TICK") {
+      filaMonitores.forEach((monitor) => { if (monitor.pulsar) monitor.pulsar(); });
+      sendResponse({ ok: true });
+      return true;
+    }
     if (msg && msg.type === "GET_QUEUE_NAME") {
       try {
         const title = document.querySelector(".slds-page-header__title");

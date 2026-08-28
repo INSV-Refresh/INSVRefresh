@@ -1,13 +1,19 @@
 {
   "name": "INSV Refresh",
   "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
-  "version": "5.0.7",
+  "version": "5.1.0",
   "manifest_version": 3,
   "content_scripts": [
     {
       "matches": ["*://*.lightning.force.com/*"],
       "js": ["scripts/i18n.js", "scripts/util.js", "gridRefresh.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.lightning.force.com/*"],
+      "js": ["scripts/sf-nav-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
     },
     {
       "matches": ["https://extensionpay.com/*"],

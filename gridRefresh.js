@@ -425,17 +425,25 @@ function initNormalMode() {
       // Re-enable on our own toast specifically.
       ".insv-case-toast{display:flex;align-items:center;gap:8px;pointer-events:auto}",
       ".insv-case-toast-label{opacity:0.85}",
-      ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer}",
+      ".insv-case-toast-link{color:inherit;text-decoration:underline;font-weight:700;flex:1;cursor:pointer;transition:opacity var(--dur-fast,150ms) var(--ease-out,cubic-bezier(0.23,1,0.32,1))}",
       ".insv-case-toast-link:hover{opacity:0.85}",
-      ".insv-case-toast-close{flex:none;background:none;border:0;color:inherit;opacity:0.7;cursor:pointer;font:inherit;font-size:15px;line-height:1;padding:2px 5px;border-radius:4px}",
+      ".insv-case-toast-close{flex:none;background:none;border:0;color:inherit;opacity:0.7;cursor:pointer;font:inherit;font-size:15px;line-height:1;padding:2px 5px;border-radius:4px;transition:opacity var(--dur-fast,150ms) var(--ease-out,cubic-bezier(0.23,1,0.32,1)),background var(--dur-fast,150ms) var(--ease-out,cubic-bezier(0.23,1,0.32,1))}",
       ".insv-case-toast-close:hover{opacity:1;background:rgba(255,255,255,0.18)}",
+      ".insv-case-toast-close:active,#insv-case-toast-clearall:active{transform:scale(0.94)}",
       // Mudança de status usa outro azul da paleta (navy ink-700) — distinto
       // do azul brand dos casos novos de relance, ainda dentro do branding.
       ".insv-toast.info.insv-case-toast--status{background:var(--ink-700,#29325A)}",
       // Pill "fechar todos" — primeiro filho do container (fica acima da
       // pilha de toasts), só existe com 2+ notificações somando fila.
-      "#insv-case-toast-clearall{align-self:flex-end;pointer-events:auto;background:var(--ink-800,#1B2340);color:var(--white-color,#fff);border:0;border-radius:999px;padding:5px 12px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;opacity:0.92;box-shadow:var(--box-shadow,0 8px 24px -8px rgba(0,0,0,.35))}",
-      "#insv-case-toast-clearall:hover{opacity:1}",
+      // Entra com o mesmo fade+slide dos toasts (a classe .show é adicionada no
+      // frame seguinte, igual showSingleCaseToast) em vez de aparecer seco.
+      "#insv-case-toast-clearall{align-self:flex-end;pointer-events:auto;background:var(--ink-800,#1B2340);color:var(--white-color,#fff);border:0;border-radius:999px;padding:5px 12px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;opacity:0;transform:translateY(10px);box-shadow:var(--box-shadow,0 8px 24px -8px rgba(0,0,0,.35));transition:opacity var(--dur-base,200ms) var(--ease-out,cubic-bezier(0.23,1,0.32,1)),transform var(--dur-base,200ms) var(--ease-out,cubic-bezier(0.23,1,0.32,1))}",
+      "#insv-case-toast-clearall.show{opacity:0.92;transform:translateY(0)}",
+      "#insv-case-toast-clearall.show:hover{opacity:1}",
+      "@media (prefers-reduced-motion:reduce){#insv-case-toast-clearall{transition:opacity var(--dur-fast,150ms) linear;transform:none}#insv-case-toast-clearall.show{transform:none}.insv-case-toast-close:active,#insv-case-toast-clearall:active{transform:none}}",
+      // Anel de foco explícito — o CSS do Salesforce reseta outline em vários
+      // lugares, não dá pra confiar no default do navegador aqui.
+      ".insv-case-toast-close:focus-visible,.insv-case-toast-link:focus-visible,#insv-case-toast-clearall:focus-visible{outline:2px solid #fff;outline-offset:2px}",
     ].join("");
     document.head.appendChild(s);
   }
@@ -523,7 +531,53 @@ function initNormalMode() {
       });
     }
     btn.textContent = t("close_all_toasts") + " (" + total + ")";
-    if (container.firstChild !== btn) container.insertBefore(btn, container.firstChild);
+    if (container.firstChild !== btn) {
+      container.insertBefore(btn, container.firstChild);
+      // .show no frame seguinte pra transição disparar, igual aos toasts.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { if (btn.isConnected) btn.classList.add("show"); });
+      });
+    }
+  }
+
+  // ── Navegação nativa (sem reload) ─────────────────────────
+  // ID do registro dentro da URL do chamado: /lightning/r/Case/500.../view.
+  // O objeto no meio nem sempre aparece, por isso é opcional no padrão.
+  function extrairRecordId(href) {
+    const m = /\/lightning\/r\/(?:[^/]+\/)?([a-zA-Z0-9]{15,18})(?:\/|$|\?)/.exec(href || "");
+    return m ? m[1] : "";
+  }
+
+  let _navReqSeq = 0;
+  // Pede pro bridge (scripts/sf-nav-bridge.js, world MAIN) navegar pelo evento
+  // Aura. Resolve true se o one.app aceitou — aí o console abre o chamado como
+  // aba de trabalho, sem reload. False quando não há $A na página ou o bridge
+  // não está lá (Chrome antigo, sem suporte a "world": "MAIN"): o chamador cai
+  // no window.location.assign, que recarrega tudo.
+  function navegarViaAura(href) {
+    return new Promise((resolve) => {
+      const reqId = "insv-nav-" + ++_navReqSeq;
+      let resolvido = false;
+      const finalizar = (ok) => {
+        if (resolvido) return;
+        resolvido = true;
+        window.removeEventListener("insv:navigate-result", onResultado);
+        clearTimeout(timer);
+        resolve(ok);
+      };
+      const onResultado = (event) => {
+        const d = event.detail || {};
+        if (d.reqId !== reqId) return;
+        finalizar(!!d.ok);
+      };
+      window.addEventListener("insv:navigate-result", onResultado);
+      const timer = setTimeout(() => finalizar(false), 400);
+      window.dispatchEvent(
+        new CustomEvent("insv:navigate-to-record", {
+          detail: { reqId, recordId: extrairRecordId(href), url: href },
+        })
+      );
+    });
   }
 
   // Um toast independente por chamado — cada um com seu próprio link e timer,
@@ -551,13 +605,22 @@ function initNormalMode() {
       // reciclada desde que o toast apareceu. Link visível: clique sintético,
       // igual o usuário clicando na grid. Link oculto (splitview colapsada,
       // chamado aberto/focado): o clique sintético é ignorado pelo Lightning,
-      // então navega direto pela URL do chamado — o console reabre com ele
-      // como aba de trabalho.
+      // então pedimos a navegação ao próprio one.app pelo bridge Aura, que
+      // abre a aba de trabalho sem recarregar o console. Só se isso falhar é
+      // que a URL é carregada direto (reload da página inteira).
       const current = Array.from(document.querySelectorAll(CASE_LINK_SELECTOR))
         .find((a) => a.textContent.trim() === caseInfo.id);
-      if (current && isElementVisible(current)) current.click();
-      else if (caseInfo.href) window.location.assign(caseInfo.href);
-      else if (current) current.click();
+      if (current && isElementVisible(current)) {
+        current.click();
+        return;
+      }
+      if (caseInfo.href) {
+        navegarViaAura(caseInfo.href).then((ok) => {
+          if (!ok) window.location.assign(caseInfo.href);
+        });
+        return;
+      }
+      if (current) current.click();
     });
     toast.appendChild(link);
 

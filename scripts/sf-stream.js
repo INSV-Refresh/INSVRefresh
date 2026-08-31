@@ -245,6 +245,14 @@ async function sfStreamReconciliar(forcar) {
     _sfStream.desistiu = false;
     _sfStream.falhas = 0;
   }
+  // Recurso do plano Empresa. Desligado, nem lê a configuração: um flag
+  // gravado à mão em storage não pode virar assinatura de CometD, que consome
+  // cliente concorrente do org.
+  if (!ENTERPRISE_FEATURES.stream) {
+    sfStreamParar("");
+    return;
+  }
+
   let ligado = false;
   try {
     const dados = await chrome.storage.local.get("advanced");
@@ -285,7 +293,15 @@ async function sfStreamReconciliar(forcar) {
 // O service worker do MV3 é encerrado por inatividade e o long-poll morre
 // junto. O alarme traz ele de volta e a reconciliação reconecta a partir do
 // último replayId.
-chrome.alarms.create(SF_STREAM_ALARME, { periodInMinutes: 1 });
-chrome.alarms.onAlarm.addListener((alarme) => {
-  if (alarme.name === SF_STREAM_ALARME) sfStreamReconciliar();
-});
+//
+// Com o recurso desligado o alarme não é criado: ele acordaria o service
+// worker a cada minuto, para sempre, só para reconciliar um streaming que
+// nunca vai subir. Um alarme de instalação anterior é apagado no mesmo passo.
+if (ENTERPRISE_FEATURES.stream) {
+  chrome.alarms.create(SF_STREAM_ALARME, { periodInMinutes: 1 });
+  chrome.alarms.onAlarm.addListener((alarme) => {
+    if (alarme.name === SF_STREAM_ALARME) sfStreamReconciliar();
+  });
+} else {
+  chrome.alarms.clear(SF_STREAM_ALARME).catch(() => {});
+}

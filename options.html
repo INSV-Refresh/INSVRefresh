@@ -232,39 +232,48 @@
                 </div>
             </section>
 
-            <section id="modo-api">
-                <h2 data-i18n="api_title">Modo API (beta)</h2>
-                <p data-i18n="api_p">Lê as filas direto do Salesforce em vez de olhar a tabela na tela. Com isso o monitoramento continua mesmo com você em outra página, o status vem do campo real do chamado e nada depende do layout do Lightning.</p>
+            <!-- Modo API: recurso do plano Empresa. A seção fica visível de
+                 propósito, bloqueada, para quem usa a extensão saber que
+                 existe e poder pedir para a empresa contratar. O bloqueio de
+                 verdade é em runtime (scripts/features.js); o disabled e o
+                 section-locked aqui são a camada visual dele. -->
+            <section id="modo-api" class="section-locked">
+                <h2><span data-i18n="api_title">Modo API</span><span class="enterprise-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg><span data-i18n="enterprise_badge">Empresa</span></span></h2>
+                <p class="section-teaser" data-i18n="api_p">Lê as filas direto do Salesforce em vez de olhar a tabela na tela. Com isso o monitoramento continua mesmo com você em outra página, o status vem do campo real do chamado e nada depende do layout do Lightning.</p>
+
+                <div class="paid-gate-banner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+                    <span data-i18n="locked_enterprise">Recurso do plano Empresa, contratado pela sua organização.</span>
+                    <a href="pricing.html#enterprise" data-i18n="see_enterprise">Conhecer o plano Empresa →</a>
+                </div>
 
                 <div class="advanced-bottom-card api-card">
                     <label class="toggle-switch-label">
                         <div class="toggle-switch">
-                            <input type="checkbox" id="api-mode-enabled">
+                            <input type="checkbox" id="api-mode-enabled" disabled>
                             <span class="toggle-slider"></span>
                         </div>
                         <span data-i18n="api_enable">Ativar modo API</span>
                     </label>
 
-                    <p class="field-desc api-security-note" data-i18n="api_security">Ao ativar, o navegador vai pedir duas permissões: ler cookies e acessar o domínio do seu Salesforce. A extensão usa isso para pegar a sessão que você já tem aberta e consultar a própria API do org. A sessão não é gravada, não é enviada para lugar nenhum e só é usada em chamadas para o seu Salesforce.</p>
-
-                    <p class="field-desc" data-i18n="api_quota_hint">Cada verificação consome uma chamada de API do seu org. Intervalos muito curtos, várias filas e várias abas abertas somam. Se a sua organização tiver limite apertado, prefira intervalos maiores.</p>
+                    <p class="field-desc api-security-note" data-i18n="api_enterprise_p">Cada verificação consome uma chamada de API do Salesforce, e essa cota é da organização inteira, não sua. Por isso o recurso é liberado por contrato com a empresa, com os limites acertados junto com quem administra o org.</p>
 
                     <div class="api-status-row">
-                        <button type="button" id="api-test" class="export-import-btn" data-i18n="api_test">Testar conexão</button>
+                        <button type="button" id="api-test" class="export-import-btn" data-i18n="api_test" disabled>Testar conexão</button>
                         <span id="api-status" class="api-status" role="status" aria-live="polite"></span>
                     </div>
 
                     <div class="api-substep" id="stream-block">
                         <label class="toggle-switch-label">
                             <div class="toggle-switch">
-                                <input type="checkbox" id="stream-mode-enabled">
+                                <input type="checkbox" id="stream-mode-enabled" disabled>
                                 <span class="toggle-slider"></span>
                             </div>
                             <span data-i18n="stream_enable">Tempo real (Change Data Capture)</span>
                         </label>
                         <p class="field-desc" data-i18n="stream_p">Assina os eventos de alteração de chamado do org e verifica a fila assim que algo muda, sem esperar o intervalo. Precisa do Change Data Capture habilitado para Case no Setup do Salesforce. Sem isso, a extensão segue no intervalo normal.</p>
                         <div class="api-status-row">
-                            <button type="button" id="stream-test" class="export-import-btn" data-i18n="stream_test">Verificar streaming</button>
+                            <button type="button" id="stream-test" class="export-import-btn" data-i18n="stream_test" disabled>Verificar streaming</button>
                             <span id="stream-status" class="api-status" role="status" aria-live="polite"></span>
                         </div>
                     </div>
@@ -353,6 +362,7 @@
             </footer>
         </main>
     </div>
+    <script src="scripts/features.js"></script>
     <script src="scripts/i18n.js"></script>
     <script src="scripts/util.js"></script>
     <script src="scripts/options.js"></script>

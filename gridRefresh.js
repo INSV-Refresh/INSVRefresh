@@ -818,7 +818,8 @@ function initNormalMode() {
   let filaMonitores = [];
   const statusNotificationPrevious = {};
   // Modo API (advanced.apiMode): lê as filas pela UI API em vez de raspar a
-  // tabela. Fica desligado até o usuário conceder as permissões opcionais.
+  // tabela. Recurso do plano Empresa, desligado por ENTERPRISE_FEATURES nesta
+  // versão, então na prática fica sempre false e todo ciclo lê a tela.
   let _apiModeAtivo = false;
   // Piso entre verificações disparadas por evento de CDC: uma atualização em
   // massa no org gera muitos eventos e não pode virar rajada de leituras.
@@ -1120,7 +1121,9 @@ function initNormalMode() {
           // Expediente: monitores continuam de pé fora da janela (o pulo é
           // por ciclo, pra transição do relógio funcionar sem evento novo).
           _workSchedule = (data.advanced && data.advanced.workSchedule) || null;
-          _apiModeAtivo = !!(data.advanced && data.advanced.apiMode);
+          // Modo API é recurso do plano Empresa: o flag em storage sozinho não
+          // liga nada enquanto ENTERPRISE_FEATURES o mantiver desligado.
+          _apiModeAtivo = ENTERPRISE_FEATURES.apiMode && !!(data.advanced && data.advanced.apiMode);
           // Pausa global: suspende todos os timers sem alterar o flag
           // active de cada fila — ao retomar, o conjunto ativo é restaurado
           if (data.advanced && data.advanced.globalPaused) {
@@ -1363,8 +1366,8 @@ function initNormalMode() {
       const wsOld = JSON.stringify((changes.advanced.oldValue || {}).workSchedule || null);
       const wsNew = JSON.stringify((changes.advanced.newValue || {}).workSchedule || null);
       if (wsOld !== wsNew) agendarRecarga();
-      const apiAntes = !!(changes.advanced.oldValue && changes.advanced.oldValue.apiMode);
-      const apiDepois = !!(changes.advanced.newValue && changes.advanced.newValue.apiMode);
+      const apiAntes = ENTERPRISE_FEATURES.apiMode && !!(changes.advanced.oldValue && changes.advanced.oldValue.apiMode);
+      const apiDepois = ENTERPRISE_FEATURES.apiMode && !!(changes.advanced.newValue && changes.advanced.newValue.apiMode);
       if (apiAntes !== apiDepois) {
         log(`[Debug] Modo API ${apiDepois ? "ativado" : "desativado"}`);
         agendarRecarga();

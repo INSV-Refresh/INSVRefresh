@@ -1043,6 +1043,12 @@ const SF_API_PERMISSIONS_UI = {
 };
 
 function setupApiMode() {
+  // Recurso do plano Empresa. Desligado, a seção fica como vitrine bloqueada
+  // no HTML e esta função não registra listener nenhum: nada de pedido de
+  // permissão, nada gravado em storage. O corpo abaixo é a implementação que
+  // volta a valer quando ENTERPRISE_FEATURES.apiMode ligar.
+  if (!ENTERPRISE_FEATURES.apiMode) return;
+
   const toggle = document.getElementById("api-mode-enabled");
   const btnTest = document.getElementById("api-test");
   const statusEl = document.getElementById("api-status");

@@ -178,14 +178,14 @@
         <h3 data-i18n="pp_s5_h33">5.4 Host permission (*.lightning.force.com)</h3>
         <p data-i18n="pp_s5_p4">Permite que a extensão funcione apenas em páginas do Salesforce Lightning. A extensão permanece completamente inativa em todos os outros sites.</p>
 
-        <h3 data-i18n="pp_s5_h34">5.5 Permissões opcionais: cookies e *.my.salesforce.com (modo API)</h3>
-        <p data-i18n="pp_s5_p5">Estas duas permissões não são concedidas na instalação. Elas só são pedidas se você ativar o modo API nas configurações, e servem para ler as filas pela API do próprio Salesforce em vez de raspar a tabela na tela.</p>
+        <h3 data-i18n="pp_s5_h34">5.5 Modo API (plano Empresa)</h3>
+        <p data-i18n="pp_s5_p5">O modo API lê as filas pela API do próprio Salesforce em vez de raspar a tabela na tela. Ele é um recurso do plano Empresa e não está ativo nesta versão da extensão.</p>
         <ul>
-          <li data-i18n="pp_s5_li4">A permissão de cookies é usada para um único cookie: o identificador da sessão que você já tem aberta no seu Salesforce.</li>
-          <li data-i18n="pp_s5_li5">Essa sessão nunca é gravada em disco, nunca aparece em log e nunca é enviada para nós nem para terceiros.</li>
-          <li data-i18n="pp_s5_li6">Ela é usada apenas no cabeçalho de autorização de chamadas ao domínio do seu próprio Salesforce, para ler os chamados da fila que você configurou.</li>
+          <li data-i18n="pp_s5_li4">As permissões que ele exigia, ler cookies e acessar *.my.salesforce.com, foram removidas da extensão. Nesta versão elas não são declaradas nem podem ser solicitadas.</li>
+          <li data-i18n="pp_s5_li5">Nenhuma sessão do Salesforce é lida, gravada ou usada enquanto o recurso estiver inativo.</li>
+          <li data-i18n="pp_s5_li6">Quando o recurso for liberado por contrato com uma organização, as permissões voltam a ser pedidas de forma explícita, e esta política será atualizada antes disso.</li>
         </ul>
-        <p data-i18n="pp_s5_p6">Desligar o modo API interrompe qualquer uso da sessão. Você também pode revogar as permissões a qualquer momento em chrome://extensions.</p>
+        <p data-i18n="pp_s5_p6">Concessões dessas permissões feitas em versões anteriores são revogadas automaticamente pelo navegador ao atualizar, já que a extensão deixou de declará-las.</p>
       </section>
 
       <!-- 6. Código de terceiros -->

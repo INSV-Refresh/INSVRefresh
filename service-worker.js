@@ -1,4 +1,4 @@
-importScripts("ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js", "scripts/sf-stream.js");
+importScripts("scripts/features.js", "ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js", "scripts/sf-stream.js");
 
 const extpay = ExtPay("insv-refresh");
 extpay.startBackground();
@@ -156,6 +156,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return true;
     }
     // ── Modo API ────────────────────────────────────────────
+    // Recurso do plano Empresa. Enquanto ENTERPRISE_FEATURES o mantém
+    // desligado, os três handlers respondem sem tocar no org: a extensão não
+    // pode virar consumo de cota nem por mensagem forjada.
+    if (msg && (msg.type === "SF_API_STATUS" || msg.type === "SF_STREAM_STATUS" || msg.type === "SF_QUEUE_RECORDS")) {
+      const recurso = msg.type === "SF_STREAM_STATUS" ? "stream" : "apiMode";
+      if (!ENTERPRISE_FEATURES[recurso]) {
+        sendResponse({ ok: false, enterprise: true, erro: "recurso do plano Empresa" });
+        return true;
+      }
+    }
     // Diagnóstico para a tela de opções: o que já está concedido, qual org
     // seria usado e se a sessão responde. Nenhum dado de chamado aqui.
     if (msg && msg.type === "SF_API_STATUS") {
@@ -231,11 +241,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 //   v2: popupDarkMode → darkMode; advanced.acceptShortcutKey (string)
 //       → advanced.acceptShortcut (objeto); statusNotifications[] →
 //       queues[].statusNotify; poda analytics.
+//   v3: poda advanced.apiMode e advanced.streamMode. O modo API virou recurso
+//       do plano Empresa e está desligado por ENTERPRISE_FEATURES; deixar o
+//       flag gravado faria a máquina de quem testou religar sozinha no dia em
+//       que a flag mudar.
 // Obs.: legacyMode/legacyInterval/legacyActive ficam em storage.sync
 // (acompanham o usuário entre dispositivos); queues e demais configs
 // ficam em storage.local (são por máquina) — decisão documentada aqui
 // para manter a inconsistência intencional visível.
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 function legacyKeyToShortcutObj(key) {
   const k = (key || "").trim();
@@ -287,6 +301,16 @@ function migrateStorage() {
       delete adv.acceptShortcutKey;
       updates.advanced = adv;
     }
+
+    // Modo API / streaming: recurso do plano Empresa, desligado nesta versão.
+    // Poda o flag para não sobrar estado ligado de quem testou.
+    if (data.advanced && (data.advanced.apiMode !== undefined || data.advanced.streamMode !== undefined)) {
+      const adv = updates.advanced || Object.assign({}, data.advanced);
+      delete adv.apiMode;
+      delete adv.streamMode;
+      updates.advanced = adv;
+    }
+    chrome.storage.session.remove("sfStreamReplayId").catch(() => {});
 
     // statusNotifications[] legado → queues[].statusNotify
     if (data.statusNotifications && data.statusNotifications.length) {

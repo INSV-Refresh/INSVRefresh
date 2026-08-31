@@ -1425,7 +1425,11 @@ button.delete-audio-btn:hover {
 .changelog-banner #changelog-dismiss:hover { background: var(--brand-700); }
 
 /* ── Premium / gate banners ──────────────────── */
-.premium-badge {
+/* .enterprise-badge herda a mesma pastilha: os dois planos usam o mesmo
+   dourado em pricing.css, e o que separa um do outro é o texto ("Premium" vs
+   "Empresa"), não a cor. */
+.premium-badge,
+.enterprise-badge {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1442,9 +1446,17 @@ button.delete-audio-btn:hover {
   text-transform: uppercase;
 }
 
+/* Ícone das pastilhas e do banner: em container flex o SVG encolhe antes do
+   texto quebrar, e a linha fica com um retângulo esmagado no lugar do ícone. */
+.premium-badge svg,
+.enterprise-badge svg,
+.paid-gate-banner > svg {
+  flex-shrink: 0;
+}
+
 .section-locked { position: relative; }
 
-.section-locked > *:not(.paid-gate-banner):not(h2) {
+.section-locked > *:not(.paid-gate-banner):not(.section-teaser):not(h2) {
   opacity: 0.45;
   pointer-events: none;
   user-select: none;
@@ -1452,6 +1464,11 @@ button.delete-audio-btn:hover {
 }
 
 .section-locked h2 { opacity: 1; pointer-events: auto; filter: none; }
+
+/* Numa seção bloqueada que existe para dar vontade (o modo API), borrar a
+   explicação do recurso derrota o propósito: o parágrafo de vitrine fica
+   legível, só os controles é que somem atrás do blur. */
+.section-locked > .section-teaser { opacity: 1; filter: none; }
 
 .paid-gate-banner {
   display: flex;
@@ -1678,7 +1695,8 @@ button.delete-audio-btn:hover {
 
 /* Premium badge: warning-700 (dark brown) on gold-22%-over-ink800 was ~1.3:1.
    Lift to gold-500 in dark, matching .trial-banner / .paid-gate-banner. */
-[data-theme="dark"] .premium-badge { color: var(--gold-500); }
+[data-theme="dark"] .premium-badge,
+[data-theme="dark"] .enterprise-badge { color: var(--gold-500); }
 
 /* base link color is brand-700 for AA on light; lift it on dark surfaces */
 [data-theme="dark"] .trial-banner a,

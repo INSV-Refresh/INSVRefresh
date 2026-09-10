@@ -44,7 +44,7 @@
   font-family: var(--font-display, 'YoureGone', sans-serif);
   font-size: 1.4rem;
   color: var(--brand-500);
-  letter-spacing: 1.5px;
+  letter-spacing: var(--tracking-wordmark);
   font-weight: var(--weight-regular);
   line-height: 1;
 }
@@ -89,8 +89,7 @@
 }
 
 section h1.highlight,
-section h2.highlight,
-.advanced-bottom-card-header strong.highlight {
+section h2.highlight {
   color: var(--brand-500);
   transition: color var(--dur-slow) var(--ease-in-out);
 }
@@ -125,6 +124,7 @@ section h2.highlight,
   color: rgba(221, 226, 241, 0.65);
   cursor: pointer;
   padding: 0 0.5rem;
+  transition: color var(--dur-base) var(--ease-out);
 }
 
 .sidebar-toggle-row .toggle-switch {
@@ -177,7 +177,7 @@ h1 {
   font-size: var(--fs-2xl);
   margin-bottom: var(--space-2);
   font-weight: var(--weight-semibold);
-  letter-spacing: -0.5px;
+  letter-spacing: var(--tracking-display);
   color: var(--ink-800);
 }
 
@@ -185,6 +185,7 @@ h2 {
   font-size: var(--fs-lg);
   padding-top: 0;
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-heading);
   color: var(--ink-800);
   padding-bottom: var(--space-2);
 }
@@ -406,7 +407,7 @@ input[type="number"]::placeholder {
   font-size: var(--fs-xs);
   font-weight: var(--weight-semibold);
   color: var(--brand-300);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tracking-micro);
   min-height: 15px;
   font-family: var(--font-ui);
 }
@@ -418,6 +419,9 @@ input[type="number"]::placeholder {
   display: flex;
   align-items: center;
   cursor: pointer;
+  /* The track owns the gesture once grabbed; without this a touch drag scrolls
+     the page instead of scrubbing. */
+  touch-action: none;
 }
 
 .vp-scrub-track {
@@ -537,7 +541,7 @@ input[type="number"]::placeholder {
   font-size: 10.5px; /* deliberate HUD micro-size, below the --fs-xs floor */
   color: var(--ink-300);
   font-family: var(--font-mono);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-micro);
   white-space: nowrap;
   margin-left: 2px;
 }
@@ -856,7 +860,7 @@ button.delete-audio-btn {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out);
   flex-shrink: 0;
 }
 
@@ -935,7 +939,7 @@ button.delete-audio-btn:hover {
   font-family: var(--font-mono, monospace);
   font-size: var(--fs-xs);
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--brand-700); /* brand-600 was 3.84:1 on the surface-2 row — below AA */
   cursor: text;
@@ -1041,7 +1045,13 @@ button.delete-audio-btn:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
+  margin: var(--space-6) var(--space-10);
 }
+
+.advanced-bottom-row > section { margin: 0; }
+
+/* O gap do card já separa o título do corpo; o padding do h2 duplicaria. */
+.advanced-bottom-card h2 { padding-bottom: 0; }
 
 .advanced-bottom-card {
   background: var(--surface);
@@ -1059,18 +1069,6 @@ button.delete-audio-btn:hover {
   color: var(--text-muted, #666);
   line-height: 1.5;
   flex: 1;
-}
-
-.advanced-bottom-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: var(--space-1);
-}
-
-.advanced-bottom-card-header strong {
-  font-size: var(--fs-base);
-  color: var(--ink-800);
 }
 
 .field-label {
@@ -1139,7 +1137,7 @@ button.delete-audio-btn:hover {
 .shortcut-capture.has-shortcut { border-style: solid; }
 
 /* ink-400 dava 4.34:1 sobre surface-2; ink-500 dá 6.21:1 */
-.shortcut-placeholder { color: var(--ink-500); font-size: var(--fs-sm); }
+.shortcut-placeholder { color: var(--text-muted); font-size: var(--fs-sm); }
 
 .shortcut-capture kbd {
   display: inline-block;
@@ -1161,15 +1159,15 @@ button.delete-audio-btn:hover {
    dark-surface-only and unreadable here). Dark treatment is themed below. */
 .shortcut-clear {
   background: transparent;
-  color: var(--ink-600);
-  border: 1px solid var(--ink-100);
+  color: var(--ink-700);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 8px 14px;
   font-size: var(--fs-sm);
   font-weight: var(--weight-semibold);
   cursor: pointer;
   font-family: inherit;
-  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), transform var(--dur-press) var(--ease-out);
 }
 
 .shortcut-clear:hover {
@@ -1178,7 +1176,7 @@ button.delete-audio-btn:hover {
 }
 
 [data-theme="dark"] .shortcut-clear {
-  color: var(--ink-200);
+  color: var(--ink-100);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -1418,7 +1416,7 @@ button.delete-audio-btn:hover {
   cursor: pointer;
   font-size: var(--fs-sm);
   font-weight: var(--weight-semibold);
-  transition: background-color var(--dur-base) var(--ease-out);
+  transition: background-color var(--dur-base) var(--ease-out), transform var(--dur-press) var(--ease-out);
   font-family: inherit;
 }
 
@@ -1432,7 +1430,6 @@ button.delete-audio-btn:hover {
 .enterprise-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
   font-size: var(--fs-xs);
   font-weight: var(--weight-bold);
   color: var(--warning-700); /* #b8860b was 2.64:1 on the gold gradient */
@@ -1441,15 +1438,15 @@ button.delete-audio-btn:hover {
   border-radius: var(--radius-full);
   padding: 2px 9px;
   margin-left: 0.7rem;
-  letter-spacing: 0.3px;
+  letter-spacing: var(--tracking-caps);
   vertical-align: middle;
   text-transform: uppercase;
 }
 
-/* Ícone das pastilhas e do banner: em container flex o SVG encolhe antes do
-   texto quebrar, e a linha fica com um retângulo esmagado no lugar do ícone. */
-.premium-badge svg,
-.enterprise-badge svg,
+/* Ícone do banner: em container flex o SVG encolhe antes do texto quebrar, e a
+   linha fica com um retângulo esmagado no lugar do ícone. As pastilhas são só
+   texto — a 12px o prédio de traço virava borrão, e o mesmo ícone já aparece
+   legível logo abaixo, no banner. */
 .paid-gate-banner > svg {
   flex-shrink: 0;
 }
@@ -1552,6 +1549,9 @@ button.delete-audio-btn:hover {
 /* Neutral title in dark to match the light-mode ink heading (was brand-400,
    which read as a link and clashed with the neutral h2 section titles). */
 [data-theme="dark"] h1 { color: var(--ink-50); }
+
+[data-theme="dark"] section h1.highlight,
+[data-theme="dark"] section h2.highlight { color: var(--brand-300); }
 [data-theme="dark"] p { color: var(--ink-200); }
 [data-theme="dark"] label { color: var(--ink-200); }
 [data-theme="dark"] strong { color: var(--ink-50); }
@@ -1602,7 +1602,6 @@ button.delete-audio-btn:hover {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-[data-theme="dark"] .shortcut-placeholder { color: var(--ink-300); }
 
 [data-theme="dark"] .shortcut-capture.capturing {
   background: color-mix(in srgb, var(--brand-500) 12%, var(--ink-800));
@@ -1620,8 +1619,7 @@ button.delete-audio-btn:hover {
   color: var(--ink-100);
 }
 
-[data-theme="dark"] .field-label,
-[data-theme="dark"] .field-desc { color: var(--ink-200); }
+[data-theme="dark"] .field-label { color: var(--ink-200); }
 
 [data-theme="dark"] .toggle-switch-label { color: var(--ink-200); }
 
@@ -1723,9 +1721,9 @@ button.delete-audio-btn:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .advanced-bottom-card-header strong { color: var(--ink-50); }
-[data-theme="dark"] .advanced-bottom-card-header strong.highlight { color: var(--gold-500); }
-[data-theme="dark"] .advanced-bottom-card p { color: var(--ink-300); }
+/* Backup e Legacy são <section>: a borda acompanha as seções vizinhas, não
+   o .api-card, que continua aninhado dentro de uma delas. */
+[data-theme="dark"] .advanced-bottom-row > section { border-color: rgba(255, 255, 255, 0.06); }
 
 [data-theme="dark"] .export-import-btn {
   background-color: var(--ink-700);
@@ -1745,10 +1743,17 @@ button.delete-audio-btn:hover {
 
 /* ── Press feedback (Emil) ───────────────────── */
 /* Pressable controls dip on :active. Buttons with a hover lift keep it and
-   add the dip; the rest scale subtly. */
+   add the dip; the rest scale subtly. Feedback belongs on the press, not on
+   the release: a control that only reacts once the click completes reads as
+   dead for the whole time the pointer is held down on it. */
 .vp-btn:active,
+.vp-big-play:active,
+.vp-dot:active,
 .audio-play-btn:active,
-.export-import-btn:active {
+.export-import-btn:active,
+.shortcut-clear:active,
+.changelog-banner #changelog-dismiss:active,
+button.delete-audio-btn:active {
   transform: scale(0.97);
 }
 
@@ -1756,12 +1761,41 @@ button.delete-audio-btn:hover {
   transform: translateY(-1px) scale(0.97);
 }
 
+/* Rows and inline text buttons take the press as a tint or a colour step
+   instead. A full-width row that shrinks under the pointer reads as a card
+   coming loose, and a button that is only its label has nothing to scale. */
+.menu a:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Its own hover is !important, so the press has to match to land at all. */
+.menu-plans:active {
+  background: rgba(255, 209, 102, 0.22) !important;
+}
+
+.sidebar-toggle-row:active,
+.sidebar-footer .review:active {
+  color: var(--ink-50);
+}
+
+.browse-btn:active { color: var(--brand-700); }
+
+.trial-banner a:active,
+.paid-gate-banner a:active { opacity: 0.7; }
+
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  /* Reduced motion is not "no feedback". What has to go is travel: transforms,
+     slides, anything that moves across the screen. Opacity and colour still
+     carry meaning — a control acknowledging a press, a panel becoming the
+     active one — so they keep a short linear cross-fade instead of being
+     flattened to nothing along with the movement. */
   *, *::before, *::after {
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-property: opacity, color, background, background-color, border-color, box-shadow, fill, stroke !important;
+    transition-duration: var(--dur-fast) !important;
+    transition-timing-function: linear !important;
   }
 
   .glowPulse { animation: none; }

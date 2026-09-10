@@ -9,7 +9,7 @@
   font-family: var(--font-display);
   color: var(--brand-500);
   font-size: 21px;
-  letter-spacing: 1px;
+  letter-spacing: var(--tracking-wordmark);
   line-height: 1;
 }
 
@@ -23,9 +23,52 @@
   justify-content: space-between;
   gap: 16px;
   padding: 14px 40px;
-  background: var(--surface-sunken, #fff);
-  border-bottom: 1px solid var(--border, #E5E7EF);
+  /* Floating chrome rather than an opaque strip: the page scrolls underneath
+     and stays faintly visible through the blur, so the two read as one surface
+     with a layer over it. 80% (not the thinner glass this would allow) keeps
+     the muted link colours above AA whatever scrolls under them. */
+  background: color-mix(in srgb, var(--surface-sunken, #fff) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   flex-shrink: 0;
+}
+
+/* A scroll edge in place of a 1px rule. The separation should come from
+   content fading under the material, which only reads where the bar actually
+   overlaps something, not from a line drawn whether it does or not. */
+.app-topbar::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto 0;
+  height: 12px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.06), transparent);
+}
+
+[data-theme="dark"] .app-topbar::after {
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.28), transparent);
+}
+
+/* The blur is decoration; the separation it carries is not. Asked for less
+   transparency or more contrast, the bar goes solid and takes its line back. */
+@media (prefers-reduced-transparency: reduce) {
+  .app-topbar {
+    background: var(--surface-sunken, #fff);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid var(--border, #E5E7EF);
+  }
+  .app-topbar::after { display: none; }
+}
+
+@media (prefers-contrast: more) {
+  .app-topbar {
+    background: var(--surface-sunken, #fff);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 2px solid var(--text, #1B2340);
+  }
+  .app-topbar::after { display: none; }
 }
 
 .app-topbar-brand {

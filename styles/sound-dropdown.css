@@ -165,7 +165,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* The travel goes, the fade stays: the menu should still read as arriving
+     rather than blinking into place. */
   .qsd-list {
-    transition-duration: 0.01ms;
+    transition: opacity var(--dur-fast) linear;
+    transform: none;
+  }
+
+  .queue-sound-select.open .qsd-list {
+    transform: none;
   }
 }

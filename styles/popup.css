@@ -65,7 +65,7 @@ a {
 .header h1 .logo-link span {
   font-family: var(--font-display);
   font-size: 27px;
-  letter-spacing: 1.5px;
+  letter-spacing: var(--tracking-wordmark);
   font-weight: normal;
 }
 
@@ -129,17 +129,46 @@ body > hr:nth-of-type(2) {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   margin-bottom: 8px;
-  transition: background 0.2s;
-  -webkit-user-drag: none;
+  position: relative;
+  /* transform is listed so the rows a drag displaces can be FLIP-animated
+     into their new slot instead of teleporting. */
+  transition: background var(--dur-base) var(--ease-out),
+              transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
 }
 
 .queue-item:hover {
   background: rgba(255, 255, 255, 0.07);
 }
 
+/* The row itself is what moves now (no browser ghost image), so it reads as
+   picked up rather than as a placeholder left behind. The transform is driven
+   frame by frame — first by the pointer, then by the release spring — so it
+   must never be transitioned, or the two would fight. */
+.queue-item.dragging,
+.queue-item.settling {
+  z-index: 2;
+}
+
 .queue-item.dragging {
-  opacity: 0.45;
-  border-style: dashed;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--brand-a35);
+  box-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.3);
+  cursor: grabbing;
+  transition: none;
+}
+
+/* Settling back: the spring owns transform, everything else can ease out. */
+.queue-item.settling {
+  transition: background var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+/* Held for the whole gesture so the cursor doesn't flicker back to the arrow
+   when the pointer leaves the handle. */
+#queue-list.reordering {
+  cursor: grabbing;
+  user-select: none;
 }
 
 /* ── Drag handle ────────────────────────────── */
@@ -151,7 +180,9 @@ body > hr:nth-of-type(2) {
   padding: 2px 0;
   flex-shrink: 0;
   align-self: center;
-  -webkit-user-drag: element;
+  /* The handle owns vertical panning during a drag; without this the browser
+     scrolls the list instead of letting the row track the finger. */
+  touch-action: none;
   display: flex;
   align-items: center;
 }
@@ -333,7 +364,6 @@ input[type="number"].queue-interval {
   outline: none;
   width: 50px;
   text-align: right;
-  direction: rtl;
   transition: border-color 0.2s;
 }
 
@@ -859,10 +889,17 @@ html[data-theme="dark"] .add-queue-btn {
 
 /* ── Reduced motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  /* Reduced motion is not "no feedback". What has to go is travel: transforms,
+     slides, anything that moves across the screen. Opacity and colour still
+     carry meaning — a control acknowledging a press, a panel becoming the
+     active one — so they keep a short linear cross-fade instead of being
+     flattened to nothing along with the movement. */
   *, *::before, *::after {
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-property: opacity, color, background, background-color, border-color, box-shadow, fill, stroke !important;
+    transition-duration: var(--dur-fast) !important;
+    transition-timing-function: linear !important;
   }
 
   .queue-active {

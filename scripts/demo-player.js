@@ -129,7 +129,6 @@
   });
 
   // Scrub by dragging
-  let scrubbing = false;
 
   function seekTo(clientX) {
     const track = scrub.querySelector('.vp-scrub-track');
@@ -138,13 +137,23 @@
     if (video.duration) video.currentTime = pct * video.duration;
   }
 
-  scrub.addEventListener('mousedown', e => {
+  // Pointer Events, captured on the track itself. Capture keeps the moves
+  // coming once the pointer leaves the 20px strip, which is what the old
+  // document-level mousemove was standing in for — except capture also ends
+  // cleanly on release outside the window, covers touch and pen, and leaves no
+  // listeners on document behind.
+  scrub.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.stopPropagation();
-    scrubbing = true;
+    e.preventDefault();
+    scrub.setPointerCapture(e.pointerId);
     seekTo(e.clientX);
   });
-  document.addEventListener('mousemove', e => { if (scrubbing) seekTo(e.clientX); });
-  document.addEventListener('mouseup',   () => { scrubbing = false; });
+
+  scrub.addEventListener('pointermove', e => {
+    if (!scrub.hasPointerCapture(e.pointerId)) return;
+    seekTo(e.clientX);
+  });
 
   // Step dot click → seek to that step
   dotsWrap.addEventListener('click', e => {

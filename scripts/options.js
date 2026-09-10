@@ -475,7 +475,14 @@ function previewSound(soundValue) {
 // queues[i].statusNotify = { enabled, statuses[], sound }.
 
 let qmQueues = [];
-let qmSelfWrite = null;
+// Guarda das gravações feitas por esta própria página, para não re-renderizar
+// (e matar o foco de quem está digitando) quando o onChanged for nosso.
+// Set, não slot único: duas gravações sobrepostas faziam a 2ª pisar na
+// assinatura da 1ª antes do onChanged dela chegar, e aí o próprio save
+// parecia externo e disparava o redesenho.
+let pendingSelfWriteQueues = new Set();
+// Redesenho adiado porque o foco estava na lista (ver renderQueueManager).
+let qmRenderPending = false;
 // escapeHtml lives in scripts/util.js (loaded before this file).
 
 // Mescla o storage legado statusNotifications[] dentro de queues[].
@@ -523,8 +530,10 @@ function createQueueManagerRow(queue) {
   buildSoundDropdown(soundRoot, { onPreview: previewSound });
   soundRoot.addEventListener("change", saveQueueManagerDebounced);
 
+  // Só "input": com "change" junto, sair do campo regravava o mesmo valor, e
+  // eram essas duas gravações sobrepostas que embaralhavam a guarda de
+  // self-write e faziam a página se redesenhar por cima de quem digitava.
   div.querySelectorAll("input").forEach((inp) => {
-    inp.addEventListener("change", saveQueueManagerDebounced);
     inp.addEventListener("input", saveQueueManagerDebounced);
   });
 
@@ -534,6 +543,14 @@ function createQueueManagerRow(queue) {
 function renderQueueManager() {
   const container = document.getElementById("status-notifications-list");
   if (!container) return;
+  // Redesenhar troca os inputs por outros novos: quem estivesse digitando
+  // perdia foco e caret no meio da frase. Com o foco dentro da lista o
+  // desenho fica pendente e sai no focusout.
+  if (container.contains(document.activeElement)) {
+    qmRenderPending = true;
+    return;
+  }
+  qmRenderPending = false;
   container.innerHTML = "";
   qmQueues.forEach((q) => {
     container.appendChild(createQueueManagerRow(q));
@@ -560,7 +577,7 @@ function collectQueueManagerRows() {
 }
 
 function persistQueueManager() {
-  qmSelfWrite = JSON.stringify(qmQueues);
+  pendingSelfWriteQueues.add(JSON.stringify(qmQueues));
   chrome.storage.local.set({ queues: qmQueues }, () => {
     showToast(t("queues_saved"), "success");
   });
@@ -583,6 +600,14 @@ function loadQueueManager() {
   // set(queues) e o remove(statusNotifications) do service-worker, essa
   // página fazia sua própria gravação redundante por cima. O onChanged de
   // "queues" abaixo já re-renderiza quando a migração em background termina.
+  if (!container._qmFocusOutBound) {
+    container._qmFocusOutBound = true;
+    container.addEventListener("focusout", () => {
+      // O activeElement só assume o novo alvo depois do focusout; adiar um
+      // tick evita redesenhar quando o foco só pulou para o campo vizinho.
+      setTimeout(() => { if (qmRenderPending) renderQueueManager(); }, 0);
+    });
+  }
   chrome.storage.local.get("queues", (data) => {
     qmQueues = data.queues || [];
     renderQueueManager();
@@ -593,7 +618,7 @@ function loadQueueManager() {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.queues) {
     const incoming = JSON.stringify(changes.queues.newValue || []);
-    if (incoming === qmSelfWrite) return; // gravação desta própria página
+    if (pendingSelfWriteQueues.delete(incoming)) return; // gravação desta própria página
     qmQueues = changes.queues.newValue || [];
     renderQueueManager();
   }
@@ -736,7 +761,7 @@ i18nReady.then(function() {
     const banner = document.getElementById("changelog-banner");
     if (!banner) return;
     banner.style.display = "block";
-    const items = ["cl_1", "cl_2", "cl_3", "cl_4", "cl_5", "cl_6", "cl_7", "cl_8", "cl_9", "cl_10"]
+    const items = ["cl_1", "cl_2", "cl_3", "cl_4", "cl_5", "cl_6", "cl_7", "cl_8", "cl_9"]
       .map((k) => `<li>${t(k)}</li>`)
       .join("");
     banner.innerHTML = `
@@ -1022,7 +1047,7 @@ document.querySelectorAll(".menu a").forEach(link => {
         }
 
         if (section) {
-            const title = section.querySelector("h1, h2, .advanced-bottom-card-header strong");
+            const title = section.querySelector("h1, h2");
             if (title) title.classList.add("highlight");
 
             if (targetId !== "top"){

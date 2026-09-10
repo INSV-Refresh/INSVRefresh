@@ -134,6 +134,17 @@
   --leading-normal:  1.6;   /* body */
   --leading-relaxed: 1.75;  /* long prose (privacy) */
 
+  /* Tracking — size-specific, never one value for every size. Letters read
+     further apart as type grows, so large text tightens; small and uppercase
+     text opens up to stay legible. Expressed in em so tracking scales with the
+     font instead of drifting when the user changes their text size. */
+  --tracking-display:  -0.02em;  /* page h1 / pricing hero */
+  --tracking-heading:  -0.01em;  /* section h2 */
+  --tracking-body:      0;
+  --tracking-micro:     0.03em;  /* --fs-xs and below, sentence case */
+  --tracking-caps:      0.08em;  /* uppercase micro-labels and badges */
+  --tracking-wordmark:  0.055em; /* the display face, set large */
+
   /* Weights — kit tops at 700 */
   --weight-regular:  400;
   --weight-medium:   500;

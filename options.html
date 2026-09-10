@@ -47,12 +47,12 @@
                     <span data-i18n="menu_ws">Expediente</span>
                 </a>
                 <a href="#modo-api">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M3 8h4l2-3 3 6 3-9 2 6h4"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-4"/><path d="M8 8V2"/><path d="M16 8V2"/><path d="M19 8v5a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V8Z"/></svg>
                     <span data-i18n="menu_api">Modo API</span>
                 </a>
-                <a href="#avancado">
+                <a href="#atalhos">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
-                    <span data-i18n="menu_advanced">Atalho de teclado</span>
+                    <span data-i18n="menu_advanced">Atalhos de teclado</span>
                 </a>
                 <a href="#export-import">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M7 3v6h9V3"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg>
@@ -238,7 +238,7 @@
                  verdade é em runtime (scripts/features.js); o disabled e o
                  section-locked aqui são a camada visual dele. -->
             <section id="modo-api" class="section-locked">
-                <h2><span data-i18n="api_title">Modo API</span><span class="enterprise-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg><span data-i18n="enterprise_badge">Empresa</span></span></h2>
+                <h2><span data-i18n="api_title">Modo API</span><span class="enterprise-badge" data-i18n="enterprise_badge">Empresa</span></h2>
                 <p class="section-teaser" data-i18n="api_p">Lê as filas direto do Salesforce em vez de olhar a tabela na tela. Com isso o monitoramento continua mesmo com você em outra página, o status vem do campo real do chamado e nada depende do layout do Lightning.</p>
 
                 <div class="paid-gate-banner">
@@ -280,7 +280,7 @@
                 </div>
             </section>
 
-            <section id="avancado">
+            <section id="atalhos">
                 <h2 data-i18n="advanced_title">Atalhos de teclado</h2>
 
                 <div class="advanced-shortcuts-card">
@@ -314,41 +314,42 @@
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="advanced-bottom-row">
-                    <div class="advanced-bottom-card" id="export-import">
-                        <div class="advanced-bottom-card-header">
-                            <strong data-i18n="backup_title">Exportar / Importar</strong>
-                        </div>
-                        <p data-i18n="backup_p">Faça backup das suas configurações ou restaure de um backup anterior. Útil ao trocar de computador ou reinstalar o navegador.</p>
-                        <div class="export-import-row">
-                            <button type="button" id="export-settings-btn" class="export-import-btn export-import-btn--primary">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 11 5 5 5-5"/><path d="M12 3v13"/></svg>
-                                <span data-i18n="export">Exportar</span>
-                            </button>
-                            <label for="import-settings-input" class="export-import-btn import-label">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v13"/></svg>
-                                <span data-i18n="import">Importar</span>
-                                <input type="file" id="import-settings-input" accept=".json" class="visually-hidden-input">
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="advanced-bottom-card" id="modo-legacy">
-                        <div class="advanced-bottom-card-header">
-                            <strong data-i18n="legacy_title">Modo Legacy</strong>
-                        </div>
-                        <p data-i18n="legacy_p">Versão simplificada que apenas atualiza a página em intervalos regulares, sem notificações ou validações avançadas.</p>
-                        <label class="toggle-switch-label">
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="legacyMode">
-                                <span class="toggle-slider"></span>
-                            </div>
-                            <span data-i18n="legacy_enable">Ativar Modo Legacy</span>
+            <!-- Backup e Modo Legacy são seções irmãs de #atalhos, não cards
+                 dentro dela: cada item da nav aponta para uma section com o
+                 próprio h2, como no resto da página. O grid abaixo só as
+                 coloca lado a lado; .advanced-bottom-card mantém o padding e o
+                 empilhamento internos que elas já tinham como card. -->
+            <div class="advanced-bottom-row">
+                <section id="export-import" class="advanced-bottom-card">
+                    <h2 data-i18n="backup_title">Backup</h2>
+                    <p data-i18n="backup_p">Faça backup das suas configurações ou restaure de um backup anterior. Útil ao trocar de computador ou reinstalar o navegador.</p>
+                    <div class="export-import-row">
+                        <button type="button" id="export-settings-btn" class="export-import-btn export-import-btn--primary">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 11 5 5 5-5"/><path d="M12 3v13"/></svg>
+                            <span data-i18n="export">Exportar</span>
+                        </button>
+                        <label for="import-settings-input" class="export-import-btn import-label">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v13"/></svg>
+                            <span data-i18n="import">Importar</span>
+                            <input type="file" id="import-settings-input" accept=".json" class="visually-hidden-input">
                         </label>
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <section id="modo-legacy" class="advanced-bottom-card">
+                    <h2 data-i18n="legacy_title">Modo Legacy</h2>
+                    <p data-i18n="legacy_p">Versão simplificada que apenas atualiza a página em intervalos regulares, sem notificações ou validações avançadas.</p>
+                    <label class="toggle-switch-label">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="legacyMode">
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span data-i18n="legacy_enable">Ativar Modo Legacy</span>
+                    </label>
+                </section>
+            </div>
 
             <footer class="app-footer">
                 <div class="app-footer-brand">

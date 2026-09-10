@@ -122,8 +122,6 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
         if (!chrome.runtime.lastError) applyPaidGate(!!(access && access.isPaid));
       });
     });
-  } else {
-    div.setAttribute("draggable", "false");
   }
 
   div.querySelectorAll("input").forEach((input) => {
@@ -178,18 +176,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     });
   }
 
-  if (!isFirst) {
-    div.setAttribute("draggable", "true");
-
-    div.addEventListener("dragstart", (e) => {
-      div.classList.add("dragging");
-    });
-
-    div.addEventListener("dragend", () => {
-      div.classList.remove("dragging");
-      saveOptions();
-    });
-  }
+  if (!isFirst) attachQueueDrag(div);
 
   const activeBtn = div.querySelector(".active-toggle button");
   activeBtn.addEventListener("click", () => {
@@ -440,65 +427,315 @@ if (volumeSlider) {
   });
 }
 
-queueList.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  if (!dragging) return;
+/* ── Queue reorder ─────────────────────────────────────────────
+   Pointer-driven rather than HTML5 drag-and-drop. DnD hands the browser a
+   ghost image and reports only a final drop target, which costs the three
+   things that make a reorder feel physical: the row can't track the pointer
+   1:1 from the point it was grabbed, the gesture can't be redirected once
+   it's underway, and a flick lands where the pointer stopped instead of where
+   it was thrown. Pointer Events give all three back, and cover touch and pen.
 
-  const afterElement = getDragAfterElement(queueList, e.clientY);
-  const firstItem = queueList.querySelector(".queue-item");
-  if (afterElement === firstItem || dragging === firstItem) return;
+   Nothing moves in the DOM until the gesture ends. Reordering mid-drag is the
+   obvious implementation and it is a trap: insertBefore on a node that already
+   has a parent removes it first, and removing the subtree holding the captured
+   .drag-handle implicitly releases the pointer capture. Moves and the release
+   then stop being delivered, so the row sticks to the screen until the pointer
+   wanders back over the handle. Instead the drag only ever writes transforms —
+   the row follows the pointer, the rows it displaces slide out of its way —
+   and the single DOM move happens once, after the row has settled.
+   ───────────────────────────────────────────────────────────── */
 
-  if (afterElement == null) {
-    queueList.appendChild(dragging);
-  } else {
-    queueList.insertBefore(dragging, afterElement);
-  }
-});
+const DRAG_THRESHOLD = 6;     // px of movement before a press becomes a drag
+const DRAG_EDGE = 36;         // px from the list edge where auto-scroll starts
+const DRAG_EDGE_SPEED = 0.5;  // scroll px per px into the edge, per frame
 
-queueList.addEventListener("drop", () => {
-  saveOptions();
-});
+let activeDrag = null;
 
-function getDragAfterElement(container, y) {
-  const draggableElements = [...container.querySelectorAll(".queue-item:not(.dragging)")];
-
-  return draggableElements.reduce(
-    (closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-
-      if (offset < 0 && offset > closest.offset) {
-        return { offset, element: child };
-      } else {
-        return closest;
-      }
-    },
-    { offset: Number.NEGATIVE_INFINITY }
-  ).element;
+function queueItemTranslate(el) {
+  // The live on-screen value. Interrupting a settle has to resume from what
+  // the user can see, not from the value the spring was heading toward.
+  const t = getComputedStyle(el).transform;
+  if (!t || t === "none") return 0;
+  return new DOMMatrixReadOnly(t).m42;
 }
 
-// Sincronização com o gerenciador de filas do options: mudanças
-// externas em queues re-renderizam a lista do popup
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.queues) {
-    const incoming = JSON.stringify(changes.queues.newValue || []);
-    if (pendingSelfWriteQueues.delete(incoming)) return; // nossa própria gravação
-    chrome.storage.sync.get("legacyMode", (result) => {
-      if (!result.legacyMode) restoreOptions();
-    });
-  }
-});
+function attachQueueDrag(item) {
+  const handle = item.querySelector(".drag-handle");
+  if (handle) handle.addEventListener("pointerdown", startQueueDrag);
+}
 
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.audiosPersonalizados) {
-    const queueSelectors = queueList.querySelectorAll(".queue-sound-select");
-    queueSelectors.forEach((select) => {
-      const currentValue = select.value;
-      loadSoundOptionsForQueue(select, currentValue);
-    });
+function startQueueDrag(e) {
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  if (activeDrag) return;
+
+  const handle = e.currentTarget;
+  const item = handle.closest(".queue-item");
+  if (!item || item === queueList.firstElementChild) return; // first queue is pinned
+
+  // Grabbing a row that is still settling takes it over mid-flight instead of
+  // waiting for the spring to finish.
+  if (item._insvSettle) {
+    item._insvSettle.stop();
+    item._insvSettle = null;
   }
-});
+  clearTimeout(item._insvSettleT);
+
+  e.preventDefault();
+
+  activeDrag = {
+    item: item,
+    handle: handle,
+    pointerId: e.pointerId,
+    // Offset from where the row was actually grabbed, so it doesn't jump to
+    // centre itself under the pointer.
+    grabOffset: e.clientY - item.getBoundingClientRect().top,
+    startY: e.clientY,
+    pointerY: e.clientY,
+    translate: queueItemTranslate(item),
+    lifted: false,
+    tracker: createVelocityTracker(100),
+    raf: 0,
+    layout: null,
+    toIndex: -1,
+  };
+
+  // Capture keeps moves coming when the pointer leaves the 14px handle. It
+  // throws if the pointer is already gone; the drag still works through normal
+  // dispatch, so this must not take the gesture down with it.
+  try { handle.setPointerCapture(e.pointerId); } catch (err) { /* no capture, still draggable */ }
+  handle.addEventListener("pointermove", moveQueueDrag);
+  handle.addEventListener("pointerup", endQueueDrag);
+  handle.addEventListener("pointercancel", endQueueDrag);
+  // Belt and braces: if capture is ever lost for a reason outside this file,
+  // end the gesture rather than leaving a row stranded mid-air.
+  handle.addEventListener("lostpointercapture", endQueueDrag);
+}
+
+/** Freeze the row geometry once, at lift. Every later frame reasons about
+    these numbers, so the layout cannot shift under the gesture. */
+function snapshotQueueLayout(item) {
+  const rows = Array.prototype.slice.call(queueList.children);
+  const rects = rows.map((n) => n.getBoundingClientRect());
+  const index = rows.indexOf(item);
+  // Measured, not assumed: the row gap is a margin today and could become a
+  // flex or grid gap tomorrow.
+  const gap = rects.length > 1 ? Math.max(0, rects[1].top - rects[0].bottom) : 0;
+  return {
+    rows: rows,
+    rects: rects,
+    index: index,
+    slot: rects[index].height + gap,
+    scrollTop: queueList.scrollTop,
+  };
+}
+
+function moveQueueDrag(e) {
+  if (!activeDrag || e.pointerId !== activeDrag.pointerId) return;
+  activeDrag.pointerY = e.clientY;
+  activeDrag.tracker.add(e.clientY);
+
+  if (activeDrag.lifted) return;
+  // Hysteresis: a press that drifts a couple of pixels is still a press.
+  if (Math.abs(e.clientY - activeDrag.startY) < DRAG_THRESHOLD) return;
+
+  activeDrag.lifted = true;
+  activeDrag.layout = snapshotQueueLayout(activeDrag.item);
+  activeDrag.toIndex = activeDrag.layout.index;
+  // The row is about to get a transform, which would make it the containing
+  // block for the position:fixed sound menu and drag the menu along with it.
+  closeAllSoundDropdowns();
+  activeDrag.item.classList.add("dragging");
+  activeDrag.item.style.willChange = "transform";
+  queueList.classList.add("reordering");
+  activeDrag.raf = requestAnimationFrame(queueDragFrame);
+}
+
+/** Which slot the row's centre is currently over, in snapshot coordinates. */
+function queueTargetIndex(d, centerY) {
+  const L = d.layout;
+  const mid = (i) => L.rects[i].top + L.rects[i].height / 2;
+
+  let to = L.index;
+  for (let i = L.index + 1; i < L.rows.length; i++) {
+    if (centerY > mid(i)) to = i; else break;
+  }
+  for (let i = L.index - 1; i >= 0; i--) {
+    if (centerY < mid(i)) to = i; else break;
+  }
+  return Math.max(1, to); // index 0 is the pinned queue; nothing goes above it
+}
+
+/** Slide the rows between the grabbed slot and the hovered one out of the way. */
+function applyQueueDisplacement(d, toIndex) {
+  const L = d.layout;
+  L.rows.forEach((node, i) => {
+    if (i === L.index) return;
+    let shift = 0;
+    if (toIndex > L.index && i > L.index && i <= toIndex) shift = -L.slot;
+    else if (toIndex < L.index && i >= toIndex && i < L.index) shift = L.slot;
+    const next = shift ? "translateY(" + shift + "px)" : "";
+    if (node.style.transform !== next) node.style.transform = next;
+  });
+}
+
+function queueDragFrame() {
+  const d = activeDrag;
+  if (!d || !d.lifted) return;
+
+  autoScrollQueue(d.pointerY);
+
+  const L = d.layout;
+  // The snapshot was taken at one scroll position; auto-scroll moves the rows
+  // under it, so every comparison is corrected by how far the list has scrolled.
+  const scrolled = queueList.scrollTop - L.scrollTop;
+  const desiredTop = d.pointerY - d.grabOffset;
+
+  d.translate = desiredTop - (L.rects[L.index].top - scrolled);
+  d.item.style.transform = "translateY(" + d.translate + "px)";
+
+  const centerY = desiredTop + scrolled + L.rects[L.index].height / 2;
+  const to = queueTargetIndex(d, centerY);
+  if (to !== d.toIndex) {
+    d.toIndex = to;
+    applyQueueDisplacement(d, to);
+  }
+
+  d.raf = requestAnimationFrame(queueDragFrame);
+}
+
+function autoScrollQueue(pointerY) {
+  const box = queueList.getBoundingClientRect();
+  let delta = 0;
+  if (pointerY < box.top + DRAG_EDGE) {
+    delta = (pointerY - (box.top + DRAG_EDGE)) * DRAG_EDGE_SPEED;
+  } else if (pointerY > box.bottom - DRAG_EDGE) {
+    delta = (pointerY - (box.bottom - DRAG_EDGE)) * DRAG_EDGE_SPEED;
+  }
+  if (delta) queueList.scrollTop += delta;
+}
+
+/** The one DOM write of the whole gesture. Runs the instant the pointer is
+    released, never at the end of an animation: the order is what the user
+    asked for, so it must not depend on a spring being allowed to finish.
+    Returns how far the dragged row has to travel to reach its new slot, or
+    null if the list changed underneath and the gesture has to be abandoned. */
+function commitQueueOrder(d) {
+  const L = d.layout;
+  const to = d.toIndex;
+
+  // An external storage change can call restoreOptions() and rebuild the whole
+  // list mid-gesture. The snapshot then points at detached nodes, and writing
+  // this order back would resurrect a stale row. The rebuilt list already has
+  // the right contents, so drop the gesture instead.
+  if (!d.item.isConnected || !queueList.contains(L.rows[to])) return null;
+
+  const before = L.rows.map((n) => n.getBoundingClientRect().top);
+
+  L.rows.forEach((n) => { n.style.transition = "none"; });
+
+  if (to !== L.index) {
+    const ref = to > L.index ? L.rows[to].nextElementSibling : L.rows[to];
+    queueList.insertBefore(d.item, ref);
+  }
+
+  L.rows.forEach((n) => { n.style.transform = ""; });
+  void queueList.offsetHeight;
+
+  // FLIP the rows that moved: put them back where they looked a moment ago…
+  let travel = 0;
+  L.rows.forEach((n, i) => {
+    const dy = before[i] - n.getBoundingClientRect().top;
+    if (n === d.item) { travel = dy; return; } // the spring owns the dragged row
+    n.style.transform = dy ? "translateY(" + dy + "px)" : "";
+  });
+  void queueList.offsetHeight;
+
+  // …then hand them back to CSS to play home.
+  L.rows.forEach((n) => {
+    n.style.transition = "";
+    if (n !== d.item) n.style.transform = "";
+  });
+  return travel;
+}
+
+function endQueueDrag(e) {
+  const d = activeDrag;
+  if (!d || e.pointerId !== d.pointerId) return;
+
+  d.handle.removeEventListener("pointermove", moveQueueDrag);
+  d.handle.removeEventListener("pointerup", endQueueDrag);
+  d.handle.removeEventListener("pointercancel", endQueueDrag);
+  d.handle.removeEventListener("lostpointercapture", endQueueDrag);
+  if (d.handle.hasPointerCapture(e.pointerId)) d.handle.releasePointerCapture(e.pointerId);
+
+  activeDrag = null;
+  if (!d.lifted) return; // a press that never turned into a drag
+
+  cancelAnimationFrame(d.raf);
+  queueList.classList.remove("reordering");
+
+  const item = d.item;
+  // Only a real release carries momentum. A cancel or a lost capture drops the
+  // row where it stands. The clamp is against one freak sample turning a normal
+  // drag into a fling across the whole list.
+  const raw = e.type === "pointerup" ? d.tracker.velocity() : 0;
+  const velocity = Math.max(-3000, Math.min(3000, raw));
+
+  // Land where the flick was heading, not where the pointer happened to stop.
+  // 0.99 rather than the 0.998 of a scroll view: this list is a few hundred
+  // pixels tall, so scroll-length coasting would send every flick to the end.
+  const L = d.layout;
+  const scrolled = queueList.scrollTop - L.scrollTop;
+  const projectedCenter =
+    d.pointerY - d.grabOffset + scrolled + L.rects[L.index].height / 2 +
+    projectMomentum(velocity, 0.99);
+
+  d.toIndex = queueTargetIndex(d, projectedCenter);
+
+  // Write the order and persist it NOW. Hanging this off the end of the spring
+  // meant a popup closed during the settle — a few hundred milliseconds — threw
+  // the reorder away, and a stalled frame loop stranded the row permanently.
+  const travel = commitQueueOrder(d);
+
+  item.classList.remove("dragging");
+
+  if (travel === null) {           // list rebuilt under us; nothing to animate
+    item.style.transform = "";
+    item.style.willChange = "";
+    return;
+  }
+
+  saveOptions();
+
+  item.classList.add("settling");
+  item.style.transform = "translateY(" + travel + "px)";
+
+  const land = function () {
+    item.style.transform = "";
+    item.style.willChange = "";
+    item.classList.remove("settling");
+    item._insvSettle = null;
+  };
+
+  item._insvSettle = springTo({
+    from: travel,
+    to: 0,
+    velocity: velocity, // continue at the pointer's exact speed
+    damping: 0.8,       // the gesture carried momentum, so a little overshoot fits
+    response: 0.3,
+    onFrame: function (y) {
+      item.style.transform = "translateY(" + y + "px)";
+    },
+    onDone: land,
+  });
+
+  // The frame loop can be starved (a backgrounded popup, a throttled tab). The
+  // order is already saved by then, so this only cleans up the leftover offset.
+  clearTimeout(item._insvSettleT);
+  item._insvSettleT = setTimeout(function () {
+    if (item._insvSettle) { item._insvSettle.stop(); land(); }
+  }, 1200);
+}
 
 // ── Indicador de pausa global ───────────────────────
 const globalPausedBanner = document.getElementById("global-paused-banner");

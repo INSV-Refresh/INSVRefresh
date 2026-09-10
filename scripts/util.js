@@ -286,17 +286,57 @@ function closeAllSoundDropdowns(except) {
   });
 }
 
+/**
+ * Bring an option into view WITHOUT touching any scroll container but the menu
+ * itself. scrollIntoView walks up and scrolls every scrollable ancestor, so on
+ * the popup it also scrolls #queue-list — which the dismiss listener below
+ * reads as "the user scrolled away" and closes the menu that just opened.
+ */
+function scrollOptionIntoView(list, opt) {
+  const top = opt.offsetTop;
+  const bottom = top + opt.offsetHeight;
+  const viewTop = list.scrollTop;
+  const viewBottom = viewTop + list.clientHeight;
+  if (top < viewTop) list.scrollTop = top;
+  else if (bottom > viewBottom) list.scrollTop = bottom - list.clientHeight;
+}
+
 // Scroll/resize close any open menu (fixed position doesn't follow scroll).
 let soundDropdownScrollBound = false;
+// True from the click until the menu is actually open. The .open class is set a
+// frame late (so the transition has a closed state to animate from), which
+// leaves a window where a scroll or resize would dismiss a menu that has not
+// finished opening — and whether it does is a race, so it has to be closed
+// explicitly rather than relied on.
+let soundDropdownOpening = false;
 function bindSoundDropdownDismiss() {
   if (soundDropdownScrollBound) return;
   const onMove = (e) => {
+    if (soundDropdownOpening) return;
     // Ignore scroll that originates inside a dropdown's own list — the list is
-    // fixed-positioned, so its internal scroll doesn't move it. Only a scroll of
-    // the page/container behind it should dismiss the menu.
+    // fixed-positioned, so its internal scroll doesn't move it.
     const t = e && e.target;
     if (t && t.closest && t.closest(".qsd-list")) return;
-    closeAllSoundDropdowns();
+
+    const root = document.querySelector(".queue-sound-select.open");
+    if (!root) return;
+    const trigger = root.querySelector(".qsd-trigger");
+    const list = root.querySelector(".qsd-list");
+    if (!trigger || !list) return;
+
+    // Follow the trigger rather than vanishing. Closing on any scroll looks
+    // correct until something the menu itself caused does the scrolling:
+    // clicking the trigger focuses it, and focusing a partially visible button
+    // scrolls #queue-list to bring it into view. That arrives a frame or two
+    // after the menu opens, so the menu dismissed itself and the popup looked
+    // like it was refusing to open at all. Only give up once the trigger has
+    // genuinely left the viewport.
+    const r = trigger.getBoundingClientRect();
+    if (r.bottom <= 0 || r.top >= window.innerHeight) {
+      closeAllSoundDropdowns();
+      return;
+    }
+    positionSoundMenu(trigger, list);
   };
   // Capturing scroll listener on the document catches scroll from ANY
   // descendant (popup's #queue-list, the options page/section) — scroll events
@@ -347,7 +387,7 @@ function buildSoundDropdown(root, opts) {
     getOptions().forEach((o) => o.classList.remove("active"));
     opt.classList.add("active");
     trigger.setAttribute("aria-activedescendant", opt.id);
-    opt.scrollIntoView({ block: "nearest" });
+    scrollOptionIntoView(list, opt);
   };
 
   const moveActive = (dir) => {
@@ -372,6 +412,7 @@ function buildSoundDropdown(root, opts) {
     bindSoundDropdownDismiss();
     bindSoundDropdownOutside();
     clearTimeout(list._hideT); // cancel a pending hide from a quick re-open
+    soundDropdownOpening = true;
     list.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     positionSoundMenu(trigger, list); // forces layout at the closed state…
@@ -380,6 +421,7 @@ function buildSoundDropdown(root, opts) {
       if (!list.hidden && trigger.getAttribute("aria-expanded") === "true") {
         root.classList.add("open");
       }
+      soundDropdownOpening = false;
     });
     setActive(list.querySelector(".qsd-option.selected") || list.querySelector(".qsd-option"));
   };
@@ -511,4 +553,118 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
 
     selectElement.value = selectedValue;
   });
+}
+
+/* ── Motion ───────────────────────────────────────────────────
+   Springs, not fixed-duration curves, for anything the pointer can grab.
+   A tween can't take new input mid-flight; a spring just gets a new target
+   and keeps going from wherever it currently is. The two knobs are Apple's
+   (WWDC 2018) rather than the physics triplet:
+
+     damping  1.0 = critically damped, settles without overshoot (default UI)
+              0.8 = slight overshoot, only when the gesture carried momentum
+     response      seconds to reach the target. Not a duration: the spring has
+                   no fixed end, settle time falls out of the parameters.
+   ───────────────────────────────────────────────────────────── */
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * Animate a scalar with a spring, starting from `from` at `velocity` px/s.
+ * onFrame gets every intermediate value; onDone fires once settled.
+ * Returns a handle whose .stop() cancels — call it to interrupt, then start a
+ * new spring from the live value so the motion never jumps.
+ */
+function springTo(opts) {
+  const to = opts.to || 0;
+  const damping = opts.damping == null ? 1 : opts.damping;
+  const response = opts.response || 0.4;
+  const onFrame = opts.onFrame || function () {};
+  const onDone = opts.onDone || function () {};
+
+  let x = opts.from || 0;
+  let v = opts.velocity || 0;
+
+  if (prefersReducedMotion()) {
+    onFrame(to);
+    onDone();
+    return { stop: function () {} };
+  }
+
+  const omega = (2 * Math.PI) / response;
+  let raf = 0;
+  let last = performance.now();
+  let stopped = false;
+
+  function step(now) {
+    if (stopped) return;
+    // Clamp dt so a backgrounded tab doesn't resume with one huge unstable step.
+    const dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now;
+
+    // Semi-implicit Euler: stable at rAF rates, unlike explicit Euler.
+    const accel = -omega * omega * (x - to) - 2 * damping * omega * v;
+    v += accel * dt;
+    x += v * dt;
+
+    if (Math.abs(x - to) < 0.4 && Math.abs(v) < 20) {
+      onFrame(to);
+      onDone();
+      return;
+    }
+
+    onFrame(x);
+    raf = requestAnimationFrame(step);
+  }
+
+  raf = requestAnimationFrame(step);
+
+  return {
+    stop: function () {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    },
+  };
+}
+
+/**
+ * Where a flick would coast to rest. Apple's exponential-decay projection from
+ * the Designing Fluid Interfaces sample — not the textbook v²/2a, which
+ * overshoots badly at the velocities a finger actually produces.
+ * Snap to the target nearest this point, not nearest the release point.
+ */
+function projectMomentum(velocity, decelerationRate) {
+  const d = decelerationRate == null ? 0.998 : decelerationRate;
+  return ((velocity / 1000) * d) / (1 - d);
+}
+
+/**
+ * Rolling pointer-velocity tracker. Release velocity has to come from a short
+ * history: the last single pointermove is noisy, and a pause before release
+ * should read as zero, not as the speed from 200ms ago.
+ */
+function createVelocityTracker(windowMs) {
+  const span = windowMs || 100;
+  let samples = [];
+
+  return {
+    add: function (value) {
+      const now = performance.now();
+      samples.push({ value: value, t: now });
+      while (samples.length > 2 && now - samples[0].t > span) samples.shift();
+    },
+    velocity: function () {
+      if (samples.length < 2) return 0;
+      const first = samples[0];
+      const last = samples[samples.length - 1];
+      const dt = (last.t - first.t) / 1000;
+      if (dt <= 0) return 0;
+      return (last.value - first.value) / dt;
+    },
+    reset: function () {
+      samples = [];
+    },
+  };
 }

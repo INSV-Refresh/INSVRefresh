@@ -547,7 +547,7 @@ const I18N_MESSAGES = {
     howto_4: "Audios are stored locally in your browser",
 
     status_title: "Status notifications",
-    status_p: "Configure sound notifications for status changes on each queue. Queues are managed in the popup. (separate mutiple status with ;)",
+    status_p: "Configure sound notifications for status changes on each queue. Queues are managed in the popup. (separate multiple statuses with ;)",
     qm_statuses_ph: "Statuses (e.g.: In progress;Resolved)",
     qm_statuses_title: "Separate multiple statuses with ;",
     qm_sound_title: "Status notification sound",

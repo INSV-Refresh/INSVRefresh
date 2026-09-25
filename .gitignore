@@ -1,0 +1,9 @@
+# Local agent/editor config
+.agents/
+.claude/
+
+# Generated launch-video renders (28MB+, regenerable via /brag)
+brag-output/
+
+# Store listing media (regenerable via store-assets/_build)
+store-assets/

@@ -43,11 +43,9 @@ body {
 }
 
 .toc-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted, #6B7390);
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text, var(--ink-800));
   margin-bottom: 14px;
   display: block;
 }
@@ -114,32 +112,14 @@ a.ext-link:focus-visible,
 }
 
 .doc-meta-item {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted, #6B7390);
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .doc-meta-item strong {
   color: var(--text, var(--ink-800));
   font-weight: 500;
-}
-
-.compliance-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.badge {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  color: var(--brand-600, #0085BB);
-  border: 1px solid color-mix(in srgb, var(--brand-500) 20%, transparent);
 }
 
 /* ── Summary callout ────────────────────────────── */
@@ -186,8 +166,10 @@ a.ext-link:focus-visible,
 }
 
 .doc-section h2 {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--leading-tight);
   color: var(--text, var(--ink-800));
   margin-bottom: 16px;
   display: flex;
@@ -196,20 +178,16 @@ a.ext-link:focus-visible,
   scroll-margin-top: 96px;
 }
 
+/* Plain section number, matching the "1. Introdução" style of the index. */
 .doc-section h2 .section-num {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--brand-500);
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  color: var(--text-muted, #6B7390);
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 .doc-section h3 {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--fs-base);
+  font-weight: var(--weight-semibold);
   color: var(--text, var(--ink-800));
   margin-top: 24px;
   margin-bottom: 10px;
@@ -240,10 +218,10 @@ a.ext-link:focus-visible,
   position: relative;
   padding-left: 18px;
   margin-bottom: 8px;
-  font-size: 0.87rem;
+  font-size: var(--fs-base);
   color: var(--text-muted, #6B7390);
-  line-height: 1.6;
-  max-width: 60ch;
+  line-height: var(--leading-relaxed);
+  max-width: 65ch;
 }
 
 .doc-section ul li::before {
@@ -288,42 +266,6 @@ a.ext-link:hover {
 }
 
 /* ── Rights grid ────────────────────────────────── */
-.rights-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.right-card {
-  background: var(--surface, #fff);
-  border: 1px solid var(--border, #E5E7EF);
-  border-radius: var(--radius-md);
-  padding: 16px;
-}
-
-.right-card-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text, var(--ink-800));
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.right-card-title svg {
-  color: var(--brand-500);
-  flex-shrink: 0;
-}
-
-.right-card p {
-  font-size: 0.78rem;
-  color: var(--text-muted, #6B7390);
-  margin-bottom: 0;
-  max-width: none;
-}
-
 /* ── Contact section ────────────────────────────── */
 .contact-card {
   background: var(--surface, #fff);
@@ -353,11 +295,9 @@ a.ext-link:hover {
 }
 
 .contact-row-label {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--text, var(--ink-800));
-  min-width: 120px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+  min-width: 140px;
 }
 
 .contact-row a {
@@ -382,12 +322,6 @@ a.ext-link:hover {
 [data-theme="dark"] .doc-meta-item { color: var(--ink-300); }
 [data-theme="dark"] .doc-meta-item strong { color: var(--ink-100); }
 
-[data-theme="dark"] .badge {
-  background: color-mix(in srgb, var(--brand-500) 12%, transparent);
-  border-color: color-mix(in srgb, var(--brand-500) 25%, transparent);
-  color: var(--brand-400);
-}
-
 [data-theme="dark"] .callout {
   background: color-mix(in srgb, var(--brand-500) 8%, transparent);
   border-color: color-mix(in srgb, var(--brand-500) 20%, transparent);
@@ -405,7 +339,7 @@ a.ext-link:hover {
 [data-theme="dark"] .callout-warning p strong { color: var(--warning-300); }
 [data-theme="dark"] .callout-warning .callout-icon { color: var(--warning-500); }
 
-[data-theme="dark"] .toc-label { color: var(--ink-300); }
+[data-theme="dark"] .toc-label { color: var(--ink-100); }
 [data-theme="dark"] .toc-list a { color: var(--ink-300); }
 
 [data-theme="dark"] .doc-section h2 { color: var(--ink-100); }
@@ -420,14 +354,6 @@ a.ext-link:hover {
   border-color: rgb(255 255 255 / 0.07);
   color: var(--ink-300);
 }
-
-[data-theme="dark"] .right-card {
-  background: var(--ink-950);
-  border-color: rgb(255 255 255 / 0.07);
-}
-
-[data-theme="dark"] .right-card-title { color: var(--ink-100); }
-[data-theme="dark"] .right-card p { color: var(--ink-300); }
 
 [data-theme="dark"] .contact-card {
   background: var(--ink-950);
@@ -466,8 +392,6 @@ a.ext-link:hover {
 }
 
 @media (max-width: 480px) {
-  .compliance-badges { gap: 6px; }
-  .rights-grid { grid-template-columns: 1fr; }
   .doc-meta { flex-direction: column; gap: 6px; align-items: flex-start; }
 }
 

@@ -229,27 +229,19 @@ input[type="number"]::placeholder {
 }
 
 /* ── Feature grid ────────────────────────────── */
+/* Informational list, not a set of buttons: no card chrome and no hover
+   lift, which would promise a click that does nothing. */
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-4);
-  margin-top: 0.5rem;
+  gap: var(--space-6) var(--space-8);
+  margin-top: var(--space-4);
 }
 
 .feature-card {
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
-}
-
-.feature-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
 }
 
 .feature-icon {
@@ -584,10 +576,8 @@ input[type="number"]::placeholder {
   border-color: var(--brand-500);
   background-color: var(--brand-a10);
   border-style: solid;
-  /* No scale() here — it reflowed while pulse repainted, causing jitter.
-     Solid border + glow + bg tint are enough of a dragover cue. */
-  box-shadow: 0 0 20px var(--brand-a30);
-  animation: pulse 1.5s infinite;
+  /* Solid border + ring + tint say "drop here" without a looping glow. */
+  box-shadow: 0 0 0 3px var(--brand-a40);
 }
 
 .drop-area.error {
@@ -659,7 +649,6 @@ input[type="number"]::placeholder {
   font-size: var(--fs-sm);
   color: var(--ink-400); /* ink-200 on white was 1.82:1 */
   margin-top: 8px;
-  font-family: var(--font-mono, monospace);
 }
 
 /* ── Audio name row ──────────────────────────── */
@@ -839,8 +828,8 @@ a:focus-visible,
 }
 
 .audio-meta {
-  font-family: var(--font-mono, monospace);
   font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
   color: var(--ink-400); /* ink-200 on white was 1.82:1 */
   margin-top: 2px;
   white-space: nowrap;
@@ -936,11 +925,8 @@ button.delete-audio-btn:hover {
   border: none;
   background: transparent;
   box-shadow: none;
-  font-family: var(--font-mono, monospace);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   color: var(--brand-700); /* brand-600 was 3.84:1 on the surface-2 row — below AA */
   cursor: text;
   text-overflow: ellipsis;
@@ -1399,15 +1385,9 @@ button.delete-audio-btn:hover {
 
 /* Toast styling is shared (showToast in scripts/util.js injects .insv-toast). */
 
-/* ── GlowPulse ───────────────────────────────── */
-@keyframes glowPulse {
-  0% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-  50% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(249, 135, 100, 0.6); }
-  100% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-}
-
+/* The sparkle stays still: a glow looping forever in the sidebar pulls the
+   eye away from the settings the page is for. */
 .glowPulse {
-  animation: glowPulse 2s ease-in-out infinite;
   text-decoration: none;
 }
 
@@ -1460,12 +1440,8 @@ button.delete-audio-btn:hover {
 [data-theme="dark"] strong { color: var(--ink-50); }
 [data-theme="dark"] ul { color: var(--ink-200); }
 
-[data-theme="dark"] .feature-card {
-  background: var(--ink-700);
-  border-color: rgba(255, 255, 255, 0.06);
-}
 [data-theme="dark"] .feature-card strong { color: var(--ink-50); }
-[data-theme="dark"] .feature-card p { color: var(--ink-200); } /* ink-300 on ink-700 was 4.25:1 — below AA */
+[data-theme="dark"] .feature-card p { color: var(--ink-200); }
 
 [data-theme="dark"] input,
 [data-theme="dark"] select,

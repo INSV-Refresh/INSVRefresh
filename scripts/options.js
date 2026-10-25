@@ -690,7 +690,6 @@ i18nReady.then(function() {
     captureBtnId: "accept-shortcut-capture",
     clearBtnId: "accept-shortcut-clear",
     storageProp: "acceptShortcut",
-    legacyProp: "acceptShortcutKey",
   });
 
   setupShortcutCapture({
@@ -751,6 +750,7 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp }) {
   const captureBtn = document.getElementById(captureBtnId);
   const clearBtn = document.getElementById(clearBtnId);
   if (!captureBtn) return;
+  const action = SHORTCUT_ACTIONS.find((a) => a.prop === storageProp);
 
   let capturing = false;
   let savedShortcut = null;
@@ -786,23 +786,34 @@ function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp }) {
     }, 1200);
   }
 
+  // Uma leitura e uma gravação: o atalho novo e a remoção do conflitante
+  // chegam juntos ao storage, então nenhum leitor vê a combinação em duas ações.
   function persist(sc) {
     chrome.storage.local.get("advanced", (data) => {
-      const adv = data.advanced || {};
-      adv[storageProp] = sc;
-      if (legacyProp) delete adv[legacyProp];
+      const { adv, removed } = assignShortcut(data.advanced, storageProp, sc);
       chrome.storage.local.set({ advanced: adv }, () => {
-        savedShortcut = sc;
+        savedShortcut = adv[storageProp];
         stopCapture();
-        showToast(sc ? t("shortcut_saved") : t("shortcut_removed"), "success");
+        let msg = sc ? t("shortcut_saved") : t("shortcut_removed");
+        if (removed.length) {
+          msg = t("shortcut_saved_moved", { action: removed.map((a) => t(a.labelKey)).join(", ") });
+        }
+        showToast(msg, "success");
       });
     });
   }
 
   chrome.storage.local.get("advanced", (data) => {
-    const adv = data.advanced || {};
-    savedShortcut = adv[storageProp] || (legacyProp ? legacyKeyToShortcut(adv[legacyProp]) : null);
+    savedShortcut = action ? getStoredShortcut(data.advanced, action) : null;
     render();
+  });
+
+  // O outro capturador pode tirar este atalho (conflito), e um backup ou outra
+  // aba de opções pode trocá-lo. O campo acompanha o storage na hora.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.advanced || !action) return;
+    savedShortcut = getStoredShortcut(changes.advanced.newValue, action);
+    if (!capturing) render();
   });
 
   captureBtn.addEventListener("click", () => {
@@ -918,11 +929,6 @@ function setupWorkSchedule() {
   [startEl, endEl].forEach((el) => el.addEventListener("change", persist));
   dayInputs.forEach((i) => i.addEventListener("change", persist));
 }
-
-document.getElementById("nav-pricing") && document.getElementById("nav-pricing").addEventListener("click", (e) => {
-  e.preventDefault();
-  window.location.href = chrome.runtime.getURL("pricing.html");
-});
 
 document.querySelectorAll(".menu a").forEach(link => {
     link.addEventListener("click", function (e) {

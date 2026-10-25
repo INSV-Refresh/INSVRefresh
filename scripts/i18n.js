@@ -145,6 +145,7 @@ const I18N_MESSAGES = {
     clear: "Limpar",
     shortcut_saved: "Atalho salvo.",
     shortcut_removed: "Atalho removido.",
+    shortcut_saved_moved: "Atalho salvo e removido de \"{action}\".",
 
     // Options — backup
     backup_title: "Backup",
@@ -483,6 +484,7 @@ const I18N_MESSAGES = {
     clear: "Clear",
     shortcut_saved: "Shortcut saved.",
     shortcut_removed: "Shortcut removed.",
+    shortcut_saved_moved: "Shortcut saved and removed from \"{action}\".",
 
     backup_title: "Backup",
     backup_p: "Back up your settings or restore from a previous backup. Useful when switching computers or reinstalling the browser.",
@@ -816,6 +818,7 @@ const I18N_MESSAGES = {
     clear: "Borrar",
     shortcut_saved: "Atajo guardado.",
     shortcut_removed: "Atajo eliminado.",
+    shortcut_saved_moved: "Atajo guardado y quitado de \"{action}\".",
 
     backup_title: "Copia de seguridad",
     backup_p: "Haz una copia de seguridad de tu configuración o restáurala desde una copia anterior. Útil al cambiar de computadora o reinstalar el navegador.",

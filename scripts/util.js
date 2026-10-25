@@ -199,6 +199,69 @@ function defaultQueue(overrides) {
   );
 }
 
+// ── Atalhos de teclado ───────────────────────────────────────
+// Ficam em chrome.storage.local.advanced[prop] como {ctrl, alt, shift, meta,
+// code}. Aceitar ainda pode ter a string legada acceptShortcutKey ("p").
+// A ordem da lista é a prioridade em runtime: se dados antigos ou um backup
+// importado trouxerem a mesma combinação em duas ações, só a primeira dispara.
+const SHORTCUT_ACTIONS = [
+  { prop: "acceptShortcut", legacyProp: "acceptShortcutKey", labelKey: "accept_shortcut_label" },
+  { prop: "pauseAllShortcut", labelKey: "pause_shortcut_label" },
+];
+
+// Forma canônica de um atalho, para comparar combinações gravadas em formatos
+// diferentes: modificadores viram booleanos, a string legada vira objeto e
+// letras/dígitos soltos ("p", "keyp", "1") viram o code do teclado.
+function normalizeShortcut(sc) {
+  if (!sc) return null;
+  if (typeof sc === "string") sc = { code: sc, legacy: true };
+  if (typeof sc !== "object") return null;
+  let code = String(sc.code || "").trim();
+  if (!code) return null;
+  if (/^[a-z]$/i.test(code)) code = "Key" + code.toUpperCase();
+  else if (/^[0-9]$/.test(code)) code = "Digit" + code;
+  else if (/^key[a-z]$/i.test(code)) code = "Key" + code.slice(3).toUpperCase();
+  else if (/^digit[0-9]$/i.test(code)) code = "Digit" + code.slice(5);
+  const out = { ctrl: !!sc.ctrl, alt: !!sc.alt, shift: !!sc.shift, meta: !!sc.meta, code };
+  if (sc.legacy) out.legacy = true;
+  return out;
+}
+
+// Duas combinações são a mesma tecla quando as assinaturas batem. "" = sem atalho.
+function shortcutSignature(sc) {
+  const n = normalizeShortcut(sc);
+  if (!n) return "";
+  return [n.ctrl ? "ctrl" : "", n.alt ? "alt" : "", n.shift ? "shift" : "", n.meta ? "meta" : "", n.code].join("+");
+}
+
+function getStoredShortcut(adv, action) {
+  const a = adv || {};
+  return normalizeShortcut(a[action.prop]) || (action.legacyProp ? normalizeShortcut(a[action.legacyProp]) : null);
+}
+
+// Grava sc na ação prop. A configuração nova vence: qualquer outra ação com a
+// mesma combinação perde o atalho. Devolve uma cópia de advanced (as demais
+// chaves intactas) e as ações que perderam o atalho, para o aviso na tela.
+function assignShortcut(adv, prop, sc) {
+  const out = Object.assign({}, adv || {});
+  const own = SHORTCUT_ACTIONS.find((a) => a.prop === prop);
+  const novo = normalizeShortcut(sc);
+  out[prop] = novo;
+  if (own && own.legacyProp) delete out[own.legacyProp];
+  const removed = [];
+  const sig = shortcutSignature(novo);
+  if (sig) {
+    SHORTCUT_ACTIONS.forEach((a) => {
+      if (a.prop === prop) return;
+      if (shortcutSignature(getStoredShortcut(out, a)) !== sig) return;
+      out[a.prop] = null;
+      if (a.legacyProp) delete out[a.legacyProp];
+      removed.push(a);
+    });
+  }
+  return { adv: out, removed };
+}
+
 // ── Custom sound dropdown (qsd) ──────────────────────────────
 // A styled replacement for the native <select>, shared by the popup queue
 // rows and the options status-notification rows. Exposes root.value (get/set)

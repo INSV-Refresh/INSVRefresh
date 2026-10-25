@@ -17,6 +17,7 @@ const suites = [
   ["unit", require("./unit/reorder.test.js")],
   ["unit", require("./unit/migration.test.js")],
   ["unit", require("./unit/donate.test.js")],
+  ["unit", require("./unit/shortcuts.test.js")],
 ];
 
 if (!unitOnly) {

@@ -839,8 +839,8 @@ function initNormalMode() {
   let filaMonitores = [];
   const statusNotificationPrevious = {};
   // Modo API (advanced.apiMode): lê as filas pela UI API em vez de raspar a
-  // tabela. Recurso do plano Empresa, desligado por ENTERPRISE_FEATURES nesta
-  // versão, então na prática fica sempre false e todo ciclo lê a tela.
+  // tabela. Desligado por API_FEATURES nesta versão (consome cota de API do
+  // org), então na prática fica sempre false e todo ciclo lê a tela.
   let _apiModeAtivo = false;
   // Piso entre verificações disparadas por evento de CDC: uma atualização em
   // massa no org gera muitos eventos e não pode virar rajada de leituras.
@@ -858,7 +858,7 @@ function initNormalMode() {
     return isWithinWorkSchedule(_workSchedule);
   }
 
-  function iniciarMonitoramentoFila(fila, globalSound, globalVolume, isPaid) {
+  function iniciarMonitoramentoFila(fila, globalSound, globalVolume) {
     let seenCaseIds = new Set();
     // Monitors are recreated on any settings change (volume nudge included).
     // Without this, the first cycle treats every case already on screen as new
@@ -972,7 +972,7 @@ function initNormalMode() {
         primed = true;
 
         // Notificação de mudança de status — config por fila
-        // (queues[].statusNotify), recurso premium
+        // (queues[].statusNotify)
         const sn = fila.statusNotify;
         const temStatus = linhas.some((l) => l.status);
         if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && podeAlertar && temStatus) {
@@ -1340,6 +1340,14 @@ function initNormalMode() {
         window._insvPauseShortcutHandler = null;
       }
       if (!shortcut) return;
+      // Mesma combinação de Aceitar (dados salvos antes da checagem de
+      // conflito, ou backup importado): Aceitar vence e Pausar não registra,
+      // senão uma tecla aceitaria o chamado e pausaria as filas juntas.
+      const accept = SHORTCUT_ACTIONS.find((a) => a.prop === "acceptShortcut");
+      if (shortcutSignature(shortcut) === shortcutSignature(getStoredShortcut(adv, accept))) {
+        log("[Debug] Atalho de pausa igual ao de aceitar, ignorado");
+        return;
+      }
       window._insvPauseShortcutHandler = (e) => {
         if (e.target && (e.target.matches("input, textarea, select") || e.target.isContentEditable)) return;
         if (matchesShortcut(e, shortcut)) {

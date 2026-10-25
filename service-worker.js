@@ -156,13 +156,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return true;
     }
     // ── Modo API ────────────────────────────────────────────
-    // Recurso do plano Empresa. Enquanto ENTERPRISE_FEATURES o mantém
-    // desligado, os três handlers respondem sem tocar no org: a extensão não
-    // pode virar consumo de cota nem por mensagem forjada.
+    // Desligado nesta versão (API_FEATURES): cada verificação consome cota de
+    // API do org. Enquanto a flag estiver desligada, os três handlers
+    // respondem sem tocar no org: a extensão não pode virar consumo de cota
+    // nem por mensagem forjada.
     if (msg && (msg.type === "SF_API_STATUS" || msg.type === "SF_STREAM_STATUS" || msg.type === "SF_QUEUE_RECORDS")) {
       const recurso = msg.type === "SF_STREAM_STATUS" ? "stream" : "apiMode";
-      if (!ENTERPRISE_FEATURES[recurso]) {
-        sendResponse({ ok: false, enterprise: true, erro: "recurso do plano Empresa" });
+      if (!API_FEATURES[recurso]) {
+        sendResponse({ ok: false, disabled: true, erro: "recurso desativado" });
         return true;
       }
     }
@@ -241,10 +242,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 //   v2: popupDarkMode → darkMode; advanced.acceptShortcutKey (string)
 //       → advanced.acceptShortcut (objeto); statusNotifications[] →
 //       queues[].statusNotify; poda analytics.
-//   v3: poda advanced.apiMode e advanced.streamMode. O modo API virou recurso
-//       do plano Empresa e está desligado por ENTERPRISE_FEATURES; deixar o
-//       flag gravado faria a máquina de quem testou religar sozinha no dia em
-//       que a flag mudar.
+//   v3: poda advanced.apiMode e advanced.streamMode. O modo API está
+//       desligado por API_FEATURES; deixar o flag gravado faria a máquina de
+//       quem testou religar sozinha no dia em que a flag mudar.
 // Obs.: legacyMode/legacyInterval/legacyActive ficam em storage.sync
 // (acompanham o usuário entre dispositivos); queues e demais configs
 // ficam em storage.local (são por máquina) — decisão documentada aqui
@@ -302,7 +302,7 @@ function migrateStorage() {
       updates.advanced = adv;
     }
 
-    // Modo API / streaming: recurso do plano Empresa, desligado nesta versão.
+    // Modo API / streaming: desligado nesta versão.
     // Poda o flag para não sobrar estado ligado de quem testou.
     if (data.advanced && (data.advanced.apiMode !== undefined || data.advanced.streamMode !== undefined)) {
       const adv = updates.advanced || Object.assign({}, data.advanced);

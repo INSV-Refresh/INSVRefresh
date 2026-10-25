@@ -245,10 +245,10 @@ async function sfStreamReconciliar(forcar) {
     _sfStream.desistiu = false;
     _sfStream.falhas = 0;
   }
-  // Recurso do plano Empresa. Desligado, nem lê a configuração: um flag
+  // Desligado por API_FEATURES, nem lê a configuração: um flag
   // gravado à mão em storage não pode virar assinatura de CometD, que consome
   // cliente concorrente do org.
-  if (!ENTERPRISE_FEATURES.stream) {
+  if (!API_FEATURES.stream) {
     sfStreamParar("");
     return;
   }
@@ -297,7 +297,7 @@ async function sfStreamReconciliar(forcar) {
 // Com o recurso desligado o alarme não é criado: ele acordaria o service
 // worker a cada minuto, para sempre, só para reconciliar um streaming que
 // nunca vai subir. Um alarme de instalação anterior é apagado no mesmo passo.
-if (ENTERPRISE_FEATURES.stream) {
+if (API_FEATURES.stream) {
   chrome.alarms.create(SF_STREAM_ALARME, { periodInMinutes: 1 });
   chrome.alarms.onAlarm.addListener((alarme) => {
     if (alarme.name === SF_STREAM_ALARME) sfStreamReconciliar();

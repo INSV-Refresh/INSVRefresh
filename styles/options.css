@@ -1721,8 +1721,7 @@ button.delete-audio-btn:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Backup e Legacy são <section>: a borda acompanha as seções vizinhas, não
-   o .api-card, que continua aninhado dentro de uma delas. */
+/* Backup e Legacy são <section>: a borda acompanha as seções vizinhas. */
 [data-theme="dark"] .advanced-bottom-row > section { border-color: rgba(255, 255, 255, 0.06); }
 
 [data-theme="dark"] .export-import-btn {
@@ -1918,63 +1917,3 @@ button.delete-audio-btn:active {
 [data-theme="dark"] .ws-day span {
   border-color: rgba(255, 255, 255, 0.16);
 }
-
-/* ── Modo API ───────────────────────────────────────────────── */
-.api-card {
-  gap: var(--space-3);
-}
-
-/* Nota de segurança: o que a permissão dá acesso não pode ficar com cara de
-   rodapé apagado, então ganha faixa e cor de aviso em vez do cinza do
-   .field-desc comum. */
-.api-card .api-security-note {
-  margin: 0;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--warning-500);
-  background: color-mix(in srgb, var(--warning-500) 10%, transparent);
-  color: var(--ink-800);
-}
-
-.api-status-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.api-status {
-  font-size: var(--fs-sm);
-  line-height: 1.4;
-  color: var(--text-muted);
-  /* Host + versão + contagem podem estourar a linha em telas estreitas. */
-  overflow-wrap: anywhere;
-}
-
-.api-status[data-tone="ok"] { color: var(--success-500); }
-.api-status[data-tone="error"] { color: var(--danger-600); }
-
-[data-theme="dark"] .api-card .api-security-note {
-  background: color-mix(in srgb, var(--warning-500) 14%, transparent);
-  color: var(--warning-300);
-  border-left-color: var(--warning-300);
-}
-
-[data-theme="dark"] .api-status { color: var(--ink-300); }
-[data-theme="dark"] .api-status[data-tone="error"] { color: var(--danger-500); }
-
-/* Streaming depende do modo API: o recuo e a borda dizem isso sem texto. */
-.api-substep {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-left: var(--space-4);
-  border-left: 2px solid var(--border);
-  transition: opacity var(--dur-base) var(--ease-out);
-}
-
-.api-substep.disabled {
-  opacity: 0.45;
-}
-
-[data-theme="dark"] .api-substep { border-left-color: rgba(255, 255, 255, 0.12); }

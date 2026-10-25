@@ -1,7 +1,4 @@
-importScripts("scripts/features.js", "ExtPay.js", "scripts/sf-session.js", "scripts/sf-api.js", "scripts/sf-stream.js");
-
-const extpay = ExtPay("insv-refresh");
-extpay.startBackground();
+importScripts("scripts/features.js", "scripts/sf-session.js", "scripts/sf-api.js", "scripts/sf-stream.js");
 
 // All four sizes so Chrome picks a crisp toolbar icon instead of downscaling 128.
 const ICON_ACTIVE = {
@@ -47,62 +44,6 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   if (tabStates.delete(tabId)) recomputeExtensionIcon();
 });
 
-
-// ── Nível de acesso (free / trial / paid) ───────────────────
-// Fonte única da regra de acesso, usada por popup, options e gridRefresh
-// via mensagem GET_ACCESS_LEVEL. Usuário em trial é tratado como pago.
-const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 1 mês
-
-function computeAccessLevel(user) {
-  if (user && user.paid) {
-    return { level: "paid", isPaid: true, trialDaysLeft: 0 };
-  }
-  if (user && user.trialStartedAt) {
-    const startedAt = new Date(user.trialStartedAt).getTime();
-    const elapsed = Date.now() - startedAt;
-    if (!isNaN(startedAt) && elapsed >= 0 && elapsed < TRIAL_DURATION_MS) {
-      const trialDaysLeft = Math.max(1, Math.ceil((TRIAL_DURATION_MS - elapsed) / (24 * 60 * 60 * 1000)));
-      return { level: "trial", isPaid: true, trialDaysLeft };
-    }
-  }
-  return { level: "free", isPaid: false, trialDaysLeft: 0 };
-}
-
-// GET_ACCESS_LEVEL fires on every relevant storage change (volume nudge, queue
-// edit, …); each call hit ExtPay over the network. Cache the user with a short
-// TTL so a burst of writes shares one lookup. Access level is recomputed fresh
-// each call (so trialDaysLeft stays current); the cache is dropped on payment.
-let _userCache = null;
-let _userCacheAt = 0;
-const USER_CACHE_TTL_MS = 60 * 1000;
-
-function getUserCached() {
-  const now = Date.now();
-  if (_userCache && now - _userCacheAt < USER_CACHE_TTL_MS) {
-    return Promise.resolve(_userCache);
-  }
-  return extpay.getUser().then((user) => {
-    _userCache = user;
-    _userCacheAt = now;
-    return user;
-  });
-}
-
-// Reflect a new payment immediately instead of waiting out the TTL.
-try {
-  extpay.onPaid.addListener(() => { _userCache = null; });
-} catch (e) {
-  console.warn("[INSV] onPaid listener:", e);
-}
-
-// Same as onPaid above — without this, a user who starts a trial can see up
-// to USER_CACHE_TTL_MS of stale free-tier UI (premium features still locked)
-// if GET_ACCESS_LEVEL was called and cached shortly before the trial began.
-try {
-  extpay.onTrialStarted.addListener(() => { _userCache = null; });
-} catch (e) {
-  console.warn("[INSV] onTrialStarted listener:", e);
-}
 
 // ── Dedupe de som entre abas ────────────────────────────────
 // Abas com a mesma fila detectam o mesmo lote de casos com defasagem (timers
@@ -193,43 +134,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         .catch((e) => sendResponse({ ok: false, erro: limparErro(e) }));
       return true;
     }
-    if (msg && msg.type === "GET_EXTPAY_USER") {
-      extpay.getUser().then(sendResponse).catch((err) => {
-        console.error("[INSV] ExtPay getUser error:", err);
-        sendResponse({ paid: false, error: err?.message || "Unknown error" });
-      });
-      return true;
-    }
-    if (msg && msg.type === "GET_ACCESS_LEVEL") {
-      getUserCached().then((user) => {
-        sendResponse(computeAccessLevel(user));
-      }).catch((err) => {
-        console.error("[INSV] ExtPay getUser error:", err);
-        sendResponse({ level: "free", isPaid: false, trialDaysLeft: 0, error: err?.message || "Unknown error" });
-      });
-      return true;
-    }
-    if (msg && msg.type === "OPEN_PAYMENT_PAGE") {
-      extpay.openPaymentPage().then(() => sendResponse({ ok: true })).catch((err) => {
-        console.error("[INSV] ExtPay openPaymentPage error:", err);
-        sendResponse({ ok: false, error: err?.message || "Unknown error" });
-      });
-      return true;
-    }
-    if (msg && msg.type === "OPEN_TRIAL_PAGE") {
-      extpay.openTrialPage(msg.period || "1 month").then(() => sendResponse({ ok: true })).catch((err) => {
-        console.error("[INSV] ExtPay openTrialPage error:", err);
-        sendResponse({ ok: false, error: err?.message || "Unknown error" });
-      });
-      return true;
-    }
-    if (msg && msg.type === "OPEN_LOGIN_PAGE") {
-      extpay.openLoginPage().then(() => sendResponse({ ok: true })).catch((err) => {
-        console.error("[INSV] ExtPay openLoginPage error:", err);
-        sendResponse({ ok: false, error: err?.message || "Unknown error" });
-      });
-      return true;
-    }
   } catch (e) {
     console.error("[INSV] Message handler error:", e);
     sendResponse({ ok: false, error: e.message });
@@ -245,11 +149,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 //   v3: poda advanced.apiMode e advanced.streamMode. O modo API está
 //       desligado por API_FEATURES; deixar o flag gravado faria a máquina de
 //       quem testou religar sozinha no dia em que a flag mudar.
+//   v4: fim dos planos pagos. Apaga as chaves extensionpay_* que a
+//       biblioteca ExtensionPay deixou em storage.sync e storage.local.
 // Obs.: legacyMode/legacyInterval/legacyActive ficam em storage.sync
 // (acompanham o usuário entre dispositivos); queues e demais configs
 // ficam em storage.local (são por máquina) — decisão documentada aqui
 // para manter a inconsistência intencional visível.
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
+
+const EXTPAY_KEYS = ["extensionpay_api_key", "extensionpay_user", "extensionpay_installed_at"];
 
 function legacyKeyToShortcutObj(key) {
   const k = (key || "").trim();
@@ -321,6 +229,10 @@ function migrateStorage() {
     // Analytics removed — purge any leftover blob from older versions
     if (data.analytics !== undefined) removals.push("analytics");
 
+    // Planos pagos removidos: some com o que o ExtensionPay gravou.
+    EXTPAY_KEYS.forEach((k) => { if (data[k] !== undefined) removals.push(k); });
+    chrome.storage.sync.remove(EXTPAY_KEYS).catch(() => {});
+
     chrome.storage.local.set(updates, () => {
       if (removals.length) chrome.storage.local.remove(removals);
     });
@@ -333,10 +245,64 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.advanced) sfStreamReconciliar(true);
 });
 
+// ── Abas abertas durante a instalação ───────────────────────
+// O Chrome só injeta os content_scripts do manifest em páginas carregadas
+// depois da instalação. Sem isto, quem instala com o Salesforce aberto fica
+// sem monitoramento, atalhos e cópia do nome da fila até recarregar a aba.
+// A lista de arquivos vem do próprio manifest para não haver duas fontes.
+function abaJaTemExtensao(tabId) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, { type: "INSV_PING" }, (resp) => {
+      resolve(!chrome.runtime.lastError && !!(resp && resp.ok));
+    });
+  });
+}
+
+async function injetarNasAbasAbertas() {
+  // document_start (ponte no mundo da página) antes de document_idle, a mesma
+  // ordem de uma carga normal.
+  const ordem = { document_start: 0, document_end: 1, document_idle: 2 };
+  const scripts = (chrome.runtime.getManifest().content_scripts || [])
+    .filter((cs) => Array.isArray(cs.js) && cs.js.length)
+    .sort((a, b) => (ordem[a.run_at || "document_idle"] || 0) - (ordem[b.run_at || "document_idle"] || 0));
+  const padroes = [...new Set(scripts.flatMap((cs) => cs.matches || []))];
+  if (!scripts.length || !padroes.length) return;
+
+  let abas = [];
+  try {
+    abas = await chrome.tabs.query({ url: padroes });
+  } catch (e) {
+    console.warn("[INSV] Sem acesso às abas abertas:", e);
+    return;
+  }
+
+  for (const aba of abas) {
+    // Aba descartada recarrega sozinha ao ser ativada (e aí recebe os scripts
+    // do manifest); aba ainda carregando também vai recebê-los.
+    if (aba.discarded || aba.status !== "complete") continue;
+    // Injetar de novo num mundo que já tem os scripts quebraria nos const.
+    if (await abaJaTemExtensao(aba.id)) continue;
+    try {
+      for (const cs of scripts) {
+        await chrome.scripting.executeScript({
+          target: { tabId: aba.id },
+          files: cs.js,
+          world: cs.world || "ISOLATED",
+        });
+      }
+    } catch (e) {
+      // Página de erro, acesso ao site restrito pelo usuário etc. O popup
+      // mostra o aviso para recarregar a aba nesses casos.
+      console.warn("[INSV] Não foi possível ativar a aba " + aba.id + ":", e);
+    }
+  }
+}
+
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
     const internalUrl = chrome.runtime.getURL("options.html");
     chrome.tabs.create({ url: internalUrl }, () => {});
+    injetarNasAbasAbertas();
   }
   if (reason === "update") {
     const v = chrome.runtime.getManifest().version;

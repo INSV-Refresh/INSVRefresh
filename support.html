@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INSV Refresh - Apoiar</title>
+  <link rel="shortcut icon" href="assets/icons/INSVRefresh.png">
+  <!-- Fonts self-hosted via @font-face in variaveis.css (CDN blocked by MV3 CSP) -->
+  <link rel="stylesheet" href="styles/variaveis.css">
+  <link rel="stylesheet" href="styles/app-chrome.css">
+  <link rel="stylesheet" href="styles/support.css">
+</head>
+<body>
+  <!-- Brand header -->
+  <header class="app-topbar">
+    <a href="options.html" class="app-topbar-brand" title="Voltar às configurações" data-i18n-title="back_to_settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      <span class="app-wordmark">INSV Refresh</span>
+    </a>
+    <a href="options.html" class="app-topbar-back">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      <span data-i18n="back_to_settings">Voltar às configurações</span>
+    </a>
+  </header>
+
+  <!-- Content -->
+  <main class="support-content">
+    <div class="support-layout">
+      <header class="support-header">
+        <h1 data-i18n="support_title">Apoie o INSV Refresh</h1>
+        <p data-i18n="support_sub">A extensão é gratuita e todos os recursos estão liberados para todo mundo. Se ela facilita o seu dia, você pode contribuir com o valor que quiser.</p>
+      </header>
+
+      <div class="support-grid">
+        <!-- DOAÇÃO -->
+        <section class="support-card" id="doar" aria-labelledby="donate-title">
+          <h2 id="donate-title">
+            <svg class="card-icon donate" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4 7.4 4c2 0 3.6 1.1 4.6 2.7C13 5.1 14.6 4 16.6 4c3.5 0 5.8 3.6 4.6 7.1-1.7 4.8-9.2 9.4-9.2 9.4Z"/></svg>
+            <span data-i18n="donate_title">Doação</span>
+          </h2>
+          <p class="card-desc" data-i18n="donate_desc">Doação única e voluntária, por Pix ou cartão. Qualquer valor ajuda a manter a extensão atualizada.</p>
+
+          <form id="donate-form" novalidate>
+            <fieldset class="amount-group">
+              <legend class="sr-only" data-i18n="donate_amount_legend">Valor da doação</legend>
+              <label class="amount-chip"><input type="radio" name="amount" value="5"><span>R$ 5</span></label>
+              <label class="amount-chip"><input type="radio" name="amount" value="10" checked><span>R$ 10</span></label>
+              <label class="amount-chip"><input type="radio" name="amount" value="25"><span>R$ 25</span></label>
+              <label class="amount-chip"><input type="radio" name="amount" value="50"><span>R$ 50</span></label>
+            </fieldset>
+
+            <div class="custom-amount">
+              <label class="custom-amount-label" for="custom-amount" data-i18n="donate_custom">Outro valor</label>
+              <span class="custom-amount-field">
+                <span class="custom-amount-prefix" aria-hidden="true">R$</span>
+                <input type="text" id="custom-amount" inputmode="decimal" autocomplete="off" placeholder="0,00" data-i18n-placeholder="donate_custom_ph" aria-describedby="donate-status">
+              </span>
+            </div>
+
+            <button type="submit" id="donate-btn" class="btn-support primary">Doar com Pix ou cartão</button>
+            <p id="donate-status" class="donate-status" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="card-note" data-i18n="donate_note">Pagamento processado pela InfinitePay, em página segura aberta em nova aba. A extensão não recebe nem guarda seus dados de pagamento. A doação é voluntária e não libera nenhum recurso extra.</p>
+        </section>
+
+        <!-- EMPRESAS -->
+        <section class="support-card" id="empresas" aria-labelledby="business-title">
+          <h2 id="business-title">
+            <svg class="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+            <span data-i18n="business_title">Para empresas</span>
+          </h2>
+          <p class="card-desc" data-i18n="business_desc">Usa o INSV Refresh no time ou na empresa? Fale com a gente sobre parcerias, implantação para times inteiros, suporte dedicado ou contratação.</p>
+
+          <div class="api-info" id="modo-api">
+            <h3 data-i18n="api_info_title">Modo API</h3>
+            <p data-i18n="api_info_p">Lê as filas pela API do Salesforce e atualiza em tempo real quando um caso muda. Vem desligado porque cada verificação consome a cota de API da sua organização. A liberação é combinada com a empresa: fale com a gente.</p>
+          </div>
+
+          <div class="business-cta">
+            <a href="mailto:contato@insv.dev.br?subject=INSV%20Refresh%20-%20Contato%20comercial" class="btn-support outlined" data-i18n="business_cta">Enviar e-mail</a>
+            <p class="card-note email-address">contato@insv.dev.br</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="app-footer-brand">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--spark-500)" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+      INSV Refresh · Vitor Rodrigues &amp; Douglas Rocha
+    </div>
+    <nav class="app-footer-links">
+      <a href="docs/privacy-policy.html" data-i18n="privacy_policy">Política de privacidade</a>
+      <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" rel="noopener noreferrer" class="accent" data-i18n="feedback">Enviar feedback</a>
+    </nav>
+  </footer>
+
+  <script src="scripts/i18n.js"></script>
+  <script src="scripts/util.js"></script>
+  <script src="scripts/support.js"></script>
+</body>
+</html>

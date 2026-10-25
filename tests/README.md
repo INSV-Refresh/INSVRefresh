@@ -33,6 +33,9 @@ by running the real popup. They are the kind that reasoning does not catch:
 | --- | --- | --- |
 | `unit/spring.test.js` | no | `springTo`, `projectMomentum`, `createVelocityTracker` in `scripts/util.js` |
 | `unit/reorder.test.js` | no | `queueTargetIndex`, `applyQueueDisplacement`, `commitQueueOrder` in `scripts/popup.js` |
+| `unit/migration.test.js` | no | storage migration v4 in `service-worker.js` removes the old ExtensionPay keys |
+| `unit/shortcuts.test.js` | no | shortcut normalization and conflict removal (`assignShortcut`) in `scripts/util.js` |
+| `unit/donate.test.js` | no | amount parsing, accepted checkout URLs and the exact request body in `scripts/support.js` |
 | `browser/sound-dropdown.test.js` | yes | the dropdown opens and survives a scroll behind it |
 | `browser/queue-drag.test.js` | yes | the reorder commits on release and leaves nothing stuck |
 

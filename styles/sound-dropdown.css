@@ -3,7 +3,7 @@
    Design: claude.ai/design — INSV Dropdown spec
    Shared by the popup and the options status-notification rows.
    Theme-aware via the semantic --surface/--text/--border tokens, which
-   flip for [data-theme] across popup / options / pricing / privacy.
+   flip for [data-theme] across popup / options / support / privacy.
    Behaviour lives in scripts/util.js (buildSoundDropdown).
    ============================================= */
 .queue-sound-select {

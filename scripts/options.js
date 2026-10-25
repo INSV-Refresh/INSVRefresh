@@ -624,77 +624,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-function applyPaidGateOptions(isPaid) {
-  try {
-    // Marcar h2 de seções premium com badge visual
-    const premiumSections = [
-      document.getElementById("upload-audio"),
-      document.getElementById("status-notification"),
-    ];
-
-    premiumSections.forEach((section) => {
-      if (!section) return;
-      const h2 = section.querySelector("h2");
-
-      // Adicionar badge premium no título se ainda não existir
-      if (h2 && !h2.querySelector(".premium-badge")) {
-        const badge = document.createElement("span");
-        badge.className = "premium-badge";
-        badge.textContent = t("premium_badge");
-        h2.appendChild(badge);
-      }
-
-      if (!isPaid) {
-        section.classList.add("section-locked");
-
-        // Banner "Disponível no plano pago" — apenas 1, sem double wrapper
-        if (!section.querySelector(".paid-gate-banner")) {
-          const banner = document.createElement("div");
-          banner.className = "paid-gate-banner";
-          banner.innerHTML = `
-            ${t("locked_paid")}
-            <a href="${chrome.runtime.getURL('pricing.html')}">${t("see_plans")}</a>
-          `;
-          section.insertBefore(banner, section.firstChild);
-        }
-
-        // Desabilitar todos inputs/buttons/selects dentro da seção
-        section.querySelectorAll("input, button, select, textarea").forEach((el) => {
-          el.disabled = true;
-          el.setAttribute("data-locked", "true");
-        });
-
-        // Bloquear drop area visualmente
-        const dropArea = section.querySelector("#drop-area");
-        if (dropArea) {
-          dropArea.style.pointerEvents = "none";
-        }
-
-      } else {
-        section.classList.remove("section-locked");
-
-        // Remover banner se existir
-        const banner = section.querySelector(".paid-gate-banner");
-        if (banner) banner.remove();
-
-        // Reabilitar elementos
-        section.querySelectorAll("[data-locked='true']").forEach((el) => {
-          el.disabled = false;
-          el.removeAttribute("data-locked");
-        });
-
-        const dropArea = section.querySelector("#drop-area");
-        if (dropArea) {
-          dropArea.style.pointerEvents = "";
-        }
-      }
-    });
-
-  } catch (e) {
-    console.error("Error applying paid gate:", e);
-  }
-}
-
 // i18nReady resolve após DOMContentLoaded com o idioma carregado e o
 // DOM estático traduzido — só então renderizamos o conteúdo dinâmico
 i18nReady.then(function() {
@@ -736,24 +665,6 @@ i18nReady.then(function() {
       applyDarkMode(darkModeToggle.checked);
     });
   }
-
-  chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-    if (chrome.runtime.lastError) return;
-    applyPaidGateOptions(!!(access && access.isPaid));
-
-    // Aviso de dias restantes do teste grátis
-    if (access && access.level === "trial") {
-      const trialBanner = document.getElementById("trial-banner");
-      if (trialBanner) {
-        const dias = access.trialDaysLeft;
-        trialBanner.innerHTML = `
-          ⏳ <strong>${t("trial_active")}</strong>: ${dias === 1 ? t("trial_days_left_one") : t("trial_days_left", { n: dias })}.
-          <a href="${chrome.runtime.getURL("pricing.html")}">${t("subscribe_now")}</a>
-        `;
-        trialBanner.style.display = "flex";
-      }
-    }
-  });
 
   chrome.storage.local.get("pendingChangelogVersion", (data) => {
     const v = data.pendingChangelogVersion;
@@ -836,17 +747,7 @@ function shortcutChipsHTML(sc) {
   return parts.map((p) => `<kbd>${p}</kbd>`).join('<span class="kbd-plus">+</span>');
 }
 
-function legacyKeyToShortcut(key) {
-  if (!key) return null;
-  const k = key.trim();
-  if (!k) return null;
-  let code = k;
-  if (/^[a-z]$/i.test(k)) code = "Key" + k.toUpperCase();
-  else if (/^[0-9]$/.test(k)) code = "Digit" + k;
-  return { ctrl: false, alt: false, shift: false, meta: false, code, legacy: true };
-}
-
-function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp, legacyProp }) {
+function setupShortcutCapture({ captureBtnId, clearBtnId, storageProp }) {
   const captureBtn = document.getElementById(captureBtnId);
   const clearBtn = document.getElementById(clearBtnId);
   if (!captureBtn) return;
@@ -1025,8 +926,11 @@ document.getElementById("nav-pricing") && document.getElementById("nav-pricing")
 
 document.querySelectorAll(".menu a").forEach(link => {
     link.addEventListener("click", function (e) {
+        const href = this.getAttribute("href") || "";
+        // Links para outra página (ex.: support.html) navegam normalmente
+        if (!href.startsWith("#")) return;
         e.preventDefault();
-        const targetId = this.getAttribute("href").substring(1);
+        const targetId = href.substring(1);
         var section = document.getElementById(targetId);
 
         // Remove highlight de todos os h1/h2 e dos links da nav

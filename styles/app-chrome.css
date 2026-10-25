@@ -1,7 +1,7 @@
 /* =============================================
    INSV Refresh — shared app chrome
    One owner for the brand wordmark, topbar and footer
-   across options / pricing / privacy. Tokens only.
+   across options / support / privacy. Tokens only.
    ============================================= */
 
 /* ── Brand wordmark (header logo) ───────────────── */
@@ -13,7 +13,7 @@
   line-height: 1;
 }
 
-/* ── Topbar (full-page surfaces: pricing, privacy) ─ */
+/* ── Topbar (full-page surfaces: support, privacy) ─ */
 .app-topbar {
   position: sticky;
   top: 0;
@@ -104,7 +104,7 @@
   transform: scale(0.97);
 }
 
-/* ── Footer (options, pricing, privacy) ─────────── */
+/* ── Footer (options, support, privacy) ─────────── */
 .app-footer {
   display: flex;
   align-items: center;

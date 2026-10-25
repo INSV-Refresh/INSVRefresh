@@ -95,7 +95,7 @@ window.chrome = {
   runtime: {
     lastError: null,
     getURL: function (p) { return p; },
-    sendMessage: function (m, cb) { if (cb) setTimeout(function () { cb({ isPaid: true }); }, 0); },
+    sendMessage: function (m, cb) { if (cb) setTimeout(function () { cb({}); }, 0); },
     onMessage: { addListener: function () {} }
   },
   tabs: { query: function (q, cb) { cb([]); }, sendMessage: function () {} },

@@ -975,7 +975,7 @@ function initNormalMode() {
         // (queues[].statusNotify)
         const sn = fila.statusNotify;
         const temStatus = linhas.some((l) => l.status);
-        if (isPaid && sn && sn.enabled && (sn.statuses || []).length > 0 && podeAlertar && temStatus) {
+        if (sn && sn.enabled && (sn.statuses || []).length > 0 && podeAlertar && temStatus) {
           const currentMap = {};
           linhas.forEach((l) => { currentMap[l.caseNumber] = l.status || ""; });
           const targetStatuses = new Set(sn.statuses.map((s) => s.trim().toLowerCase()));
@@ -1125,7 +1125,7 @@ function initNormalMode() {
   }
 
   // Chamada de novo a cada storage change relevante (debounced) — sem
-  // sequenciamento, uma chamada mais lenta (ex.: GET_ACCESS_LEVEL sem cache)
+  // sequenciamento, uma leitura de storage mais lenta
   // podia resolver DEPOIS de uma mais rápida e disparada depois dela,
   // sobrescrevendo os monitores recém-criados com um snapshot mais antigo.
   let _cargaSeq = 0;
@@ -1142,9 +1142,9 @@ function initNormalMode() {
           // Expediente: monitores continuam de pé fora da janela (o pulo é
           // por ciclo, pra transição do relógio funcionar sem evento novo).
           _workSchedule = (data.advanced && data.advanced.workSchedule) || null;
-          // Modo API é recurso do plano Empresa: o flag em storage sozinho não
-          // liga nada enquanto ENTERPRISE_FEATURES o mantiver desligado.
-          _apiModeAtivo = ENTERPRISE_FEATURES.apiMode && !!(data.advanced && data.advanced.apiMode);
+          // Modo API: o flag em storage sozinho não liga nada enquanto
+          // API_FEATURES o mantiver desligado.
+          _apiModeAtivo = API_FEATURES.apiMode && !!(data.advanced && data.advanced.apiMode);
           // Pausa global: suspende todos os timers sem alterar o flag
           // active de cada fila — ao retomar, o conjunto ativo é restaurado
           if (data.advanced && data.advanced.globalPaused) {
@@ -1152,44 +1152,29 @@ function initNormalMode() {
             pararMonitoramentosAtuais();
             return;
           }
-          chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-            if (minhaSeq !== _cargaSeq) {
-              log("[Debug] carregarEIniciarTodos (pós GET_ACCESS_LEVEL) superado, descartando");
-              return;
-            }
-            try {
-              if (chrome.runtime.lastError) {
-                console.warn("[INSV] Erro ao obter nível de acesso:", chrome.runtime.lastError);
-              }
-              const isPaid = !!(access && access.isPaid);
-              let filas = (data.queues || []).filter((q) => q.active);
-              // Uma fila só pode ser monitorada uma vez: entradas duplicadas
-              // (mesmo nome, ignorando caixa) rodariam monitores paralelos na
-              // mesma página, cada um tocando seu próprio som.
-              const vistos = new Set();
-              filas = filas.filter((q) => {
-                const chave = (q.name || "").toLowerCase().trim();
-                if (!chave || vistos.has(chave)) return false;
-                vistos.add(chave);
-                return true;
-              });
-              if (!isPaid && filas.length > 1) filas = filas.slice(0, 1);
-              const defaultSound = "notification.mp3";
-              const volume = (data.general && data.general.volume) || 0.5;
+          let filas = (data.queues || []).filter((q) => q.active);
+          // Uma fila só pode ser monitorada uma vez: entradas duplicadas
+          // (mesmo nome, ignorando caixa) rodariam monitores paralelos na
+          // mesma página, cada um tocando seu próprio som.
+          const vistos = new Set();
+          filas = filas.filter((q) => {
+            const chave = (q.name || "").toLowerCase().trim();
+            if (!chave || vistos.has(chave)) return false;
+            vistos.add(chave);
+            return true;
+          });
+          const defaultSound = "notification.mp3";
+          const volume = (data.general && data.general.volume) || 0.5;
 
-              log(`[Debug] Som padrão: ${defaultSound}`);
-              log(`[Debug] Volume: ${volume}`);
+          log(`[Debug] Som padrão: ${defaultSound}`);
+          log(`[Debug] Volume: ${volume}`);
 
-              pararMonitoramentosAtuais();
+          pararMonitoramentosAtuais();
 
-              filas.forEach((fila) => {
-                if (fila.name) {
-                  log(`[Debug] Iniciando monitoramento da fila: "${fila.name}"`);
-                  iniciarMonitoramentoFila(fila, defaultSound, volume, isPaid);
-                }
-              });
-            } catch (e) {
-              console.error("[Debug] Erro ao processar filas:", e);
+          filas.forEach((fila) => {
+            if (fila.name) {
+              log(`[Debug] Iniciando monitoramento da fila: "${fila.name}"`);
+              iniciarMonitoramentoFila(fila, defaultSound, volume);
             }
           });
         } catch (e) {
@@ -1366,16 +1351,6 @@ function initNormalMode() {
       sendResponse({ ok: true });
       return true;
     }
-    if (msg && msg.type === "GET_QUEUE_NAME") {
-      try {
-        const title = document.querySelector(".slds-page-header__title");
-        const queueName = title ? title.innerText.trim() : "";
-        sendResponse({ queueName });
-      } catch (e) {
-        sendResponse({ queueName: "", error: e.message });
-      }
-      return true;
-    }
     return false;
   };
   chrome.runtime.onMessage.addListener(onMensagem);
@@ -1395,8 +1370,8 @@ function initNormalMode() {
       const wsOld = JSON.stringify((changes.advanced.oldValue || {}).workSchedule || null);
       const wsNew = JSON.stringify((changes.advanced.newValue || {}).workSchedule || null);
       if (wsOld !== wsNew) agendarRecarga();
-      const apiAntes = ENTERPRISE_FEATURES.apiMode && !!(changes.advanced.oldValue && changes.advanced.oldValue.apiMode);
-      const apiDepois = ENTERPRISE_FEATURES.apiMode && !!(changes.advanced.newValue && changes.advanced.newValue.apiMode);
+      const apiAntes = API_FEATURES.apiMode && !!(changes.advanced.oldValue && changes.advanced.oldValue.apiMode);
+      const apiDepois = API_FEATURES.apiMode && !!(changes.advanced.newValue && changes.advanced.newValue.apiMode);
       if (apiAntes !== apiDepois) {
         log(`[Debug] Modo API ${apiDepois ? "ativado" : "desativado"}`);
         agendarRecarga();

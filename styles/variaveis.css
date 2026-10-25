@@ -126,7 +126,7 @@
   --fs-base: 0.9375rem;  /* 15px — body */
   --fs-lg:   1.25rem;    /* 20px — h2 */
   --fs-2xl:  1.75rem;    /* 28px — page h1 */
-  --fs-3xl:  2rem;       /* 32px — pricing hero (deliberate) */
+  --fs-3xl:  2rem;       /* 32px — support page hero (deliberate) */
 
   /* Line-heights */
   --leading-tight:   1.15;  /* headings */
@@ -138,7 +138,7 @@
      further apart as type grows, so large text tightens; small and uppercase
      text opens up to stay legible. Expressed in em so tracking scales with the
      font instead of drifting when the user changes their text size. */
-  --tracking-display:  -0.02em;  /* page h1 / pricing hero */
+  --tracking-display:  -0.02em;  /* page h1 / support hero */
   --tracking-heading:  -0.01em;  /* section h2 */
   --tracking-body:      0;
   --tracking-micro:     0.03em;  /* --fs-xs and below, sentence case */
@@ -170,7 +170,7 @@
   --dur-slow:  250ms; /* larger surfaces */
 }
 
-/* Dark theme — popup, options, pricing & privacy all use [data-theme] now */
+/* Dark theme — popup, options, support & privacy all use [data-theme] now */
 [data-theme="dark"] {
   color-scheme: dark; /* native scrollbars/controls flip with the tokens */
   --surface:        var(--ink-950);

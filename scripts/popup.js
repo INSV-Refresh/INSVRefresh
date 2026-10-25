@@ -77,7 +77,7 @@ function createQueueElement(queue) {
   const div = document.createElement("div");
   div.className = "queue-item";
   // Keep the original queue object so saveOptions can preserve fields the popup
-  // doesn't render (notably statusNotify — the premium status-notification rules
+  // doesn't render (notably statusNotify — the status-notification rules
   // owned by the options page). Survives drag reorder since it rides the node.
   div._insvQueue = queue || {};
 
@@ -118,9 +118,6 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
     deleteBtn.addEventListener("click", () => {
       div.remove();
       saveOptions();
-      chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-        if (!chrome.runtime.lastError) applyPaidGate(!!(access && access.isPaid));
-      });
     });
   }
 
@@ -237,11 +234,6 @@ function attachScrollToInterval(input) {
   }, { passive: false });
 }
 
-// Filas excedentes ocultadas no plano free. Não são apagadas do
-// storage — apenas deixam de ser renderizadas, e voltam quando o
-// usuário voltar a ser pago.
-let hiddenPaidQueues = [];
-
 // Guarda das gravações feitas pelo próprio popup, para não re-renderizar (e
 // perder foco) quando o onChanged for nosso próprio save. Set, não slot
 // único: duas gravações sobrepostas (ex. drag reorder + edit debounced)
@@ -273,90 +265,11 @@ function saveOptions() {
     volume: parseInt(volumeSlider.value, 10) / 100,
   };
 
-  const fullQueues = queues.concat(hiddenPaidQueues);
-  pendingSelfWriteQueues.add(JSON.stringify(fullQueues));
-  chrome.storage.local.set({ queues: fullQueues, general }, showSaving);
+  pendingSelfWriteQueues.add(JSON.stringify(queues));
+  chrome.storage.local.set({ queues, general }, showSaving);
 }
 
 const saveOptionsDebounced = debounce(saveOptions, 500);
-
-function applyPaidGate(isPaid) {
-  const count = queueList.querySelectorAll(".queue-item").length;
-
-  // Remover elementos antigos
-  const upgrade = document.getElementById("upgrade-multi-queue");
-  if (upgrade) upgrade.remove();
-  const banner = document.getElementById("popup-lock-banner");
-  if (banner) banner.remove();
-
-  if (!addQueueBtn) return;
-
-  if (!isPaid && count >= 1) {
-    // Botão amarelo premium
-    addQueueBtn.classList.add("premium-locked");
-    addQueueBtn.title = t("multi_queue_paid");
-    addQueueBtn.setAttribute("data-tooltip", t("tt_premium"));
-
-    // Link sutil embaixo
-    const link = document.createElement("a");
-    link.id = "upgrade-multi-queue";
-    link.href = chrome.runtime.getURL("pricing.html");
-    link.target = "_blank";
-    link.textContent = t("subscribe_multi");
-    normalMode.appendChild(link);
-
-    // Detach any previously-bound handler first. applyPaidGate re-runs for free
-    // users (load, lang change, legacy toggle); overwriting the reference
-    // without removing would stack capture listeners, and an even count cancels
-    // the banner toggle so it never shows.
-    if (addQueueBtn._premiumClickHandler) {
-      addQueueBtn.removeEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
-    }
-    // Ao clicar no botão travado, mostrar banner em vez de ignorar
-    addQueueBtn._premiumClickHandler = (e) => {
-      e.stopPropagation();
-      // Remover banner existente se houver
-      const existing = document.getElementById("popup-lock-banner");
-      if (existing) { existing.remove(); return; }
-
-      const lockBanner = document.createElement("div");
-      lockBanner.id = "popup-lock-banner";
-      lockBanner.className = "popup-lock-banner";
-      lockBanner.innerHTML = `
-        ${t("locked_paid")}
-        <a href="${chrome.runtime.getURL('pricing.html')}" target="_blank">${t("see_plans")}</a>
-      `;
-      normalMode.insertBefore(lockBanner, addQueueBtn);
-
-      // Auto-esconder após 3s
-      setTimeout(() => lockBanner.remove(), 3500);
-    };
-    addQueueBtn.addEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
-
-  } else {
-    // Resetar botão
-    addQueueBtn.classList.remove("premium-locked");
-    addQueueBtn.removeAttribute("title");
-    addQueueBtn.setAttribute("data-tooltip", t("tt_add_queue"));
-
-    if (addQueueBtn._premiumClickHandler) {
-      addQueueBtn.removeEventListener("click", addQueueBtn._premiumClickHandler, { capture: true });
-      delete addQueueBtn._premiumClickHandler;
-    }
-  }
-}
-
-function renderHiddenQueuesNote() {
-  const existing = document.getElementById("hidden-queues-note");
-  if (existing) existing.remove();
-  if (hiddenPaidQueues.length === 0) return;
-
-  const note = document.createElement("div");
-  note.id = "hidden-queues-note";
-  note.className = "hidden-queues-note";
-  note.innerHTML = hiddenPaidQueues.length === 1 ? t("hidden_one") : t("hidden_many", { n: hiddenPaidQueues.length });
-  normalMode.insertBefore(note, addQueueBtn);
-}
 
 function restoreOptions() {
   chrome.storage.local.get(["queues", "general"], (data) => {
@@ -375,40 +288,18 @@ function restoreOptions() {
     volumeSlider.value = general.volume * 100;
     updateSliderFill(volumeSlider);
 
-    chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-      const isPaid = !chrome.runtime.lastError && !!(access && access.isPaid);
-
-      // No free, renderizar somente a fila principal (única funcional);
-      // as demais ficam guardadas em hiddenPaidQueues e preservadas no save
-      hiddenPaidQueues = isPaid ? [] : queues.slice(1);
-      const visibleQueues = isPaid ? queues : queues.slice(0, 1);
-
-      queueList.innerHTML = "";
-      visibleQueues.forEach((queue) => {
-        const el = createQueueElement(queue);
-        queueList.appendChild(el);
-      });
-
-      renderHiddenQueuesNote();
-      applyPaidGate(isPaid);
+    queueList.innerHTML = "";
+    queues.forEach((queue) => {
+      const el = createQueueElement(queue);
+      queueList.appendChild(el);
     });
   });
 }
 
 function addQueueHandler() {
-  // Se está travado no modo premium, o handler de capture já tratou — não fazer nada
-  if (addQueueBtn.classList.contains("premium-locked")) return;
-
-  chrome.runtime.sendMessage({ type: "GET_ACCESS_LEVEL" }, (access) => {
-    const isPaid = !!(access && access.isPaid);
-    const count = queueList.querySelectorAll(".queue-item").length;
-    if (!isPaid && count >= 1) return;
-    const newQueue = defaultQueue();
-    const el = createQueueElement(newQueue);
-    queueList.appendChild(el);
-    saveOptions();
-    applyPaidGate(isPaid);
-  });
+  const el = createQueueElement(defaultQueue());
+  queueList.appendChild(el);
+  saveOptions();
 }
 
 function playQueueTestSound(soundValue) {
@@ -828,7 +719,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 // ── Dark mode no popup ──────────────────────────────
 // Chave única darkMode (chrome.storage.local), controlada pelo toggle do
-// options — vale para popup, options e pricing. Migra a antiga popupDarkMode
+// options — vale para popup, options e apoio. Migra a antiga popupDarkMode
 // na primeira carga.
 // O popup NÃO tem tema claro: dark on → [data-theme="dark"] (gradiente +
 // tokens escuros); dark off → sem atributo, então o dropdown de som e demais

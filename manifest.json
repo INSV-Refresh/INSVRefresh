@@ -14,14 +14,9 @@
       "js": ["scripts/sf-nav-bridge.js"],
       "run_at": "document_start",
       "world": "MAIN"
-    },
-    {
-      "matches": ["https://extensionpay.com/*"],
-      "js": ["ExtPay.js"],
-      "run_at": "document_start"
     }
   ],
-  "host_permissions": ["*://*.lightning.force.com/*", "https://extensionpay.com/*"],
+  "host_permissions": ["*://*.lightning.force.com/*"],
   "action": {
     "default_icon": {
       "16": "assets/icons/INSVRefresh-16.png",

@@ -99,7 +99,7 @@ function watchDarkMode() {
 // ── Toast ─────────────────────────────────────────────────────
 // One implementation for every surface, including the Salesforce content
 // script. The injected CSS reads brand tokens when the page loads
-// variaveis.css (popup/options/pricing/privacy) and falls back to literal
+// variaveis.css (popup/options/support/privacy) and falls back to literal
 // hex in the content script, which can't see our CSS variables.
 function showToast(message, type, duration) {
   if (!type) type = "info";

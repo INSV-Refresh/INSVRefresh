@@ -15,6 +15,8 @@ const unitOnly = process.argv.includes("--unit");
 const suites = [
   ["unit", require("./unit/spring.test.js")],
   ["unit", require("./unit/reorder.test.js")],
+  ["unit", require("./unit/migration.test.js")],
+  ["unit", require("./unit/donate.test.js")],
 ];
 
 if (!unitOnly) {
@@ -26,6 +28,8 @@ const browser = findBrowser();
 console.log("INSV Refresh test suite");
 console.log(unitOnly ? "unit tests only" : browser ? "browser: " + browser : "browser: none found (browser tests will skip)");
 
-for (const [, suite] of suites) suite();
-
-process.exit(summary() ? 0 : 1);
+(async () => {
+  // Suites may be async (donate.test.js awaits a stubbed fetch).
+  for (const [, suite] of suites) await suite();
+  process.exit(summary() ? 0 : 1);
+})();

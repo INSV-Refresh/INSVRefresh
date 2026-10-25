@@ -372,6 +372,28 @@ function initNormalMode() {
     return audio;
   }
 
+  // O CSP do Salesforce bloqueia data: em media-src, então o áudio
+  // personalizado (guardado como data URL) falhava na página e caía no som
+  // padrão. blob: faz parte do CSP base do Lightning, por isso o data URL vira
+  // um blob URL antes de tocar. Cache de uma entrada: as chaves custom_* são
+  // únicas por upload, então a chave basta para saber se o blob ainda vale.
+  let _customBlobCache = null; // { key, url }
+
+  function urlDoAudioPersonalizado(soundName, dataUrl) {
+    if (_customBlobCache && _customBlobCache.key === soundName) return _customBlobCache.url;
+    const virgula = dataUrl.indexOf(",");
+    const cabecalho = dataUrl.slice(0, virgula);
+    if (virgula < 0 || !/;base64$/i.test(cabecalho)) return dataUrl;
+    const mime = cabecalho.slice(5, cabecalho.indexOf(";")) || "audio/mpeg";
+    const bin = atob(dataUrl.slice(virgula + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    if (_customBlobCache) URL.revokeObjectURL(_customBlobCache.url);
+    _customBlobCache = { key: soundName, url };
+    return url;
+  }
+
   function tocarSom(soundName, volume) {
     try {
       if (!audioEnabled) {
@@ -393,8 +415,7 @@ function initNormalMode() {
         if (customAudio && customAudio.data) {
           log(`[Debug] Tocando áudio personalizado: ${customAudio.name}`);
           try {
-            // Data URLs play directly — no manual base64 → Blob → object URL.
-            const audio = reproduzir(customAudio.data, volume);
+            const audio = reproduzir(urlDoAudioPersonalizado(soundName, customAudio.data), volume);
             audio.addEventListener("error", (e) => {
               log("Erro ao tocar áudio personalizado:", e);
               tocarSomPadrao("notification.mp3", volume);

@@ -92,6 +92,15 @@ function insvStart() {
   const CHAVES_MODO = ["legacyMode", "legacyInterval", "legacyActive"];
   chrome.storage.sync.get(CHAVES_MODO, aplicarModo);
 
+  // Responde em qualquer modo (normal, legacy ou idle). O popup usa para saber
+  // se a aba já tem a extensão ativa e o service worker, para não injetar duas
+  // vezes nas abas abertas durante a instalação.
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || msg.type !== "INSV_PING") return false;
+    sendResponse({ ok: true });
+    return false;
+  });
+
   // Listener único e permanente: é ele que decide o modo, então nenhum modo
   // precisa vigiar a própria desativação (nem se recarregar pra isso).
   chrome.storage.onChanged.addListener((changes, area) => {

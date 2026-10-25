@@ -33,9 +33,17 @@ function updateSliderFill(slider) {
   slider.style.setProperty("--pct", pct + "%");
 }
 
+// Uma mensagem por vez no rodapé: o timer de uma mensagem antiga não apaga
+// a nova (antes "Salvando…" engolia o "copiado!" logo depois de copiar).
+let statusTimer = null;
+function flashStatus(text, ms) {
+  clearTimeout(statusTimer);
+  statusSpan.textContent = text;
+  statusTimer = setTimeout(() => { statusSpan.textContent = ""; }, ms || 2000);
+}
+
 function showSaving() {
-  statusSpan.textContent = t("saving");
-  setTimeout(() => (statusSpan.textContent = ""), 1800);
+  flashStatus(t("saving"), 1800);
 }
 
 function updateLegacyToggle(active) {
@@ -138,40 +146,7 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
   }
 
   const copyBtn = div.querySelector(".copy-queue-name-btn");
-  if (copyBtn) {
-    copyBtn.addEventListener("click", () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs[0] || !tabs[0].url || !tabs[0].url.includes("lightning.force.com")) {
-          if (typeof statusSpan !== "undefined") statusSpan.textContent = t("open_sf");
-          setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
-          return;
-        }
-        chrome.tabs.sendMessage(tabs[0].id, { type: "GET_QUEUE_NAME" }, (response) => {
-          if (chrome.runtime.lastError) {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("reload_sf");
-            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
-            return;
-          }
-          const queueName = (response && response.queueName || "").trim();
-          if (!queueName) {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("detect_fail");
-            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
-            return;
-          }
-          navigator.clipboard.writeText(queueName).then(() => {
-            const nameInput = div.querySelector(".queue-name");
-            if (nameInput) nameInput.value = queueName;
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("copied", { name: queueName });
-            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
-            saveOptions();
-          }).catch(() => {
-            if (typeof statusSpan !== "undefined") statusSpan.textContent = t("copy_fail");
-            setTimeout(() => { if (statusSpan) statusSpan.textContent = ""; }, 2000);
-          });
-        });
-      });
-    });
-  }
+  if (copyBtn) copyBtn.addEventListener("click", () => copyQueueName(div));
 
   if (!isFirst) attachQueueDrag(div);
 
@@ -216,6 +191,109 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
   return div;
 }
 
+// ── Copiar nome da fila ─────────────────────────────────────
+// O título é lido direto na página, sem passar pelo content script: assim a
+// cópia funciona também numa aba do Salesforce aberta antes da instalação,
+// onde o Chrome ainda não injetou os scripts da extensão. Roda dentro da aba,
+// então precisa ser autocontida.
+function readQueueTitleInPage() {
+  const title = document.querySelector(".slds-page-header__title");
+  return title ? title.innerText.trim() : "";
+}
+
+function flashNameInput(div, cls) {
+  const nameInput = div.querySelector(".queue-name");
+  if (!nameInput) return;
+  nameInput.classList.remove("queue-name-saved", "queue-name-copy-error");
+  nameInput.classList.add(cls);
+  clearTimeout(nameInput._insvFlashT);
+  nameInput._insvFlashT = setTimeout(() => nameInput.classList.remove(cls), 1500);
+}
+
+function writeClipboard(text) {
+  return navigator.clipboard.writeText(text).catch(() => {
+    // A API assíncrona recusa quando o popup perde o foco; execCommand ainda
+    // copia a partir de um campo selecionado.
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const copiou = document.execCommand("copy");
+    ta.remove();
+    if (!copiou) throw new Error("copy failed");
+  });
+}
+
+function copyQueueName(div) {
+  const falhar = (key) => {
+    flashStatus(t(key));
+    flashNameInput(div, "queue-name-copy-error");
+  };
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs && tabs[0];
+    if (!tab || !tab.url || !tab.url.includes("lightning.force.com")) {
+      falhar("open_sf");
+      return;
+    }
+    chrome.scripting.executeScript({ target: { tabId: tab.id }, func: readQueueTitleInPage }, (results) => {
+      if (chrome.runtime.lastError || !results || !results[0]) {
+        // Aba ainda carregando, página de erro ou acesso ao site restrito:
+        // recarregar é o que resta, então o aviso já oferece o botão.
+        showReloadBanner(tab.id);
+        falhar("detect_fail");
+        return;
+      }
+      const queueName = String(results[0].result || "").trim();
+      if (!queueName) {
+        falhar("detect_fail");
+        return;
+      }
+      writeClipboard(queueName)
+        .then(() => {
+          const nameInput = div.querySelector(".queue-name");
+          if (nameInput) nameInput.value = queueName;
+          flashNameInput(div, "queue-name-saved");
+          saveOptions({ quiet: true });
+          flashStatus(t("copied", { name: queueName }));
+        })
+        .catch(() => falhar("copy_fail"));
+    });
+  });
+}
+
+// ── Aviso para recarregar a aba ─────────────────────────────
+// Aba do Salesforce sem a extensão ativa (aberta antes da instalação ou de
+// uma atualização, ou a injeção falhou). A página só é recarregada quando o
+// usuário clica: recarregar sozinho poderia interromper o trabalho dele.
+const reloadBanner = document.getElementById("reload-banner");
+const reloadPageBtn = document.getElementById("reload-page-btn");
+let reloadTabId = null;
+
+function showReloadBanner(tabId) {
+  if (!reloadBanner) return;
+  reloadTabId = tabId;
+  reloadBanner.style.display = "flex";
+}
+
+if (reloadPageBtn) {
+  reloadPageBtn.addEventListener("click", () => {
+    if (reloadTabId === null) return;
+    chrome.tabs.reload(reloadTabId, {}, () => window.close());
+  });
+}
+
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  const tab = tabs && tabs[0];
+  // Aba ainda carregando vai receber os scripts do manifest: sem aviso.
+  if (!tab || !tab.url || !tab.url.includes("lightning.force.com") || tab.status !== "complete") return;
+  chrome.tabs.sendMessage(tab.id, { type: "INSV_PING" }, (resp) => {
+    if (chrome.runtime.lastError || !(resp && resp.ok)) showReloadBanner(tab.id);
+  });
+});
+
 // The custom sound dropdown (buildSoundDropdown / loadSoundOptionsForQueue /
 // positioning + dismiss helpers) now lives in scripts/util.js so the options
 // status-notification rows can reuse the exact same component. Loaded before
@@ -241,7 +319,11 @@ function attachScrollToInterval(input) {
 // chegar, fazendo o próprio save parecer externo e disparar re-render.
 let pendingSelfWriteQueues = new Set();
 
-function saveOptions() {
+// quiet: grava sem "Salvando…" no rodapé, para não cobrir outra mensagem
+// (ex.: o "copiado!" da cópia do nome da fila). Também é chamada como
+// handler de evento, por isso a checagem estrita.
+function saveOptions(opts) {
+  const quiet = !!(opts && opts.quiet === true);
   const queues = [];
   queueList.querySelectorAll(".queue-item").forEach((item) => {
     const soundSelect = item.querySelector(".queue-sound-select");
@@ -266,7 +348,7 @@ function saveOptions() {
   };
 
   pendingSelfWriteQueues.add(JSON.stringify(queues));
-  chrome.storage.local.set({ queues, general }, showSaving);
+  chrome.storage.local.set({ queues, general }, quiet ? undefined : showSaving);
 }
 
 const saveOptionsDebounced = debounce(saveOptions, 500);

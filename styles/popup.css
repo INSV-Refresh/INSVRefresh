@@ -260,6 +260,13 @@ input[type="text"].queue-name::placeholder {
   background: rgba(34, 197, 94, 0.06);
 }
 
+/* Copy failure flash — same shape as the save flash, in danger */
+.queue-name-wrapper:has(.queue-name-copy-error) {
+  border-color: var(--danger-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.06);
+}
+
 /* Copy button inline at the right edge — inside the wrapper */
 .copy-queue-name-btn {
   flex-shrink: 0;
@@ -524,6 +531,28 @@ input[type="number"].queue-interval {
 
 .global-paused-banner button:hover {
   background: rgba(255, 209, 102, 0.32);
+}
+
+/* Reload notice: lives outside #normal-mode (so Legacy shows it too), so it
+   carries its own side inset. The message wraps; the button never does. */
+.reload-banner {
+  margin: 0 16px 8px;
+  flex-shrink: 0;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.reload-banner span {
+  flex: 1;
+}
+
+.reload-banner svg,
+.reload-banner button {
+  flex-shrink: 0;
+}
+
+.reload-banner button {
+  white-space: nowrap;
 }
 
 /* ── Legacy mode ────────────────────────────── */

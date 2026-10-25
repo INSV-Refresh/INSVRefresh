@@ -31,7 +31,8 @@ const I18N_MESSAGES = {
     copy_queue_name: "Copiar nome da fila atual",
     tt_notify_new: "Notificar novos chamados",
     open_sf: "Abra uma página do Salesforce",
-    reload_sf: "Recarregue a página do Salesforce",
+    reload_banner: "Recarregue esta aba do Salesforce para ativar a extensão.",
+    reload_page: "Recarregar página",
     detect_fail: "Não foi possível detectar a fila",
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Ação necessária: clique na página para ativar o áudio",
@@ -373,7 +374,8 @@ const I18N_MESSAGES = {
     copy_queue_name: "Copy current queue name",
     tt_notify_new: "Notify new cases",
     open_sf: "Open a Salesforce page",
-    reload_sf: "Reload the Salesforce page",
+    reload_banner: "Reload this Salesforce tab to activate the extension.",
+    reload_page: "Reload page",
     detect_fail: "Could not detect the queue",
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Action needed: click the page to enable audio",
@@ -705,7 +707,8 @@ const I18N_MESSAGES = {
     copy_queue_name: "Copiar nombre de la cola actual",
     tt_notify_new: "Notificar nuevos casos",
     open_sf: "Abre una página de Salesforce",
-    reload_sf: "Recarga la página de Salesforce",
+    reload_banner: "Recarga esta pestaña de Salesforce para activar la extensión.",
+    reload_page: "Recargar página",
     detect_fail: "No se pudo detectar la cola",
     // Content script (Salesforce in-page toasts)
     audio_activation_required: "Acción necesaria: haz clic en la página para activar el audio",

@@ -28,6 +28,13 @@
     </div>
     <hr>
 
+    <!-- Fora de #normal-mode para valer também no Modo Legacy -->
+    <div id="reload-banner" class="global-paused-banner reload-banner" role="alert" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        <span data-i18n="reload_banner">Recarregue esta aba do Salesforce para ativar a extensão.</span>
+        <button type="button" id="reload-page-btn" data-i18n="reload_page">Recarregar página</button>
+    </div>
+
     <div id="normal-mode">
         <div id="global-paused-banner" class="global-paused-banner" style="display: none;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
@@ -74,7 +81,7 @@
             </span>
             <input type="range" id="volumeSlider" min="0" max="100" value="50" />
         </div>
-        <span id="status"></span>
+        <span id="status" role="status" aria-live="polite"></span>
         <a href="https://forms.gle/kCXquvvB3s2fHDTx7" target="_blank" class="feedback-link" data-i18n="feedback">Enviar feedback</a>
         <a href="options.html#modo-legacy" target="_blank" id="legacy-text" class="has-tooltip has-tooltip-legacy-text"
             data-tooltip="Desative o modo legacy para mais funcionalidades!" data-i18n-tooltip="tt_legacy" data-i18n="legacy_mode">Modo Legacy</a>

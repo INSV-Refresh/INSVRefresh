@@ -1051,7 +1051,10 @@ function initNormalMode() {
     // limitam timers em abas em background, então ao voltar a aba
     // visível comparamos com lastRefreshAt para respeitar o intervalo
     // configurado — no máximo 1 refresh imediato, nunca em rajada.
-    const intervalMs = (fila.interval || 15) * 1000;
+    // Mesma faixa das telas (5 a 900 s): valor gravado por versão antiga ou
+    // editado à mão não pode virar um refresh por segundo no Salesforce.
+    const intervalSec = Number(fila.interval) || 15;
+    const intervalMs = Math.min(900, Math.max(5, intervalSec)) * 1000;
     // Antes da baseline, ritmo curto e limitado: se a página/fila ainda está
     // carregando (título ou tabela ausentes), tenta de novo logo em vez de
     // esperar o intervalo cheio só pra ler o que já está na tela.

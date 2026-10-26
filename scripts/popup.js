@@ -56,6 +56,14 @@ function updateLegacyToggle(active) {
   }
 }
 
+// Mesma faixa do Legacy Mode e do import (5 a 900 s). O min/max do <input>
+// só vale para as setas e a roda do mouse: digitar "1" gravava refresh a
+// cada segundo, e cada refresh é uma requisição ao Salesforce.
+function clampQueueInterval(value) {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) ? Math.min(900, Math.max(5, n)) : 15;
+}
+
 function saveLegacyConfig() {
   // Clamp here so a cleared field can't store NaN (which drives a tight
   // refresh loop on the content-script side).
@@ -135,7 +143,13 @@ ${isFirst ? "" : `<button class="delete-queue has-tooltip has-tooltip-default" d
   });
 
   const intervalInput = div.querySelector(".queue-interval");
-  if (intervalInput) attachScrollToInterval(intervalInput);
+  if (intervalInput) {
+    attachScrollToInterval(intervalInput);
+    // Ao sair do campo, mostra o valor que de fato foi gravado.
+    intervalInput.addEventListener("change", () => {
+      intervalInput.value = clampQueueInterval(intervalInput.value);
+    });
+  }
 
   const nameInput = div.querySelector(".queue-name");
   if (nameInput) {
@@ -336,7 +350,7 @@ function saveOptions(opts) {
       queues.push(Object.assign({}, item._insvQueue || {}, {
         name: nameInput.value,
         active: activeBtn ? activeBtn.getAttribute("aria-pressed") === "true" : false,
-        interval: parseInt(intervalInput.value, 10),
+        interval: clampQueueInterval(intervalInput.value),
         soundEnabled: !soundBtn.classList.contains("off"),
         customSound: soundSelect ? soundSelect.value : "",
       }));

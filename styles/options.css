@@ -576,8 +576,10 @@ input[type="number"]::placeholder {
   border-color: var(--brand-500);
   background-color: var(--brand-a10);
   border-style: solid;
-  /* Solid border + ring + tint say "drop here" without a looping glow. */
-  box-shadow: 0 0 0 3px var(--brand-a40);
+  /* No scale() here — it reflowed while pulse repainted, causing jitter.
+     Solid border + glow + bg tint are enough of a dragover cue. */
+  box-shadow: 0 0 20px var(--brand-a30);
+  animation: pulse 1.5s infinite;
 }
 
 .drop-area.error {
@@ -1385,9 +1387,15 @@ button.delete-audio-btn:hover {
 
 /* Toast styling is shared (showToast in scripts/util.js injects .insv-toast). */
 
-/* The sparkle stays still: a glow looping forever in the sidebar pulls the
-   eye away from the settings the page is for. */
+/* ── GlowPulse ───────────────────────────────── */
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  50% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(249, 135, 100, 0.6); }
+  100% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+}
+
 .glowPulse {
+  animation: glowPulse 2s ease-in-out infinite;
   text-decoration: none;
 }
 

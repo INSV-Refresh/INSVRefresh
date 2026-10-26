@@ -614,6 +614,11 @@ function loadSoundOptionsForQueue(selectElement, selectedValue) {
       });
     }
 
+    // Áudio apagado: o alerta já toca o Padrão no lugar dele (tocarSom), então
+    // o campo mostra o Padrão em vez da chave crua "custom_…".
+    if (typeof selectedValue === "string" && selectedValue.startsWith("custom_") && !customAudios[selectedValue]) {
+      selectedValue = "notification.mp3";
+    }
     selectElement.value = selectedValue;
   });
 }

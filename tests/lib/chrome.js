@@ -1,7 +1,8 @@
 "use strict";
 
 /**
- * Drive the real popup in headless Chrome, with no automation dependency.
+ * Drive the real popup (or options page) in headless Chrome, with no
+ * automation dependency.
  *
  * There is no puppeteer here and no package.json to add one to. Instead a probe
  * page is generated from the real popup.html — same scripts, same stylesheets,
@@ -36,11 +37,16 @@ function findBrowser() {
 }
 
 /**
- * Enough of the extension APIs for the popup to boot with a known set of
- * queues. Deliberately minimal: anything the popup does not need on load stays
- * a no-op so a missing stub surfaces as a visible error rather than silence.
+ * Enough of the extension APIs for a page to boot with a known set of queues.
+ * Deliberately minimal: anything the pages do not need on load stays a no-op
+ * so a missing stub surfaces as a visible error rather than silence.
+ *
+ * storage.onChanged is live: set() and remove() notify every listener on the
+ * next tick with { key: { oldValue, newValue } }, as Chrome does, so a page
+ * that updates itself from onChanged can be tested. extraLocal is merged into
+ * the starting chrome.storage.local.
  */
-function apiStub(queueCount) {
+function apiStub(queueCount, extraLocal) {
   return `
 <pre id="__out" style="position:fixed;left:-9999px">PENDING</pre>
 <script>
@@ -76,6 +82,16 @@ for (var qi = 0; qi < ${queueCount}; qi++) {
   QUEUES.push({ name: "Fila " + (qi + 1), active: true, interval: 15, soundEnabled: true, customSound: "notification.mp3" });
 }
 var STORE = { local: { queues: QUEUES, general: { volume: 0.5 }, advanced: {} }, sync: { legacyMode: false } };
+var EXTRA_LOCAL = ${JSON.stringify(extraLocal || {})};
+for (var ek in EXTRA_LOCAL) STORE.local[ek] = EXTRA_LOCAL[ek];
+var CHANGE_LISTENERS = [];
+function clone(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+function notify(name, changes) {
+  if (!Object.keys(changes).length) return;
+  setTimeout(function () {
+    CHANGE_LISTENERS.forEach(function (fn) { fn(changes, name); });
+  }, 0);
+}
 function area(name) {
   return {
     get: function (keys, cb) {
@@ -86,12 +102,34 @@ function area(name) {
       else out = JSON.parse(JSON.stringify(STORE[name]));
       setTimeout(function () { cb(out); }, 0);
     },
-    set: function (o, cb) { for (var k in o) STORE[name][k] = o[k]; rec("storage.set", { keys: Object.keys(o).join(",") }); if (cb) setTimeout(cb, 0); },
-    remove: function (k, cb) { delete STORE[name][k]; if (cb) setTimeout(cb, 0); }
+    set: function (o, cb) {
+      var changes = {};
+      for (var k in o) {
+        changes[k] = { newValue: clone(o[k]) };
+        if (k in STORE[name]) changes[k].oldValue = clone(STORE[name][k]);
+        STORE[name][k] = o[k];
+      }
+      rec("storage.set", { keys: Object.keys(o).join(",") });
+      if (cb) setTimeout(cb, 0);
+      notify(name, changes);
+    },
+    remove: function (keys, cb) {
+      var changes = {};
+      (Array.isArray(keys) ? keys : [keys]).forEach(function (k) {
+        if (k in STORE[name]) changes[k] = { oldValue: clone(STORE[name][k]) };
+        delete STORE[name][k];
+      });
+      if (cb) setTimeout(cb, 0);
+      notify(name, changes);
+    }
   };
 }
 window.chrome = {
-  storage: { local: area("local"), sync: area("sync"), onChanged: { addListener: function () {} } },
+  storage: {
+    local: area("local"),
+    sync: area("sync"),
+    onChanged: { addListener: function (fn) { CHANGE_LISTENERS.push(fn); } }
+  },
   runtime: {
     lastError: null,
     getURL: function (p) { return p; },
@@ -105,17 +143,31 @@ window.chrome = {
 }
 
 /**
- * Build a probe page from the real popup.html and run it.
+ * Build a probe page from a real extension page and run it.
  * `scenarioScript` is a <script> body that drives the page and calls publish().
+ *
+ * opts.page    the HTML file to load (default popup.html)
+ * opts.main    its last script, after which the scenario runs (default scripts/popup.js)
+ * opts.local   extra keys for the starting chrome.storage.local
+ * opts.queues  how many default queues to seed (default 5)
  */
 function runProbe(name, scenarioScript, opts) {
   const options = opts || {};
   const browser = findBrowser();
   if (!browser) return { skipped: true };
 
-  const html = read("popup.html")
-    .replace('<script src="scripts/i18n.js"></script>', apiStub(options.queues || 5) + '<script src="scripts/i18n.js"></script>')
-    .replace('<script src="scripts/popup.js"></script>', '<script src="scripts/popup.js"></script>' + scenarioScript);
+  const page = options.page || "popup.html";
+  const mainTag = '<script src="' + (options.main || "scripts/popup.js") + '"></script>';
+  const i18nTag = '<script src="scripts/i18n.js"></script>';
+  const source = read(page);
+  // Both anchors have to exist, or the stub or the scenario would silently
+  // not be injected and the probe would report a confusing timeout.
+  if (!source.includes(i18nTag) || !source.includes(mainTag)) {
+    return { error: page + " is missing " + (source.includes(i18nTag) ? mainTag : i18nTag) };
+  }
+  const html = source
+    .replace(i18nTag, apiStub(options.queues || 5, options.local) + i18nTag)
+    .replace(mainTag, mainTag + scenarioScript);
 
   const file = path.join(REPO, ".probe-" + name + ".html");
   const profile = path.join(os.tmpdir(), "insv-probe-" + name + "-" + process.pid);

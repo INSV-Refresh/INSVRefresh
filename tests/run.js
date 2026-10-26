@@ -23,6 +23,7 @@ const suites = [
 if (!unitOnly) {
   suites.push(["browser", require("./browser/sound-dropdown.test.js")]);
   suites.push(["browser", require("./browser/queue-drag.test.js")]);
+  suites.push(["browser", require("./browser/options-audio.test.js")]);
 }
 
 const browser = findBrowser();

@@ -210,8 +210,9 @@ function saveCustomAudio() {
           showToast(t("audio_save_error"), "error");
           return;
         }
+        // A lista de áudios e os campos de som das regras se atualizam pelo
+        // onChanged de audiosPersonalizados (fim do arquivo).
         showToast(t("audio_saved"), "success");
-        loadCustomAudios();
         clearAudioForm();
       });
     });
@@ -312,7 +313,6 @@ function deleteCustomAudio(audioKey) {
     
     chrome.storage.local.set({ audiosPersonalizados: customAudios }, () => {
       showToast(t("audio_deleted"), "success");
-      loadCustomAudios();
     });
   });
 }
@@ -614,13 +614,30 @@ function loadQueueManager() {
   });
 }
 
+// Os campos de som das regras montam as opções uma vez, no render. Áudio
+// salvo ou apagado depois disso não aparecia até recarregar a página. Aqui só
+// as opções são refeitas, com a escolha atual mantida: redesenhar as linhas
+// inteiras tiraria o foco de quem estivesse digitando os status.
+function refreshQueueManagerSoundOptions() {
+  document.querySelectorAll("#status-notifications-list .qm-sound").forEach((root) => {
+    loadSoundOptionsForQueue(root, root.value || "notification.mp3");
+  });
+}
+
 // Sincronização: mudanças vindas do popup re-renderizam a lista
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.queues) {
+  if (area !== "local") return;
+  if (changes.queues) {
     const incoming = JSON.stringify(changes.queues.newValue || []);
-    if (pendingSelfWriteQueues.delete(incoming)) return; // gravação desta própria página
-    qmQueues = changes.queues.newValue || [];
-    renderQueueManager();
+    if (!pendingSelfWriteQueues.delete(incoming)) { // ignora gravação desta própria página
+      qmQueues = changes.queues.newValue || [];
+      renderQueueManager();
+    }
+  }
+  // Vale para áudio salvo ou apagado nesta aba ou em outra.
+  if (changes.audiosPersonalizados) {
+    loadCustomAudios();
+    refreshQueueManagerSoundOptions();
   }
 });
 

@@ -38,6 +38,7 @@ by running the real popup. They are the kind that reasoning does not catch:
 | `unit/donate.test.js` | no | amount parsing, accepted checkout URLs and the exact request body in `scripts/support.js` |
 | `browser/sound-dropdown.test.js` | yes | the dropdown opens and survives a scroll behind it |
 | `browser/queue-drag.test.js` | yes | the reorder commits on release and leaves nothing stuck |
+| `browser/options-audio.test.js` | yes | a saved or deleted audio updates the "Notificações por status" sound fields without a reload or a re-render |
 
 ## How the browser tests work
 

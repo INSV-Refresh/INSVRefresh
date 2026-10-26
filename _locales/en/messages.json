@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "INSV Refresh",
+    "description": "Extension name. Brand, do not translate."
+  },
+  "extDescription": {
+    "message": "Stay on top of new Salesforce cases with automatic refreshes and configurable sound alerts.",
+    "description": "Extension description in the Chrome Web Store and chrome://extensions (max 132 characters)."
+  },
+  "actionTitle": {
+    "message": "INSV Refresh",
+    "description": "Tooltip for the extension icon in the toolbar."
+  }
+}

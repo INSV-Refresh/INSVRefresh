@@ -116,9 +116,6 @@ body {
   color: var(--text-muted, #6B7390);
 }
 
-/* The note closes the donation card, level with the business card's footer. */
-#doar > .card-note { margin-top: auto; }
-
 /* ── Donation form ─────────────────────────── */
 #donate-form {
   display: flex;
@@ -237,12 +234,12 @@ body {
 .donate-status[data-tone="error"] { color: var(--danger-600); }
 
 /* ── Business card ─────────────────────────── */
-/* Informational, no control: what the feature is and why it ships off. */
+/* Informational, no control: what the feature is and why it ships off.
+   A hairline sets it apart from the pitch above. A coloured side stripe on a
+   tinted box would dress a plain note up as an alert. */
 .api-info {
-  border-left: 3px solid var(--brand-500);
-  background: color-mix(in srgb, var(--brand-500) 6%, transparent);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border, #E5E7EF);
+  padding-top: var(--space-4);
 }
 
 .api-info h3 {
@@ -253,9 +250,11 @@ body {
 }
 
 .api-info p {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   line-height: var(--leading-normal);
   color: var(--text-muted, #6B7390);
+  max-width: 60ch;
+  text-wrap: pretty;
 }
 
 .business-cta {
@@ -369,7 +368,7 @@ body {
 [data-theme="dark"] .donate-status[data-tone="ok"] { color: var(--success-500); }
 [data-theme="dark"] .donate-status[data-tone="error"] { color: var(--danger-500); }
 
-[data-theme="dark"] .api-info { background: color-mix(in srgb, var(--brand-500) 12%, transparent); }
+[data-theme="dark"] .api-info { border-top-color: rgb(255 255 255 / 0.1); }
 [data-theme="dark"] .api-info h3 { color: var(--ink-50); }
 [data-theme="dark"] .api-info p { color: var(--ink-300); }
 

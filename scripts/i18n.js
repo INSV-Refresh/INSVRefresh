@@ -208,11 +208,10 @@ const I18N_MESSAGES = {
     donate_opened: "Pagamento aberto em uma nova aba. Obrigado pelo apoio!",
     donate_error: "Não foi possível abrir o pagamento agora. Tente de novo em instantes.",
     donate_invalid: "Escolha um valor entre {min} e {max}.",
-    donate_note: "Pagamento processado pela InfinitePay, em página segura aberta em nova aba. A extensão não recebe nem guarda seus dados de pagamento. A doação é voluntária e não libera nenhum recurso extra.",
     business_title: "Para empresas",
     business_desc: "Usa o INSV Refresh no time ou na empresa? Fale com a gente sobre parcerias, implantação para times inteiros, suporte dedicado ou contratação.",
     api_info_title: "Modo API",
-    api_info_p: "Lê as filas pela API do Salesforce e atualiza em tempo real quando um caso muda. Vem desligado porque cada verificação consome a cota de API da sua organização. A liberação é combinada com a empresa: fale com a gente.",
+    api_info_p: "Lê as filas pela API do Salesforce, mesmo com a lista fechada, e confere de novo assim que um caso muda. Vem desligado porque cada leitura conta na cota diária de API da organização. Ligar depende de acordo com o time que administra o Salesforce da empresa.",
     business_cta: "Enviar e-mail",
 
     // Privacy policy
@@ -549,11 +548,10 @@ const I18N_MESSAGES = {
     donate_opened: "Payment opened in a new tab. Thanks for your support!",
     donate_error: "Couldn't open the payment right now. Please try again in a moment.",
     donate_invalid: "Pick an amount between {min} and {max}.",
-    donate_note: "Payment is processed by InfinitePay on a secure page that opens in a new tab, in Brazilian reais (BRL). The extension never receives or stores your payment details. Donating is voluntary and doesn't unlock anything extra.",
     business_title: "For companies",
     business_desc: "Using INSV Refresh across a team or company? Talk to us about partnerships, rollout for whole teams, dedicated support or hiring.",
     api_info_title: "API mode",
-    api_info_p: "Reads queues through the Salesforce API and updates in real time when a case changes. It ships turned off because every check uses your organization's API quota. Turning it on is arranged with the company: get in touch.",
+    api_info_p: "Reads queues through the Salesforce API, even with the list closed, and checks again as soon as a case changes. It ships turned off because every read counts against your organization's daily API quota. Turning it on takes an agreement with the team that runs your company's Salesforce.",
     business_cta: "Send an email",
 
     // Privacy policy
@@ -890,11 +888,10 @@ const I18N_MESSAGES = {
     donate_opened: "Pago abierto en una nueva pestaña. ¡Gracias por tu apoyo!",
     donate_error: "No se pudo abrir el pago ahora. Inténtalo de nuevo en unos instantes.",
     donate_invalid: "Elige un monto entre {min} y {max}.",
-    donate_note: "El pago lo procesa InfinitePay en una página segura que se abre en una nueva pestaña, en reales brasileños (BRL). La extensión no recibe ni guarda tus datos de pago. La donación es voluntaria y no desbloquea nada extra.",
     business_title: "Para empresas",
     business_desc: "¿Usas INSV Refresh en tu equipo o empresa? Habla con nosotros sobre alianzas, implementación para equipos completos, soporte dedicado o contratación.",
     api_info_title: "Modo API",
-    api_info_p: "Lee las colas por la API de Salesforce y se actualiza en tiempo real cuando un caso cambia. Viene desactivado porque cada verificación consume la cuota de API de tu organización. La activación se acuerda con la empresa: escríbenos.",
+    api_info_p: "Lee las colas por la API de Salesforce, incluso con la lista cerrada, y vuelve a revisar en cuanto un caso cambia. Viene desactivado porque cada lectura cuenta en la cuota diaria de API de la organización. Activarlo requiere un acuerdo con el equipo que administra el Salesforce de la empresa.",
     business_cta: "Enviar correo",
 
     // Privacy policy

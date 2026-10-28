@@ -873,6 +873,17 @@ function initNormalMode() {
     // Without this, the first cycle treats every case already on screen as new
     // and rings. The first cycle seeds the baseline silently.
     let primed = false;
+    // Antes da baseline o refresh não é mais bloqueado de vez: fila vazia não
+    // renderiza tabela, `primed` nunca virava true e a fila nunca recarregava.
+    // O primeiro ciclo continua sem refresh; depois disso, enquanto não há
+    // baseline, o refresh respeita o intervalo a partir deste instante (os
+    // retries curtos de 2s não viram rajada de cliques).
+    let ultimoRefreshAt = Date.now();
+    // Leituras seguidas, cada uma logo após um refresh, com a fila na tela,
+    // botão de refresh presente e sem tabela. Uma só não prova fila vazia (a
+    // tabela pode estar atrasada); duas seguidas viram baseline vazia.
+    let leiturasSemTabela = 0;
+    const LEITURAS_PARA_FILA_VAZIA = 2;
 
     // Um aviso por monitor: se a API falhar todo ciclo, o usuário não é
     // soterrado de toast — a leitura da tela segue como rede de segurança.
@@ -921,7 +932,8 @@ function initNormalMode() {
       // O refresh da grid continua mesmo no modo API: é ele que faz o chamado
       // novo aparecer na tela do usuário. O que mudou é que ele deixou de ser
       // a fonte da detecção.
-      if (!primed) {
+      let refrescou = false;
+      if (!primed && Date.now() - ultimoRefreshAt < intervalMs) {
         // Primeira leitura: captura o que já está na fila do jeito que está,
         // sem clicar em refresh. `primed` garante que essa baseline é
         // silenciosa — sem som e sem toast.
@@ -929,8 +941,10 @@ function initNormalMode() {
       } else if (!filaNaTela) {
         log(`[Debug] Fila fora da tela, sem refresh de grid: "${fila.name}"`);
       } else if (!userIsEditing) {
-        log(`[Debug] Executando refresh da fila: "${fila.name}"`);
+        log(`[Debug] Executando refresh da fila: "${fila.name}"${primed ? "" : " (ainda sem baseline)"}`);
         doRefresh();
+        refrescou = true;
+        ultimoRefreshAt = Date.now();
       } else {
         log("[Debug] Ignorou refresh - usuário está com chamado selecionado");
       }
@@ -950,7 +964,22 @@ function initNormalMode() {
 
         // Sem leitura confiável não há baseline: primar com lista vazia faria
         // o ciclo seguinte tocar som para a fila inteira.
-        if (!linhas || (!usarApi && !document.querySelector(CASE_TABLE_SELECTOR))) {
+        const semTabela = !usarApi && !document.querySelector(CASE_TABLE_SELECTOR);
+        if (!linhas || semTabela) {
+          // Estado vazio do Salesforce ("Nada para ver aqui"): sem tabela,
+          // mas com a fila e o botão de refresh na tela. Só conta leitura
+          // feita logo após um refresh; fila fora da tela zera a contagem.
+          if (!primed && linhas && semTabela) {
+            const filaVisivel = isRightQueue(fila.name) &&
+              !!document.querySelector('button[name="refreshButton"]');
+            if (!filaVisivel) leiturasSemTabela = 0;
+            else if (refrescou) leiturasSemTabela++;
+            if (leiturasSemTabela >= LEITURAS_PARA_FILA_VAZIA) {
+              log(`[Debug] Fila vazia confirmada, baseline vazia: "${fila.name}"`);
+              primed = true;
+              return;
+            }
+          }
           log(`[Debug] Sem leitura utilizável, ciclo ignorado: "${fila.name}"`);
           if (!primed && fastRetriesLeft > 0) {
             fastRetriesLeft--;
@@ -979,6 +1008,7 @@ function initNormalMode() {
 
         novos.forEach((id) => seenCaseIds.add(id));
         primed = true;
+        leiturasSemTabela = 0;
 
         // Notificação de mudança de status — config por fila
         // (queues[].statusNotify)

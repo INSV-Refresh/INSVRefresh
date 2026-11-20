@@ -283,6 +283,21 @@ function protegerFocoDuranteRefresh(janelaMs) {
   return encerrar;
 }
 
+// Um click sintético comum sobe até o document, e o Salesforce o lê como
+// clique fora: fecha a busca global (e outros overlays) e o campo onde o
+// usuário digitava some, sem foco para devolver. O handler do refresh fica
+// no lightning-button-icon, então o clique é contido ali: o handler roda
+// (registrado antes, dispara antes) e o evento não passa para os ancestrais.
+function clicarSemVazar(botao) {
+  const raiz = botao.getRootNode();
+  const host =
+    (raiz instanceof ShadowRoot && raiz.host) || botao.closest("lightning-button-icon");
+  // Markup sem o wrapper: não dá para saber onde está o handler, e conter no
+  // lugar errado mataria o refresh. Melhor o clique comum.
+  if (host) host.addEventListener("click", (e) => e.stopPropagation(), { once: true });
+  botao.click();
+}
+
 // Retorna true quando um refresh foi disparado por algum caminho. O caminho
 // da ponte é assíncrono e não confirma nada aqui: quem chama já espera o grid
 // assentar (waitForGridSettle) antes de ler a tela.
@@ -290,7 +305,7 @@ function doRefresh() {
   const refreshButton = document.querySelector('button[name="refreshButton"]');
   if (refreshButton) {
     protegerFocoDuranteRefresh();
-    refreshButton.click();
+    clicarSemVazar(refreshButton);
     return true;
   }
   // force:refreshView recria os componentes da página inteira, não só a

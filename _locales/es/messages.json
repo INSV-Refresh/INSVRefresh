@@ -4,7 +4,7 @@
     "description": "Nombre de la extensión. Marca, no traducir."
   },
   "extDescription": {
-    "message": "Mantente al tanto de los nuevos casos en Salesforce con actualizaciones automáticas y alertas sonoras configurables.",
+    "message": "Actualiza tus colas de Salesforce solo y suena cuando entra un caso nuevo o cambia un estado.",
     "description": "Descripción de la extensión en la Chrome Web Store y en chrome://extensions (máx. 132 caracteres)."
   },
   "actionTitle": {

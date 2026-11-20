@@ -4,7 +4,7 @@
     "description": "Extension name. Brand, do not translate."
   },
   "extDescription": {
-    "message": "Stay on top of new Salesforce cases with automatic refreshes and configurable sound alerts.",
+    "message": "Refreshes your Salesforce queues on its own and plays a sound when a new case arrives or a status changes.",
     "description": "Extension description in the Chrome Web Store and chrome://extensions (max 132 characters)."
   },
   "actionTitle": {

@@ -110,14 +110,196 @@ function insvStart() {
   });
 }
 
+// ── Proteção de foco durante o refresh ────────────────────────
+// O re-render da list view pode tirar o foco de onde o usuário está
+// trabalhando (busca global, chat, modal): o texto digitado passa a cair no
+// body e é preciso clicar de novo no campo. Durante uma janela curta após cada
+// refresh, uma mudança de foco que NÃO veio do usuário é desfeita: o foco
+// volta para o elemento anterior, com o cursor e a seleção onde estavam.
+// Qualquer clique ou tecla de navegação (Tab, Esc, Enter, atalho com
+// modificador) encerra a proteção na hora: a partir dali a intenção é dele.
+const FOCUS_GUARD_MS = 6000; // cobre o fallback de 5s do waitForGridSettle
+const FOCUS_GUARD_MAX_RESTAURACOES = 5; // nunca brigar em loop com a página
+const FOCUS_GUARD_TECLAS_DE_INTENCAO = new Set(["Tab", "Escape", "Enter", "F6"]);
+
+// Grid da fila: o foco ali dentro é gerenciado pelo próprio datatable e o
+// elemento é recriado no refresh. Não protegemos nem restauramos nada nela.
+const FOCUS_GUARD_AREA_DO_GRID = ".mainContentMark .split-left";
+
+function elementoFocadoReal(doc) {
+  let el = (doc || document).activeElement;
+  // LWC com shadow DOM nativo: activeElement do documento é só o host.
+  while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
+  return el;
+}
+
+function ehCampoEditavel(el) {
+  if (!el || el.nodeType !== 1) return false;
+  if (el.isContentEditable) return true;
+  const tag = el.tagName;
+  if (tag === "TEXTAREA") return true;
+  if (tag !== "INPUT") return false;
+  const tipo = (el.getAttribute("type") || "text").toLowerCase();
+  return !/^(button|submit|reset|checkbox|radio|file|image|range|color|hidden)$/.test(tipo);
+}
+
+// Vale proteger: qualquer foco fora do body e fora do grid. Isso inclui
+// campos de texto, iframes (chat embutido) e controles dentro de modais.
+function focoMereceProtecao(el) {
+  if (!el || el === document.body || el === document.documentElement) return false;
+  if (typeof el.closest === "function" && el.closest(FOCUS_GUARD_AREA_DO_GRID)) return false;
+  return true;
+}
+
+function capturarSelecao(el) {
+  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+    try {
+      return { tipo: "campo", inicio: el.selectionStart, fim: el.selectionEnd, direcao: el.selectionDirection, scroll: el.scrollTop };
+    } catch (e) {
+      return null; // type="email"/"number" não expõem seleção
+    }
+  }
+  if (el.isContentEditable) {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) return { tipo: "range", range: sel.getRangeAt(0).cloneRange() };
+  }
+  return null;
+}
+
+function restaurarSelecao(el, s) {
+  if (!s) return;
+  try {
+    if (s.tipo === "campo" && s.inicio !== null) {
+      el.setSelectionRange(s.inicio, s.fim, s.direcao || "none");
+      el.scrollTop = s.scroll;
+    } else if (s.tipo === "range" && s.range.startContainer.isConnected) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(s.range);
+    }
+  } catch (e) {
+    log("[Debug] Não foi possível restaurar a seleção:", e);
+  }
+}
+
+// Liga a proteção para um refresh. Devolve uma função que desliga antes do
+// prazo (não é obrigatório chamar: a janela expira sozinha).
+function protegerFocoDuranteRefresh(janelaMs) {
+  const alvo = elementoFocadoReal();
+  if (!focoMereceProtecao(alvo)) return () => {};
+
+  // A seleção muda enquanto o usuário digita: atualizamos o snapshot a cada
+  // evento de input/seleção no próprio alvo, não só no início da janela.
+  let selecao = capturarSelecao(alvo);
+  let restauracoes = 0;
+  let encerrado = false;
+  let checagemAgendada = false;
+  let timer = null;
+
+  const atualizarSelecao = () => {
+    if (elementoFocadoReal() === alvo) selecao = capturarSelecao(alvo);
+  };
+
+  const encerrar = () => {
+    if (encerrado) return;
+    encerrado = true;
+    clearTimeout(timer);
+    document.removeEventListener("pointerdown", onIntencao, true);
+    document.removeEventListener("mousedown", onIntencao, true);
+    document.removeEventListener("keydown", onTecla, true);
+    document.removeEventListener("focusin", agendarChecagem, true);
+    document.removeEventListener("focusout", agendarChecagem, true);
+    document.removeEventListener("selectionchange", atualizarSelecao);
+    alvo.removeEventListener("input", atualizarSelecao);
+    alvo.removeEventListener("keyup", atualizarSelecao);
+  };
+
+  const onIntencao = () => {
+    log("[Debug] Proteção de foco encerrada: clique do usuário");
+    encerrar();
+  };
+
+  const onTecla = (e) => {
+    if (FOCUS_GUARD_TECLAS_DE_INTENCAO.has(e.key) || e.ctrlKey || e.altKey || e.metaKey) {
+      log(`[Debug] Proteção de foco encerrada: tecla ${e.key}`);
+      encerrar();
+    }
+  };
+
+  // Microtask: roda depois que o focus() de quem roubou terminou (blur do
+  // antigo + focus do novo acontecem na mesma pilha), antes do próximo evento
+  // de teclado. Nenhuma tecla digitada cai no lugar errado.
+  function agendarChecagem() {
+    if (encerrado || checagemAgendada) return;
+    checagemAgendada = true;
+    queueMicrotask(() => {
+      checagemAgendada = false;
+      checarERestaurar();
+    });
+  }
+
+  function checarERestaurar() {
+    if (encerrado) return;
+    if (!alvo.isConnected) {
+      log("[Debug] Proteção de foco: elemento original saiu da página");
+      encerrar();
+      return;
+    }
+    const atual = elementoFocadoReal();
+    if (atual === alvo) return;
+    // Clique dentro de um iframe (chat embutido, por exemplo) não chega aos
+    // listeners deste documento. O refresh da lista nunca foca um iframe,
+    // então foco indo para um é sempre o usuário.
+    if (atual && atual.tagName === "IFRAME") {
+      encerrar();
+      return;
+    }
+    if (restauracoes >= FOCUS_GUARD_MAX_RESTAURACOES) {
+      log("[Debug] Proteção de foco: limite de restaurações atingido");
+      encerrar();
+      return;
+    }
+    restauracoes++;
+    log("[Debug] Foco tirado pelo refresh, devolvendo ao elemento anterior");
+    try {
+      alvo.focus({ preventScroll: true });
+    } catch (e) {
+      encerrar();
+      return;
+    }
+    if (elementoFocadoReal() === alvo) restaurarSelecao(alvo, selecao);
+  }
+
+  document.addEventListener("pointerdown", onIntencao, true);
+  document.addEventListener("mousedown", onIntencao, true);
+  document.addEventListener("keydown", onTecla, true);
+  document.addEventListener("focusin", agendarChecagem, true);
+  document.addEventListener("focusout", agendarChecagem, true);
+  document.addEventListener("selectionchange", atualizarSelecao);
+  alvo.addEventListener("input", atualizarSelecao);
+  alvo.addEventListener("keyup", atualizarSelecao);
+  timer = setTimeout(encerrar, janelaMs || FOCUS_GUARD_MS);
+
+  return encerrar;
+}
+
 // Retorna true quando um refresh foi disparado por algum caminho. O caminho
 // da ponte é assíncrono e não confirma nada aqui: quem chama já espera o grid
 // assentar (waitForGridSettle) antes de ler a tela.
 function doRefresh() {
   const refreshButton = document.querySelector('button[name="refreshButton"]');
   if (refreshButton) {
+    protegerFocoDuranteRefresh();
     refreshButton.click();
     return true;
+  }
+  // force:refreshView recria os componentes da página inteira, não só a
+  // lista. Com o usuário digitando, o campo dele pode ser destruído e
+  // recriado, e aí não há foco para devolver. Nesse caso o ciclo pula o
+  // refresh e tenta de novo no próximo intervalo.
+  if (ehCampoEditavel(elementoFocadoReal())) {
+    log("[Debug] Refresh pela ponte adiado: usuário digitando em um campo");
+    return false;
   }
   // Sem botão no DOM (splitview colapsada, chamado em foco, markup novo do
   // Salesforce) o ciclo antes virava no-op silencioso: o monitor seguia
@@ -126,6 +308,7 @@ function doRefresh() {
   // exceção de propósito: as docs avisam que o evento é caro e que disparo
   // repetido não é suportado.
   log("[Debug] Botão de refresh ausente — usando force:refreshView");
+  protegerFocoDuranteRefresh();
   pedirAoAura("refresh");
   return true;
 }

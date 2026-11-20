@@ -1,6 +1,6 @@
 {
   "name": "INSV Refresh",
-  "description": "Fique por dentro dos novos casos no Salesforce com atualizações automáticas e alertas sonoros configuráveis.",
+  "description": "Atualiza suas filas do Salesforce sozinha e toca um som quando entra chamado novo ou um status muda.",
   "version": "6.0.1",
   "manifest_version": 3,
   "content_scripts": [
